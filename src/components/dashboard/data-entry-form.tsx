@@ -66,12 +66,18 @@ export default function DataEntryForm() {
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+    console.log({
+      ...values,
+      receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
+    })
     toast({
         title: "Data Submitted",
         description: (
             <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                <code className="text-white">{JSON.stringify(values, null, 2)}</code>
+                <code className="text-white">{JSON.stringify({
+                  ...values,
+                  receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
+                }, null, 2)}</code>
             </pre>
         ),
     });
@@ -112,7 +118,10 @@ export default function DataEntryForm() {
                 <FormItem>
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                    <Input type="number" placeholder="2000" {...field} />
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                        <Input type="number" placeholder="2000" {...field} className="pl-7" />
+                    </div>
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -135,7 +144,7 @@ export default function DataEntryForm() {
                             )}
                             >
                             {field.value ? (
-                                format(field.value, "PPP")
+                                format(field.value, "dd/MM/yyyy")
                             ) : (
                                 <span>Pick a date</span>
                             )}
