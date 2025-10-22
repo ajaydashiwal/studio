@@ -30,8 +30,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   return (
     <Card className="w-full max-w-sm shadow-xl">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-headline">Spreadsheet Data Viewer</CardTitle>
-        <CardDescription>Please sign in to view your records</CardDescription>
+        <CardTitle className="text-2xl font-headline">Upvan Apartment Resident Welfare Association</CardTitle>
+        <CardDescription>Please sign in to view your maintenance records</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">

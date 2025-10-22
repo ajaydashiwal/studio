@@ -1,20 +1,28 @@
+import { subMonths } from "date-fns";
+
 export type User = {
   flatNo: string;
   ownerName: string;
+  membershipId: number;
+  userType: string;
 };
 
 export type MonthlyData = {
   id: number;
   month: string;
-  maintenance: string;
-  water: string;
+  maintenance: string;  
   status: 'Paid' | 'Due';
 };
 
 // Mock user data from a "master sheet"
 const mockUsers: (User & { password: string })[] = [
-  { flatNo: 'A-101', ownerName: 'John Doe', password: 'password123' },
-  { flatNo: 'B-205', ownerName: 'Jane Smith', password: 'password456' },
+  { flatNo: 'A-101', membershipId: 351, ownerName: 'John Doe', userType: 'Member', password: 'password456' },
+  { flatNo: 'B-205', membershipId: 352, ownerName: 'Jane Smith', userType: 'Member', password: 'password456' },
+  { flatNo: 'R-105', membershipId: 170, ownerName: 'Smith Janes', userType: 'Treasurer', password: 'password456' },
+  { flatNo: 'R-104', membershipId: 179, ownerName: 'Doe John', userType: 'President', password: 'password456' },
+  { flatNo: 'R-103', membershipId: 119, ownerName: 'Alexander', userType: 'Vice President', password: 'password456' },
+  { flatNo: 'R-102', membershipId: 109, ownerName: 'Adam', userType: 'General Secretary', password: 'password456' },
+  { flatNo: 'R-101', membershipId: 199, ownerName: 'Philip', userType: 'Joint Secretary', password: 'password456' },
 ];
 
 /**
@@ -48,20 +56,20 @@ const generateMonthlyData = (): MonthlyData[] => {
   } else {
     endYear = now.getFullYear() + 1;
   }
-  const startYear = endYear - 2;
-
+  const startYear = endYear - 3;
+  //const startYear = 2025;
+  
   for (let i = 0; i < 24; i++) {
     // Start from October of the start year
     const date = new Date(startYear, 9 + i, 1);
     const month = date.toLocaleString('default', { month: 'short' });
     const year = date.getFullYear();
-
+    
     data.push({
       id: i + 1,
       month: `${month} ${year}`,
-      maintenance: (2000 + Math.floor(Math.random() * 500)).toFixed(2),
-      water: (500 + Math.floor(Math.random() * 200)).toFixed(2),
-      status: Math.random() > 0.15 ? 'Paid' : 'Due',
+      maintenance: '2000',      
+      status: Math.random() > 0.25 ? 'Paid' : 'Due',
     });
   }
   return data.reverse(); // Show most recent first

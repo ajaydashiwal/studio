@@ -34,8 +34,7 @@ export default function DataTable({ data }: DataTableProps) {
                     <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
                         <TableHead className="w-[150px]">Month</TableHead>
-                        <TableHead className="text-right">Maintenance</TableHead>
-                        <TableHead className="text-right">Water Bill</TableHead>
+                        <TableHead className="text-right">Maintenance Charges</TableHead>
                         <TableHead className="text-center w-[120px]">Status</TableHead>
                     </TableRow>
                     </TableHeader>
@@ -43,8 +42,7 @@ export default function DataTable({ data }: DataTableProps) {
                     {data.map((item) => (
                         <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.month}</TableCell>
-                        <TableCell className="text-right">₹{item.maintenance}</TableCell>
-                        <TableCell className="text-right">₹{item.water}</TableCell>
+                        <TableCell className="text-right">₹{item.maintenance}</TableCell>                        
                         <TableCell className="text-center">
                             <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
                             className={item.status === 'Paid' ? 'bg-green-600' : ''}>

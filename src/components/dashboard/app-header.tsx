@@ -1,7 +1,6 @@
 import type { User } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { LogOut, UserCircle } from 'lucide-react';
-import { Separator } from '../ui/separator';
 
 interface AppHeaderProps {
   user: User;
@@ -20,7 +19,13 @@ export default function AppHeader({ user, onLogout }: AppHeaderProps) {
                     </h1>
                     <p className="text-sm text-muted-foreground">
                         Flat No: <span className="font-semibold">{user.flatNo}</span>
+                        &nbsp; | Membership No: <span className="font-semibold">{user.membershipId}</span>
                     </p>
+                    {user.userType !== 'Member' && (
+                        <p className="text-sm text-muted-foreground">
+                            Office Bearer: <span className="font-semibold">{user.userType}</span>
+                        </p>
+                    )}
                 </div>
             </div>
             <Button
