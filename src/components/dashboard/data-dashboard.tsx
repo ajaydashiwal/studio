@@ -5,7 +5,7 @@ import DataTable from '@/components/dashboard/data-table';
 import DataEntryForm from '@/components/dashboard/data-entry-form';
 import MembershipEntryForm from '@/components/dashboard/membership-entry-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 interface DataDashboardProps {
   user: User;

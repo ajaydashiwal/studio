@@ -20,9 +20,9 @@ export const mockUsers: (User & { password: string })[] = [
   { flatNo: 'B-205', membershipId: 352, ownerName: 'Jane Smith', userType: 'Member', password: 'password456' },
   { flatNo: 'R-105', membershipId: 170, ownerName: 'Smith Janes', userType: 'Treasurer', password: 'password456' },
   { flatNo: 'R-104', membershipId: 179, ownerName: 'Doe John', userType: 'President', password: 'password456' },
-  { flatNo: 'R-103', membershipId: 119, ownerName: 'Alexander', userType: 'Vice President', password: 'password456' },
-  { flatNo: 'R-102', membershipId: 109, ownerName: 'Adam', userType: 'General Secretary', password: 'password456' },
-  { flatNo: 'R-101', membershipId: 199, ownerName: 'Philip', userType: 'Joint Secretary', password: 'password456' },
+  { flatNo: 'R-103', membershipId: 119, ownerName: 'Alexander', userType: 'VicePresident', password: 'password456' },
+  { flatNo: 'R-102', membershipId: 109, ownerName: 'Adam', userType: 'GeneralSecretary', password: 'password456' },
+  { flatNo: 'R-101', membershipId: 199, ownerName: 'Philip', userType: 'JointSecretary', password: 'password456' },
 ];
 
 /**
