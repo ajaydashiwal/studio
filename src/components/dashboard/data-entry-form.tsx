@@ -66,18 +66,16 @@ export default function DataEntryForm() {
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log({
+    const formattedValues = {
       ...values,
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
-    })
+    };
+    console.log(formattedValues)
     toast({
         title: "Data Submitted",
         description: (
             <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                <code className="text-white">{JSON.stringify({
-                  ...values,
-                  receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
-                }, null, 2)}</code>
+                <code className="text-white">{JSON.stringify(formattedValues, null, 2)}</code>
             </pre>
         ),
     });
