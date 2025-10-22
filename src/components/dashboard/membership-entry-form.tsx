@@ -32,10 +32,11 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { mockUsers } from "@/lib/data"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 const formSchema = z.object({
   flatNo: z.string().min(1, { message: "Please enter a flat number." }),
+  ownerName: z.string().min(1, { message: "Owner name is required." }),
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
   }),
@@ -47,11 +48,13 @@ const formSchema = z.object({
 
 export default function MembershipEntryForm() {
   const { toast } = useToast()
+  const [isNewUser, setIsNewUser] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
         flatNo: "",
+        ownerName: "",
         receiptNo: "",
         membershipFee: 1000,
         membershipStatus: "Active",
@@ -64,10 +67,16 @@ export default function MembershipEntryForm() {
     const user = mockUsers.find(u => u.flatNo.toLowerCase() === watchedFlatNo.toLowerCase());
     if (user) {
         form.setValue("membershipStatus", user.membershipStatus);
+        form.setValue("ownerName", user.ownerName);
+        setIsNewUser(false);
     } else {
         form.setValue("membershipStatus", "Active");
+        if (!isNewUser) {
+          form.setValue("ownerName", "");
+        }
+        setIsNewUser(true);
     }
-  }, [watchedFlatNo, form]);
+  }, [watchedFlatNo, form, isNewUser]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
@@ -89,6 +98,7 @@ export default function MembershipEntryForm() {
     form.setValue("membershipFee", 1000);
     form.setValue("membershipStatus", "Active");
     form.setValue("flatNo", "");
+    form.setValue("ownerName", "");
   }
 
   const handleFlatNoBlur = () => {
@@ -96,8 +106,12 @@ export default function MembershipEntryForm() {
     const user = mockUsers.find(u => u.flatNo.toLowerCase() === flatNo.toLowerCase());
     if (user) {
         form.setValue("membershipStatus", user.membershipStatus);
+        form.setValue("ownerName", user.ownerName);
+        setIsNewUser(false);
     } else {
         form.setValue("membershipStatus", "Active");
+        // Don't clear ownerName on blur if user is typing it for a new record
+        setIsNewUser(true);
     }
   }
 
@@ -116,6 +130,23 @@ export default function MembershipEntryForm() {
                         placeholder="Enter flat number and press tab" 
                         {...field} 
                         onBlur={handleFlatNoBlur}
+                    />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="ownerName"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Owner Name</FormLabel>
+                <FormControl>
+                    <Input 
+                        placeholder="Owner's full name" 
+                        {...field} 
+                        readOnly={!isNewUser}
                     />
                 </FormControl>
                 <FormMessage />
