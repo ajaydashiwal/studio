@@ -15,7 +15,7 @@ export type MonthlyData = {
 };
 
 // Mock user data from a "master sheet"
-const mockUsers: (User & { password: string })[] = [
+export const mockUsers: (User & { password: string })[] = [
   { flatNo: 'A-101', membershipId: 351, ownerName: 'John Doe', userType: 'Member', password: 'password456' },
   { flatNo: 'B-205', membershipId: 352, ownerName: 'Jane Smith', userType: 'Member', password: 'password456' },
   { flatNo: 'R-105', membershipId: 170, ownerName: 'Smith Janes', userType: 'Treasurer', password: 'password456' },

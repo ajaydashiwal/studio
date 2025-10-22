@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,44 +30,29 @@ import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
+import { mockUsers } from "@/lib/data"
 
 const formSchema = z.object({
-  monthYear: z.string({
-    required_error: "Please select a month and year.",
-  }),
-  amount: z.coerce.number().positive({ message: "Please enter a valid amount." }),
+  flatNo: z.string().min(1, { message: "Please select a flat number." }),
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
   }),
   receiptNo: z.string().min(1, { message: "Receipt number is required." }),
+  membershipFee: z.coerce.number().positive({ message: "Please enter a valid amount." }),
+  membershipStatus: z.enum(["Active", "Inactive"]),
 })
 
-const generateMonthYearOptions = () => {
-    const options = [];
-    const currentYear = new Date().getFullYear();
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    for (const month of monthNames) {
-        options.push(`${month} ${currentYear}`);
-    }
-    return options;
-}
+const flatNumberOptions = mockUsers.map(u => u.flatNo);
 
-export default function DataEntryForm() {
+export default function MembershipEntryForm() {
   const { toast } = useToast()
-  const monthYearOptions = generateMonthYearOptions();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
         receiptNo: "",
-        amount: 2000,
+        membershipFee: 1000,
+        membershipStatus: "Active",
     }
   })
 
@@ -79,7 +63,7 @@ export default function DataEntryForm() {
     };
     console.log(formattedValues)
     toast({
-        title: "Data Submitted",
+        title: "Membership Data Submitted",
         description: (
             <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                 <code className="text-white">{JSON.stringify(formattedValues, null, 2)}</code>
@@ -87,7 +71,8 @@ export default function DataEntryForm() {
         ),
     });
     form.reset();
-    form.setValue("amount", 2000);
+    form.setValue("membershipFee", 1000);
+    form.setValue("membershipStatus", "Active");
   }
 
   return (
@@ -96,18 +81,18 @@ export default function DataEntryForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField
             control={form.control}
-            name="monthYear"
+            name="flatNo"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Month & Year</FormLabel>
+                <FormLabel>Flat Number</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                     <SelectTrigger>
-                        <SelectValue placeholder="Select a month" />
+                        <SelectValue placeholder="Select a flat" />
                     </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        {monthYearOptions.map(option => (
+                        {flatNumberOptions.map(option => (
                             <SelectItem key={option} value={option}>{option}</SelectItem>
                         ))}
                     </SelectContent>
@@ -116,23 +101,7 @@ export default function DataEntryForm() {
                 </FormItem>
             )}
             />
-            <FormField
-            control={form.control}
-            name="amount"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Amount</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="2000" {...field} className="pl-7" />
-                    </div>
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
+             <FormField
                 control={form.control}
                 name="receiptDate"
                 render={({ field }) => (
@@ -186,8 +155,45 @@ export default function DataEntryForm() {
                 </FormItem>
             )}
             />
+            <FormField
+            control={form.control}
+            name="membershipFee"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Membership Fee</FormLabel>
+                <FormControl>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                        <Input type="number" placeholder="1000" {...field} className="pl-7" />
+                    </div>
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="membershipStatus"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Membership Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
         </div>
-        <Button type="submit">Submit</Button>
+        <Button type="submit">Update Record</Button>
       </form>
     </Form>
   )
