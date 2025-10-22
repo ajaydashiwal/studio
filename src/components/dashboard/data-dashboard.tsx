@@ -17,7 +17,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       <AppHeader user={user} onLogout={onLogout} />
       <main>
         <Tabs defaultValue="statement">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={`grid w-full ${user.userType === 'Treasurer' ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <TabsTrigger value="statement">Account Statement</TabsTrigger>
             {user.userType === 'Treasurer' && (
               <TabsTrigger value="entry">Data Entry</TabsTrigger>
