@@ -1,3 +1,4 @@
+
 import type { User } from '@/lib/data';
 import { spreadsheetData } from '@/lib/data';
 import AppHeader from '@/components/dashboard/app-header';
@@ -8,20 +9,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 interface DataDashboardProps {
-  user: User;
+  user: Omit<User, 'membershipStatus'>;
   onLogout: () => void;
 }
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const isTreasurer = user.userType === 'Treasurer';
-  const isPresidentOrSecretary = user.userType === 'President' || user.userType === 'General Secretary';
+  const isPresidentOrSecretary = user.userType === 'President' || user.userType === 'GeneralSecretary';
 
   const getGridCols = () => {
     let cols = 1;
     if (isTreasurer) cols++;
     if (isPresidentOrSecretary) cols++;
-    if (cols > 3) cols = 3; // Max 3 cols for simplicity
-    return `grid-cols-${cols}`;
+    if (cols > 3) cols = 3;
+    let gridClass = 'grid-cols-1';
+    if (cols === 2) gridClass = 'grid-cols-2';
+    if (cols === 3) gridClass = 'grid-cols-3';
+    return gridClass;
   };
 
   return (

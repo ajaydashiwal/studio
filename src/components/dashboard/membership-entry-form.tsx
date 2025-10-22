@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -31,9 +32,10 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { mockUsers } from "@/lib/data"
+import { useEffect } from "react"
 
 const formSchema = z.object({
-  flatNo: z.string().min(1, { message: "Please select a flat number." }),
+  flatNo: z.string().min(1, { message: "Please enter a flat number." }),
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
   }),
@@ -42,7 +44,6 @@ const formSchema = z.object({
   membershipStatus: z.enum(["Active", "Inactive"]),
 })
 
-const flatNumberOptions = mockUsers.map(u => u.flatNo);
 
 export default function MembershipEntryForm() {
   const { toast } = useToast()
@@ -50,11 +51,23 @@ export default function MembershipEntryForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+        flatNo: "",
         receiptNo: "",
         membershipFee: 1000,
         membershipStatus: "Active",
     }
   })
+
+  const watchedFlatNo = form.watch("flatNo");
+
+  useEffect(() => {
+    const user = mockUsers.find(u => u.flatNo.toLowerCase() === watchedFlatNo.toLowerCase());
+    if (user) {
+        form.setValue("membershipStatus", user.membershipStatus);
+    } else {
+        form.setValue("membershipStatus", "Active");
+    }
+  }, [watchedFlatNo, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
@@ -62,8 +75,10 @@ export default function MembershipEntryForm() {
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
     };
     console.log(formattedValues)
+    const userExists = mockUsers.some(u => u.flatNo.toLowerCase() === values.flatNo.toLowerCase());
+    
     toast({
-        title: "Membership Data Submitted",
+        title: userExists ? "Membership Record Updated" : "New Membership Record Created",
         description: (
             <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                 <code className="text-white">{JSON.stringify(formattedValues, null, 2)}</code>
@@ -73,6 +88,17 @@ export default function MembershipEntryForm() {
     form.reset();
     form.setValue("membershipFee", 1000);
     form.setValue("membershipStatus", "Active");
+    form.setValue("flatNo", "");
+  }
+
+  const handleFlatNoBlur = () => {
+    const flatNo = form.getValues("flatNo");
+    const user = mockUsers.find(u => u.flatNo.toLowerCase() === flatNo.toLowerCase());
+    if (user) {
+        form.setValue("membershipStatus", user.membershipStatus);
+    } else {
+        form.setValue("membershipStatus", "Active");
+    }
   }
 
   return (
@@ -85,18 +111,13 @@ export default function MembershipEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Flat Number</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a flat" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {flatNumberOptions.map(option => (
-                            <SelectItem key={option} value={option}>{option}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <FormControl>
+                    <Input 
+                        placeholder="Enter flat number and press tab" 
+                        {...field} 
+                        onBlur={handleFlatNoBlur}
+                    />
+                </FormControl>
                 <FormMessage />
                 </FormItem>
             )}
@@ -177,7 +198,7 @@ export default function MembershipEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Membership Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select status" />

@@ -1,9 +1,10 @@
+
 import type { User } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { LogOut, UserCircle } from 'lucide-react';
 
 interface AppHeaderProps {
-  user: User;
+  user: Omit<User, 'membershipStatus'>;
   onLogout: () => void;
 }
 

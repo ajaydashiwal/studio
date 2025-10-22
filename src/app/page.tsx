@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,8 +8,10 @@ import LoginForm from '@/components/auth/login-form';
 import DataDashboard from '@/components/dashboard/data-dashboard';
 import { useToast } from "@/hooks/use-toast"
 
+type LoggedInUser = Omit<User, 'membershipStatus'>;
+
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
 
   const handleLogin = (flatNo: string, password: string) => {
