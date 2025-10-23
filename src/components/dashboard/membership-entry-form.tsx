@@ -56,7 +56,7 @@ export default function MembershipEntryForm() {
     defaultValues: {
         flatNo: "",
         ownerName: "",
-        membershipId: undefined,
+        membershipId: "" as any,
         receiptNo: "",
         membershipFee: 1000,
         membershipStatus: "Active",
@@ -76,7 +76,7 @@ export default function MembershipEntryForm() {
         form.setValue("membershipStatus", "Active");
         if (!isNewUser) {
           form.setValue("ownerName", "");
-          form.setValue("membershipId", undefined as any); // To satisfy TS
+          form.setValue("membershipId", "" as any);
         }
         setIsNewUser(true);
     }
@@ -103,7 +103,7 @@ export default function MembershipEntryForm() {
     form.setValue("membershipStatus", "Active");
     form.setValue("flatNo", "");
     form.setValue("ownerName", "");
-    form.setValue("membershipId", undefined as any);
+    form.setValue("membershipId", "" as any);
   }
 
   const handleFlatNoBlur = () => {
