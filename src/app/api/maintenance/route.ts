@@ -5,31 +5,6 @@ import { NextResponse } from 'next/server';
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'monthCollection';
 
-async function getNextSerialNumber() {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: 'google-credentials.json',
-    scopes: 'https://www.googleapis.com/auth/spreadsheets',
-  });
-  const sheets = google.sheets({ version: 'v4', auth });
-  const range = `${SHEET_NAME}!A:H`; // FlatNo,NameTenant,ReceiptDate,ReceiptNumber,MonthPaid,AmountPaid,ModePayment,transactionReg
-
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range,
-  });
-
-  const rows = response.data.values;
-  if (rows && rows.length > 1) {
-    // Find the last valid number in the column
-    const lastId = rows.slice(1).reduce((maxId, row) => {
-        const currentId = parseInt(row[0], 10);
-        return !isNaN(currentId) && currentId > maxId ? currentId : maxId;
-    }, 0);
-    return lastId + 1;
-  }
-  return 1; // Start from 1 if sheet is empty or has no valid numbers
-}
-
 
 export async function POST(request: Request) {
   try {
@@ -57,12 +32,9 @@ export async function POST(request: Request) {
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-
-    const serialNumber = await getNextSerialNumber();
     
-    // Schema: Sl No, Flat No, Month-Year, Amount, Date of Receipt, Receipt No, Paid by Tenant, Mode of Payment, Transaction Ref
+    // Schema: Flat No, Month-Year, Amount, Date of Receipt, Receipt No, Paid by Tenant, Mode of Payment, Transaction Ref
     const newRow = [
-      serialNumber,
       flatNo,
       monthYear,
       amount,
