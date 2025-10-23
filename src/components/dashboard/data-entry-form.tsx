@@ -48,6 +48,7 @@ const formSchema = z.object({
     required_error: "A date of receipt is required.",
   }),
   receiptNo: z.string().min(1, { message: "Receipt number is required." }),
+  tenantName: z.string().optional(),
 })
 
 const generateMonthYearOptions = () => {
@@ -69,6 +70,7 @@ export default function DataEntryForm() {
     defaultValues: {
         receiptNo: "",
         amount: 2000,
+        tenantName: "",
     }
   })
 
@@ -181,6 +183,19 @@ export default function DataEntryForm() {
                 <FormLabel>Receipt No.</FormLabel>
                 <FormControl>
                     <Input placeholder="Enter receipt number" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="tenantName"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Tenant Name (Optional)</FormLabel>
+                <FormControl>
+                    <Input placeholder="Enter tenant's name" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
