@@ -20,6 +20,7 @@ import type { User } from "@/lib/data"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
+import { Label } from "@/components/ui/label"
   
 interface SummaryTableProps {
     users: User[];
@@ -37,10 +38,22 @@ const generateMonthYearOptions = () => {
     return options;
 }
 
-const calculateDues = (period: string | null) => {
+const calculateDues = (from: string | null, to: string | null) => {
     // This is a mock calculation. In a real app, this data would come from a backend.
-    // The number of months for calculation can be adjusted based on the 'period'
-    const totalMonths = period ? 36 - monthYearOptions.findIndex(opt => opt.value === period) : 24;
+    let totalMonths = 24; // Default
+    if (from && to) {
+        const fromIndex = monthYearOptions.findIndex(opt => opt.value === from);
+        const toIndex = monthYearOptions.findIndex(opt => opt.value === to);
+        if (fromIndex !== -1 && toIndex !== -1 && fromIndex >= toIndex) {
+            totalMonths = fromIndex - toIndex + 1;
+        }
+    } else if (from) {
+        const fromIndex = monthYearOptions.findIndex(opt => opt.value === from);
+        if (fromIndex !== -1) {
+            totalMonths = fromIndex + 1;
+        }
+    }
+
     const paidMonths = Math.floor(Math.random() * (totalMonths + 1));
     const dueMonths = totalMonths - paidMonths;
     const maintenanceFee = 2000;
@@ -53,11 +66,11 @@ const calculateDues = (period: string | null) => {
 const monthYearOptions = generateMonthYearOptions();
   
 export default function SummaryTable({ users }: SummaryTableProps) {
-    const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
+    const [period, setPeriod] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
 
     const summaryData = users.map(user => ({
         ...user,
-        ...calculateDues(selectedPeriod)
+        ...calculateDues(period.from, period.to)
     }));
 
     return (
@@ -68,17 +81,33 @@ export default function SummaryTable({ users }: SummaryTableProps) {
                     <CardTitle>Residents' Maintenance Summary</CardTitle>
                     <CardDescription>Overview of maintenance payments for all residents.</CardDescription>
                 </div>
-                <div className="mt-4 sm:mt-0">
-                    <Select onValueChange={(value) => setSelectedPeriod(value)}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="Select Period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {monthYearOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
+                    <div className="grid gap-2">
+                        <Label htmlFor="from-period">From</Label>
+                        <Select onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                            <SelectTrigger className="w-full sm:w-[160px]" id="from-period">
+                                <SelectValue placeholder="Select Period" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {monthYearOptions.map(option => (
+                                    <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="to-period">To</Label>
+                        <Select onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                            <SelectTrigger className="w-full sm:w-[160px]" id="to-period">
+                                <SelectValue placeholder="Select Period" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {monthYearOptions.map(option => (
+                                    <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
         </CardHeader>
@@ -109,4 +138,3 @@ export default function SummaryTable({ users }: SummaryTableProps) {
       </Card>
     )
 }
-
