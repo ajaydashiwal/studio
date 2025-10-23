@@ -46,6 +46,7 @@ const userTypes = [
 export default function UserEntryForm() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,6 +59,58 @@ export default function UserEntryForm() {
         isMember: true
     }
   });
+
+  const resetForm = () => {
+    form.reset({
+        flatNo: "" as any,
+        membershipNo: "" as any,
+        ownerName: "",
+        userType: "Member",
+        membershipStatus: "Active",
+        isMember: true
+    });
+    setIsExistingUser(false);
+  }
+
+  const fetchUserDetails = async (flatNo: number) => {
+    if (!flatNo || flatNo <= 0) {
+        // Reset if flatNo is cleared or invalid
+        if (isExistingUser) {
+           resetForm();
+        }
+        return;
+    }
+    try {
+        const response = await fetch(`/api/users/${flatNo}`);
+        if (response.ok) {
+            const data = await response.json();
+            form.setValue("membershipNo", data.membershipNo);
+            form.setValue("ownerName", data.ownerName);
+            form.setValue("userType", data.userType);
+            form.setValue("membershipStatus", data.membershipStatus);
+            form.setValue("isMember", data.isMember);
+            setIsExistingUser(true);
+            toast({
+                title: "User Found",
+                description: `Displaying existing record for flat ${flatNo}.`,
+            });
+        } else {
+            // User not found, reset relevant fields for new entry
+            if (isExistingUser) { // only reset if we were previously showing an existing user
+               const currentFlat = form.getValues("flatNo");
+               resetForm();
+               form.setValue("flatNo", currentFlat);
+            }
+             setIsExistingUser(false);
+        }
+    } catch (error) {
+        console.error("Failed to fetch user details", error);
+        if (isExistingUser) {
+           resetForm();
+        }
+    }
+  };
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -76,14 +129,7 @@ export default function UserEntryForm() {
                 title: "Success",
                 description: result.message || "User record saved successfully.",
             });
-            form.reset({
-                flatNo: "" as any,
-                membershipNo: "" as any,
-                ownerName: "",
-                userType: "Member",
-                membershipStatus: "Active",
-                isMember: true
-            });
+            resetForm();
         } else {
             toast({
                 variant: "destructive",
@@ -113,7 +159,12 @@ export default function UserEntryForm() {
                     <FormItem>
                     <FormLabel>Flat Number</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="Enter flat number" {...field} />
+                        <Input 
+                            type="number" 
+                            placeholder="Enter flat no. and move out" 
+                            {...field}
+                            onBlur={() => fetchUserDetails(field.value)}
+                        />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -126,7 +177,12 @@ export default function UserEntryForm() {
                     <FormItem>
                     <FormLabel>Membership No.</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="Enter membership number" {...field} />
+                        <Input 
+                            type="number" 
+                            placeholder="Enter membership number" 
+                            {...field} 
+                            readOnly={isExistingUser}
+                        />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -139,7 +195,11 @@ export default function UserEntryForm() {
                     <FormItem>
                     <FormLabel>Owner Name</FormLabel>
                     <FormControl>
-                        <Input placeholder="Enter owner's full name" {...field} />
+                        <Input 
+                            placeholder="Enter owner's full name" 
+                            {...field} 
+                            readOnly={isExistingUser}
+                        />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -151,7 +211,7 @@ export default function UserEntryForm() {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>User Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select user type" />
@@ -177,7 +237,7 @@ export default function UserEntryForm() {
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
+                        </Trigger>
                         </FormControl>
                         <SelectContent>
                             <SelectItem value="Active">Active</SelectItem>
@@ -207,9 +267,14 @@ export default function UserEntryForm() {
                 )}
                 />
         </div>
-        <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Submit Record"}
-        </Button>
+        <div className="flex gap-4">
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : isExistingUser ? "Update Record" : "Submit Record"}
+            </Button>
+             <Button type="button" variant="outline" onClick={resetForm} disabled={isSubmitting}>
+                Clear Form
+            </Button>
+        </div>
       </form>
     </Form>
   )
