@@ -81,8 +81,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
   } catch (error) {
     console.error('Error accessing Google Sheets:', error);
     if (error.code === 'ENOENT') {
-        return NextResponse.json({ error: 'Server configuration error: Credentials file not found.' }, { status: 500 });
+        return NextResponse.json({ error: 'Server configuration error: The `google-credentials.json` file was not found.' }, { status: 500 });
     }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error while accessing Google Sheets.' }, { status: 500 });
   }
 }

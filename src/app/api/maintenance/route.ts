@@ -86,8 +86,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error writing to Google Sheets:', error);
     if (error.code === 'ENOENT') {
-        return NextResponse.json({ error: 'Server configuration error: Credentials file not found.' }, { status: 500 });
+        return NextResponse.json({ error: 'Server configuration error: The `google-credentials.json` file was not found.' }, { status: 500 });
     }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error while writing to Google Sheets.' }, { status: 500 });
   }
 }
