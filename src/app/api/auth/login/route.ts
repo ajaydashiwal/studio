@@ -30,12 +30,21 @@ export async function POST(request: Request) {
     const rows = response.data.values;
     if (rows) {
       const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+      console.log(`Attempting login for flat: ${flatNo}`);
+      console.log(`Generated MD5 Hash: ${hashedPassword}`);
+
       // Find the user (skip header row)
       const userRow = rows.slice(1).find(
-        (row) => row[0]?.toLowerCase() === flatNo.toLowerCase() && row[3] === hashedPassword
+        (row) => {
+          const sheetFlatNo = row[0]?.toLowerCase();
+          const sheetPassword = row[3];
+          console.log(`Checking row: Flat No: ${sheetFlatNo}, Stored Hash: ${sheetPassword}`);
+          return sheetFlatNo === flatNo.toLowerCase() && sheetPassword === hashedPassword;
+        }
       );
 
       if (userRow) {
+        console.log("Login successful: Found matching user.");
         // Find userType from mock data as it's not in the sheet
         const mockUser = mockUsers.find(u => u.flatNo.toLowerCase() === userRow[0]?.toLowerCase());
         
@@ -48,6 +57,7 @@ export async function POST(request: Request) {
         return NextResponse.json(user);
       }
     }
+    console.log("Login failed: No matching user found in spreadsheet.");
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   } catch (error) {
     console.error('Error accessing Google Sheets:', error);
