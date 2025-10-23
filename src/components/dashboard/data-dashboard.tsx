@@ -8,7 +8,6 @@ import AppHeader from '@/components/dashboard/app-header';
 import DataTable from '@/components/dashboard/data-table';
 import SummaryTable from '@/components/dashboard/summary-table';
 import DataEntryForm from '@/components/dashboard/data-entry-form';
-import UserEntryForm from '@/components/dashboard/user-entry-form';
 import {
   Menubar,
   MenubarContent,
@@ -29,12 +28,11 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'user-entry';
+type View = 'statement' | 'entry';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
   const isTreasurer = user.userType === 'Treasurer';
-  const isOfficeBearer = ['President', 'GeneralSecretary', 'Treasurer'].includes(user.userType);
   const isMember = user.userType === 'Member';
 
   const renderContent = () => {
@@ -57,23 +55,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               </CardHeader>
               <CardContent className="pt-0">
                 <DataEntryForm />
-              </CardContent>
-            </Card>
-          );
-        }
-        return null;
-      case 'user-entry':
-        if (isOfficeBearer) {
-          return (
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Membership Record Entry</CardTitle>
-                <CardDescription>
-                  Create or update a user membership record.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <UserEntryForm />
               </CardContent>
             </Card>
           );
@@ -104,16 +85,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 className={activeView === 'entry' ? 'bg-accent' : ''}
               >
                 Maintenance Entry
-              </MenubarTrigger>
-            </MenubarMenu>
-          )}
-          {isOfficeBearer && (
-            <MenubarMenu>
-              <MenubarTrigger
-                onClick={() => setActiveView('user-entry')}
-                className={activeView === 'user-entry' ? 'bg-accent' : ''}
-              >
-                User Entry
               </MenubarTrigger>
             </MenubarMenu>
           )}
