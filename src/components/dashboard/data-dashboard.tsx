@@ -1,9 +1,9 @@
 
+
 'use client';
 
 import { useState } from 'react';
 import type { User } from '@/lib/data';
-import { mockUsers } from '@/lib/data'; // Keep for summary table mock
 import AppHeader from '@/components/dashboard/app-header';
 import DataTable from '@/components/dashboard/data-table';
 import SummaryTable from '@/components/dashboard/summary-table';
@@ -44,7 +44,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
         return isMember ? (
           <DataTable flatNo={user.flatNo} />
         ) : (
-          <SummaryTable users={mockUsers} />
+          <SummaryTable />
         );
       case 'entry':
         if (isTreasurer) {

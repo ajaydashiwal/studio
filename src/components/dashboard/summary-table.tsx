@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import {
@@ -16,62 +17,76 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import type { User } from "@/lib/data"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton";
   
-interface SummaryTableProps {
-    users: User[];
+interface SummaryData {
+    flatNo: string;
+    ownerName: string;
+    totalPaid: number;
+    totalDue: number;
 }
-
+  
 const generateMonthYearOptions = () => {
     const options = [];
     const now = new Date();
+    // Go back 36 months for the "From" dropdown
     for (let i = 0; i < 36; i++) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const month = date.toLocaleString('default', { month: 'short' });
         const year = date.getFullYear();
-        options.push({ value: `${year}-${date.getMonth()}`, label: `${month} ${year}` });
+        options.push({ value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: `${month} ${year}` });
     }
     return options;
 }
 
-const calculateDues = (from: string | null, to: string | null) => {
-    // This is a mock calculation. In a real app, this data would come from a backend.
-    let totalMonths = 24; // Default
-    if (from && to) {
-        const fromIndex = monthYearOptions.findIndex(opt => opt.value === from);
-        const toIndex = monthYearOptions.findIndex(opt => opt.value === to);
-        if (fromIndex !== -1 && toIndex !== -1 && fromIndex >= toIndex) {
-            totalMonths = fromIndex - toIndex + 1;
-        }
-    } else if (from) {
-        const fromIndex = monthYearOptions.findIndex(opt => opt.value === from);
-        if (fromIndex !== -1) {
-            totalMonths = fromIndex + 1;
-        }
-    }
-
-    const paidMonths = Math.floor(Math.random() * (totalMonths + 1));
-    const dueMonths = totalMonths - paidMonths;
-    const maintenanceFee = 2000;
-    return {
-        totalPaid: paidMonths * maintenanceFee,
-        totalDue: dueMonths * maintenanceFee,
-    }
-}
-
 const monthYearOptions = generateMonthYearOptions();
   
-export default function SummaryTable({ users }: SummaryTableProps) {
-    const [period, setPeriod] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
+export default function SummaryTable() {
+    const [summaryData, setSummaryData] = useState<SummaryData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [period, setPeriod] = useState<{ from: string; to: string }>({ 
+        from: monthYearOptions[11].value, // Default to 12 months ago
+        to: monthYearOptions[0].value,   // Default to current month
+    });
 
-    const summaryData = users.map(user => ({
-        ...user,
-        ...calculateDues(period.from, period.to)
-    }));
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            const { from, to } = period;
+            const query = new URLSearchParams({ from, to });
+            try {
+                const response = await fetch(`/api/summary?${query}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Failed to fetch summary data");
+                }
+                const result = await response.json();
+                setSummaryData(result);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "An unknown error occurred");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [period]);
+
+    const renderSkeletons = () => (
+        Array.from({ length: 15 }).map((_, index) => (
+            <TableRow key={`skeleton-${index}`}>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-4 w-20" /></TableCell>
+            </TableRow>
+        ))
+    );
 
     return (
       <Card className="shadow-md">
@@ -84,7 +99,7 @@ export default function SummaryTable({ users }: SummaryTableProps) {
                 <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
                     <div className="grid gap-2">
                         <Label htmlFor="from-period">From</Label>
-                        <Select onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                        <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
                             <SelectTrigger className="w-full sm:w-[160px]" id="from-period">
                                 <SelectValue placeholder="Select Period" />
                             </SelectTrigger>
@@ -97,12 +112,12 @@ export default function SummaryTable({ users }: SummaryTableProps) {
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="to-period">To</Label>
-                        <Select onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                        <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
                             <SelectTrigger className="w-full sm:w-[160px]" id="to-period">
                                 <SelectValue placeholder="Select Period" />
                             </SelectTrigger>
                             <SelectContent>
-                                {monthYearOptions.map(option => (
+                                {monthYearOptions.slice(0, 12).map(option => ( // Only show last 12 months for "To"
                                     <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -123,14 +138,30 @@ export default function SummaryTable({ users }: SummaryTableProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {summaryData.map((item) => (
-                        <TableRow key={item.membershipId}>
-                            <TableCell className="font-medium">{item.flatNo}</TableCell>
-                            <TableCell>{item.ownerName}</TableCell>
-                            <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
-                            <TableCell className="text-right">₹{item.totalDue.toLocaleString()}</TableCell>                        
+                    {loading ? (
+                        renderSkeletons()
+                    ) : error ? (
+                         <TableRow>
+                            <TableCell colSpan={4} className="text-center text-destructive">
+                                {error}
+                            </TableCell>
                         </TableRow>
-                    ))}
+                    ) : summaryData.length === 0 ? (
+                         <TableRow>
+                           <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                No summary data available for the selected period.
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        summaryData.map((item) => (
+                            <TableRow key={item.flatNo}>
+                                <TableCell className="font-medium">{item.flatNo}</TableCell>
+                                <TableCell>{item.ownerName}</TableCell>
+                                <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
+                                <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
+                            </TableRow>
+                        ))
+                    )}
                     </TableBody>
                 </Table>
             </ScrollArea>
