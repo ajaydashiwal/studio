@@ -2,6 +2,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { mockUsers } from '@/lib/data'; // For userType mapping
+import * as crypto from 'crypto';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const RANGE = 'memberUsers!A:D'; // Columns: flatNo, ownerName, membershipId, password
@@ -28,9 +29,10 @@ export async function POST(request: Request) {
 
     const rows = response.data.values;
     if (rows) {
+      const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
       // Find the user (skip header row)
       const userRow = rows.slice(1).find(
-        (row) => row[0]?.toLowerCase() === flatNo.toLowerCase() && row[3] === password
+        (row) => row[0]?.toLowerCase() === flatNo.toLowerCase() && row[3] === hashedPassword
       );
 
       if (userRow) {
