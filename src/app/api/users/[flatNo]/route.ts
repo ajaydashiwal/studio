@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 // This API now reads from masterMembership to pre-populate the form.
 const MASTER_SHEET_NAME = 'masterMembership'; 
-// Columns in masterMembership: flatNo, membershipNo, ownerName, status
-const RANGE = `${MASTER_SHEET_NAME}!A:D`; 
+// Columns in masterMembership: receiptNo,receiptDate,flatNo, memberName,membershipNo,status
+const RANGE = `${MASTER_SHEET_NAME}!D:G`; 
 
 export async function GET(request: Request, { params }: { params: { flatNo: string } }) {
   const { flatNo } = params;
@@ -39,8 +39,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
         // Return only the data needed for pre-population
         const userDetails = {
             flatNo: masterRecord[0],
-            membershipNo: masterRecord[1],
-            ownerName: masterRecord[2],
+            membershipNo: masterRecord[2],
+            ownerName: masterRecord[1],
             // Default other fields for the form, these are not from master
             userType: 'Member',
             membershipStatus: 'Active',

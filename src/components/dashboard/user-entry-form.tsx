@@ -51,7 +51,7 @@ export default function UserEntryForm() {
         ownerName: "",
         userType: "Member",
         membershipStatus: "Active",
-        isMember: true,
+        isMember: false,
     }
   })
 
@@ -81,7 +81,7 @@ export default function UserEntryForm() {
             ownerName: "",
             userType: "Member",
             membershipStatus: "Active",
-            isMember: true,
+            isMember: false,
         });
         setIsDataFetched(false);
         toast({
@@ -117,7 +117,7 @@ export default function UserEntryForm() {
             form.reset();
             form.setValue("userType", "Member");
             form.setValue("membershipStatus", "Active");
-            form.setValue("isMember", true);
+            form.setValue("isMember", false);
             setIsDataFetched(false);
         } else {
             toast({
