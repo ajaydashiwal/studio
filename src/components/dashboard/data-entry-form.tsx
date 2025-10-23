@@ -32,13 +32,7 @@ import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
+import { useState } from "react"
 
 const formSchema = z.object({
   flatNo: z.coerce.number().positive({ message: "Flat number is required." }),
@@ -83,6 +77,7 @@ const generateMonthYearOptions = () => {
 export default function DataEntryForm() {
   const { toast } = useToast()
   const monthYearOptions = generateMonthYearOptions();
+  const [showTenantName, setShowTenantName] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,6 +91,27 @@ export default function DataEntryForm() {
   })
 
   const watchedModeOfPayment = form.watch("modeOfPayment");
+
+  const checkMembershipStatus = async (flatNo: number) => {
+    if (!flatNo || flatNo <= 0) {
+        setShowTenantName(true); // If flatNo is invalid, show by default
+        return;
+    }
+    try {
+        const response = await fetch(`/api/users/${flatNo}/status`);
+        if (response.ok) {
+            const data = await response.json();
+            // Hide tenant name field if the member is active
+            setShowTenantName(data.membershipStatus !== 'Active');
+        } else {
+            // If user not found (404) or other error, assume not an active member and show the field
+            setShowTenantName(true);
+        }
+    } catch (error) {
+        console.error("Failed to fetch membership status", error);
+        setShowTenantName(true); // On error, default to showing the field
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
@@ -117,6 +133,7 @@ export default function DataEntryForm() {
             });
             form.reset();
             form.setValue("amount", 300);
+            setShowTenantName(true);
         } else {
             const { error } = await response.json();
             toast({
@@ -145,7 +162,12 @@ export default function DataEntryForm() {
                   <FormItem>
                   <FormLabel>Flat Number</FormLabel>
                   <FormControl>
-                      <Input type="number" placeholder="Enter flat number" {...field} />
+                      <Input 
+                        type="number" 
+                        placeholder="Enter flat number" 
+                        {...field}
+                        onBlur={() => checkMembershipStatus(field.value)}
+                       />
                   </FormControl>
                   <FormMessage />
                   </FormItem>
@@ -279,24 +301,24 @@ export default function DataEntryForm() {
                     )}
                 />
             )}
-            <FormField
-            control={form.control}
-            name="tenantName"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Tenant Name (Optional)</FormLabel>
-                <FormControl>
-                    <Input placeholder="Enter tenant's name" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
+            {showTenantName && (
+                <FormField
+                control={form.control}
+                name="tenantName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Tenant Name (Optional)</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Enter tenant's name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
             )}
-            />
         </div>
         <Button type="submit">Submit</Button>
       </form>
     </Form>
   )
 }
-
-    
