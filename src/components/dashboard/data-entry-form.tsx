@@ -70,8 +70,11 @@ const generateMonthYearOptions = () => {
     const options = [];
     const currentYear = new Date().getFullYear();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    for (const month of monthNames) {
-        options.push(`${month} ${currentYear}`);
+    for (let i = -1; i < 2; i++) {
+        const year = currentYear + i;
+        for (const month of monthNames) {
+            options.push(`${month} ${year}`);
+        }
     }
     return options;
 }
@@ -93,22 +96,41 @@ export default function DataEntryForm() {
 
   const watchedModeOfPayment = form.watch("modeOfPayment");
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
       ...values,
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
     };
-    console.log(formattedValues)
-    toast({
-        title: "Data Submitted",
-        description: (
-            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                <code className="text-white">{JSON.stringify(formattedValues, null, 2)}</code>
-            </pre>
-        ),
-    });
-    form.reset();
-    form.setValue("amount", 2000);
+    
+    try {
+        const response = await fetch('/api/maintenance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formattedValues),
+        });
+
+        if (response.ok) {
+            toast({
+                title: "Data Submitted",
+                description: "Maintenance record added successfully.",
+            });
+            form.reset();
+            form.setValue("amount", 2000);
+        } else {
+            const { error } = await response.json();
+            toast({
+                variant: "destructive",
+                title: "Submission Failed",
+                description: error || "Could not save the record.",
+            });
+        }
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not connect to the server.",
+        });
+    }
   }
 
   return (
@@ -170,7 +192,7 @@ export default function DataEntryForm() {
                 control={form.control}
                 name="receiptDate"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem className="flex flex-col pt-2">
                     <FormLabel>Date of receipt</FormLabel>
                     <Popover>
                         <PopoverTrigger asChild>

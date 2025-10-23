@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import type { User } from '@/lib/data';
-import { validateLogin } from '@/lib/data';
 import LoginForm from '@/components/auth/login-form';
 import DataDashboard from '@/components/dashboard/data-dashboard';
 import { useToast } from "@/hooks/use-toast"
@@ -14,20 +13,35 @@ export default function Home() {
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
 
-  const handleLogin = (flatNo: string, password: string) => {
-    const loggedInUser = validateLogin(flatNo, password);
-    if (loggedInUser) {
-      setUser(loggedInUser);
-      toast({
-        title: "Login Successful",
-        description: `Welcome, ${loggedInUser.ownerName}!`,
-      })
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
-      })
+  const handleLogin = async (flatNo: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flatNo, password }),
+      });
+
+      if (response.ok) {
+        const loggedInUser = await response.json();
+        setUser(loggedInUser);
+        toast({
+          title: "Login Successful",
+          description: `Welcome, ${loggedInUser.ownerName}!`,
+        });
+      } else {
+        const { error } = await response.json();
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: error || "Invalid credentials. Please try again.",
+        });
+      }
+    } catch (error) {
+       toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not connect to the server.",
+        });
     }
   };
 
