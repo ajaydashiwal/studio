@@ -41,8 +41,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                 <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                 id="flatNo"
-                type="text"
-                placeholder="e.g., A-101"
+                type="number"
+                placeholder="e.g., 101"
                 required
                 value={flatNo}
                 onChange={(e) => setFlatNo(e.target.value)}

@@ -35,7 +35,7 @@ import { mockUsers } from "@/lib/data"
 import { useEffect, useState } from "react"
 
 const formSchema = z.object({
-  flatNo: z.string().min(1, { message: "Please enter a flat number." }),
+  flatNo: z.coerce.number().positive({ message: "Please enter a flat number." }),
   ownerName: z.string().min(1, { message: "Owner name is required." }),
   membershipId: z.coerce.number().positive({ message: "Membership number is required." }),
   receiptDate: z.date({
@@ -54,7 +54,7 @@ export default function MembershipEntryForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        flatNo: "",
+        flatNo: "" as any,
         ownerName: "",
         membershipId: "" as any,
         receiptNo: "",
@@ -66,7 +66,7 @@ export default function MembershipEntryForm() {
   const watchedFlatNo = form.watch("flatNo");
 
   useEffect(() => {
-    const user = mockUsers.find(u => u.flatNo.toLowerCase() === watchedFlatNo.toLowerCase());
+    const user = mockUsers.find(u => u.flatNo.toString() === watchedFlatNo?.toString());
     if (user) {
         form.setValue("membershipStatus", user.membershipStatus);
         form.setValue("ownerName", user.ownerName);
@@ -88,7 +88,7 @@ export default function MembershipEntryForm() {
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
     };
     console.log(formattedValues)
-    const userExists = mockUsers.some(u => u.flatNo.toLowerCase() === values.flatNo.toLowerCase());
+    const userExists = mockUsers.some(u => u.flatNo.toString() === values.flatNo.toString());
     
     toast({
         title: userExists ? "Membership Record Updated" : "New Membership Record Created",
@@ -101,14 +101,14 @@ export default function MembershipEntryForm() {
     form.reset();
     form.setValue("membershipFee", 1000);
     form.setValue("membershipStatus", "Active");
-    form.setValue("flatNo", "");
+    form.setValue("flatNo", "" as any);
     form.setValue("ownerName", "");
     form.setValue("membershipId", "" as any);
   }
 
   const handleFlatNoBlur = () => {
     const flatNo = form.getValues("flatNo");
-    const user = mockUsers.find(u => u.flatNo.toLowerCase() === flatNo.toLowerCase());
+    const user = mockUsers.find(u => u.flatNo.toString() === flatNo?.toString());
     if (user) {
         form.setValue("membershipStatus", user.membershipStatus);
         form.setValue("ownerName", user.ownerName);
@@ -133,6 +133,7 @@ export default function MembershipEntryForm() {
                 <FormLabel>Flat Number</FormLabel>
                 <FormControl>
                     <Input 
+                        type="number"
                         placeholder="Enter flat number and press tab" 
                         {...field} 
                         onBlur={handleFlatNoBlur}
