@@ -186,14 +186,14 @@ export default function SummaryTable() {
             </Card>
 
             <Dialog open={!!selectedFlat} onOpenChange={(isOpen) => !isOpen && setSelectedFlat(null)}>
-                <DialogContent className="max-w-4xl h-[90vh]">
+                <DialogContent className="max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>Maintenance Statement for {selectedFlat?.ownerName} (Flat: {selectedFlat?.flatNo})</DialogTitle>
                         <DialogDescription>
                             Showing payment history for the last 24 months.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="mt-4 h-full">
+                    <div className="mt-4">
                         {selectedFlat && <DataTable flatNo={selectedFlat.flatNo} />}
                     </div>
                 </DialogContent>

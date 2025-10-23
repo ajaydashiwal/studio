@@ -71,7 +71,7 @@ export default function DataTable({ flatNo }: DataTableProps) {
           <CardDescription>Showing your payment history.</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
-            <ScrollArea className="h-[calc(100vh-22rem)] md:h-[calc(100%-2rem)] rounded-md border">
+            <ScrollArea className="h-96 rounded-md border">
                 <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
@@ -120,5 +120,3 @@ export default function DataTable({ flatNo }: DataTableProps) {
       </Card>
     )
 }
-
-    
