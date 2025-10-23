@@ -62,6 +62,8 @@ export async function GET(request: Request) {
 
         // 4. Process data
         const summary = users.map(user => {
+            if (!user.flatNo) return null; // Skip users without a flat number
+
             // Find all payments for the current user
             // Column A (index 0) is Flat No
             const userPayments = payments.filter(p => p[0]?.toLowerCase() === user.flatNo?.toLowerCase());
@@ -71,7 +73,11 @@ export async function GET(request: Request) {
             const paidMonthsInPeriod = userPayments.filter(p => periodMonths.includes(p[4]));
 
             // Column F (index 5) is amount paid
-            const totalPaid = paidMonthsInPeriod.reduce((acc, p) => acc + (parseFloat(p[5]) || 0), 0);
+            const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
+                const amount = parseFloat(p[5]);
+                return acc + (isNaN(amount) ? 0 : amount);
+            }, 0);
+
             const dueMonthsCount = totalMonthsInPeriod - paidMonthsInPeriod.length;
             const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
             
@@ -81,7 +87,7 @@ export async function GET(request: Request) {
                 totalPaid,
                 totalDue: totalDue > 0 ? totalDue : 0, // Don't show negative dues
             };
-        });
+        }).filter(Boolean); // Filter out any null entries
 
         return NextResponse.json(summary);
 
