@@ -6,7 +6,7 @@ const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const USERS_SHEET_NAME = 'memberUsers';
 const MASTER_SHEET_NAME = 'masterMembership'; 
 // Columns in memberUsers: flatNo,membershipNo,ownerName,userType,password,membershipStatus,IsMember (A-G)
-const USERS_RANGE = `${USERS_SHEET_NAME}!A:G`; 
+const USERS_RANGE = `${USERS_SHEET_NAME}!A:F`; 
 // Columns in masterMembership: flatNo, memberName,membershipNo,status (C-G) -> flatNo is C, name D, no E, status G
 const MASTER_RANGE = `${MASTER_SHEET_NAME}!C:G`; 
 
@@ -42,7 +42,6 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
                 ownerName: existingUserRow[2],
                 userType: existingUserRow[3],
                 membershipStatus: existingUserRow[5],
-                isMember: existingUserRow[6] === 'Yes',
                 isExistingUser: true,
             };
             return NextResponse.json(userDetails);
@@ -70,7 +69,6 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
             // Default other fields for the form, these are not from master
             userType: 'Member',
             membershipStatus: 'Active',
-            isMember: false,
             isExistingUser: false,
         };
         return NextResponse.json(userDetails);

@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 
@@ -36,7 +35,6 @@ const formSchema = z.object({
   membershipStatus: z.enum(["Active", "Inactive"], {
     required_error: "Please select a membership status.",
   }),
-  isMember: z.boolean().default(false),
 })
 
 export default function UserEntryForm() {
@@ -52,7 +50,6 @@ export default function UserEntryForm() {
         ownerName: "",
         userType: "Member",
         membershipStatus: "Active",
-        isMember: false,
     }
   })
 
@@ -63,7 +60,6 @@ export default function UserEntryForm() {
         ownerName: "",
         userType: "Member",
         membershipStatus: "Active",
-        isMember: false,
     });
     setIsExistingUser(false);
     setIsDataFetched(false);
@@ -80,7 +76,6 @@ export default function UserEntryForm() {
         form.setValue("ownerName", data.ownerName);
         form.setValue("userType", data.userType);
         form.setValue("membershipStatus", data.membershipStatus);
-        form.setValue("isMember", data.isMember);
         
         setIsExistingUser(data.isExistingUser);
         setIsDataFetched(true);
@@ -109,10 +104,9 @@ export default function UserEntryForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const url = '/api/users';
-    const method = isExistingUser ? 'PUT' : 'POST';
-    const body = isExistingUser 
-      ? JSON.stringify({ flatNo: values.flatNo, isMember: values.isMember })
-      : JSON.stringify(values);
+    // Since we are only creating users now, method is always POST
+    const method = 'POST';
+    const body = JSON.stringify(values);
 
     try {
         const response = await fetch(url, {
@@ -145,8 +139,7 @@ export default function UserEntryForm() {
     }
   }
 
-  const isReadOnly = isDataFetched && !isExistingUser;
-  const isUpdateOnly = isDataFetched && isExistingUser;
+  const isReadOnly = isDataFetched;
 
   return (
     <Form {...form}>
@@ -180,7 +173,7 @@ export default function UserEntryForm() {
                       <Input 
                         placeholder="Fetched automatically" 
                         {...field}
-                        readOnly={isReadOnly || isUpdateOnly}
+                        readOnly={isReadOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -198,7 +191,7 @@ export default function UserEntryForm() {
                         type="number" 
                         placeholder="Fetched automatically" 
                         {...field}
-                        readOnly={isReadOnly || isUpdateOnly}
+                        readOnly={isReadOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -211,7 +204,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>User Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isUpdateOnly}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isExistingUser}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a user type" />
@@ -236,7 +229,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Membership Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isUpdateOnly}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isExistingUser}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
@@ -251,37 +244,16 @@ export default function UserEntryForm() {
                 </FormItem>
             )}
             />
-            <FormField
-              control={form.control}
-              name="isMember"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 col-span-1 md:col-span-2">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Is General Body Member?
-                    </FormLabel>
-                    <FormDescription>
-                      Indicates if the user is a part of the general body.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
         </div>
         <div className="flex gap-4">
-            <Button type="submit" disabled={!isDataFetched}>
-                {isExistingUser ? 'Update User' : 'Create User'}
+            <Button type="submit" disabled={!isDataFetched || isExistingUser}>
+                Create User
             </Button>
             <Button variant="outline" type="button" onClick={() => resetForm()}>
                 Cancel
             </Button>
         </div>
+        {isExistingUser && <p className="text-sm text-muted-foreground">This user already exists. To update them, please modify the Google Sheet directly.</p>}
       </form>
     </Form>
   )
