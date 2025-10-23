@@ -33,14 +33,14 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    // Schema: Flat No, Month-Year, Amount, Date of Receipt, Receipt No, Paid by Tenant, Mode of Payment, Transaction Ref
+    // New Schema: Flatno, name of tenant, receipt date, receipt number, monthpaid, amount paid, mode of payment, transaction ref
     const newRow = [
       flatNo,
-      monthYear,
-      amount,
+      tenantName || '', // name of tenant
       receiptDate,
       receiptNo,
-      tenantName || '', // Paid by Tenant
+      monthYear, // monthpaid
+      amount,
       modeOfPayment,
       transactionRef || '',
     ];
