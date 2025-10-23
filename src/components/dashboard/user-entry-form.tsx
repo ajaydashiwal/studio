@@ -44,7 +44,7 @@ const userTypes = [
 ];
 
 export default function UserEntryForm() {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExistingUser, setIsExistingUser] = useState(false);
 
@@ -74,7 +74,6 @@ export default function UserEntryForm() {
 
   const fetchUserDetails = async (flatNo: number) => {
     if (!flatNo || flatNo <= 0) {
-        // Reset if flatNo is cleared or invalid
         if (isExistingUser) {
            resetForm();
         }
@@ -95,8 +94,7 @@ export default function UserEntryForm() {
                 description: `Displaying existing record for flat ${flatNo}.`,
             });
         } else {
-            // User not found, reset relevant fields for new entry
-            if (isExistingUser) { // only reset if we were previously showing an existing user
+            if (isExistingUser) { 
                const currentFlat = form.getValues("flatNo");
                resetForm();
                form.setValue("flatNo", currentFlat);
@@ -110,7 +108,6 @@ export default function UserEntryForm() {
         }
     }
   };
-
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
