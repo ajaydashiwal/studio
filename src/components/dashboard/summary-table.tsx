@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Dialog,
@@ -61,6 +62,7 @@ export default function SummaryTable() {
         to: monthYearOptions[0].value,   // Default to current month
     });
     const [selectedFlat, setSelectedFlat] = useState<{flatNo: string, ownerName: string} | null>(null);
+    const [flatNoFilter, setFlatNoFilter] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -89,6 +91,10 @@ export default function SummaryTable() {
         setSelectedFlat(flat);
     };
 
+    const filteredData = summaryData.filter(item => 
+        item.flatNo.toLowerCase().includes(flatNoFilter.toLowerCase())
+    );
+
     const renderSkeletons = () => (
         Array.from({ length: 15 }).map((_, index) => (
             <TableRow key={`skeleton-${index}`}>
@@ -110,6 +116,16 @@ export default function SummaryTable() {
                             <CardDescription>Overview of maintenance payments. Click a row to see details.</CardDescription>
                         </div>
                         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
+                            <div className="grid gap-2">
+                                <Label htmlFor="flat-filter">Filter by Flat No.</Label>
+                                <Input 
+                                    id="flat-filter"
+                                    placeholder="e.g., A-101"
+                                    value={flatNoFilter}
+                                    onChange={(e) => setFlatNoFilter(e.target.value)}
+                                    className="w-full sm:w-[160px]"
+                                />
+                            </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="from-period">From</Label>
                                 <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
@@ -159,14 +175,14 @@ export default function SummaryTable() {
                                         {error}
                                     </TableCell>
                                 </TableRow>
-                            ) : summaryData.length === 0 ? (
+                            ) : filteredData.length === 0 ? (
                                 <TableRow>
                                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                                        No summary data available for the selected period.
+                                        {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                summaryData.map((item) => (
+                                filteredData.map((item) => (
                                     <TableRow 
                                         key={item.flatNo} 
                                         className="cursor-pointer" 
@@ -186,7 +202,7 @@ export default function SummaryTable() {
             </Card>
 
             <Dialog open={!!selectedFlat} onOpenChange={(isOpen) => !isOpen && setSelectedFlat(null)}>
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-4xl h-auto sm:h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Maintenance Statement for {selectedFlat?.ownerName} (Flat: {selectedFlat?.flatNo})</DialogTitle>
                         <DialogDescription>
