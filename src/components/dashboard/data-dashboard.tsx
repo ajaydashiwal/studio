@@ -35,6 +35,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
   
   const isOfficeBearer = ['President', 'VicePresident', 'GeneralSecretary', 'JointSecretary', 'Treasurer'].includes(user.userType);
+  const isTreasurer = user.userType === 'Treasurer';
   const isMember = user.userType === 'Member';
 
   const renderContent = () => {
@@ -46,7 +47,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           <SummaryTable />
         );
       case 'entry':
-        if (isOfficeBearer) {
+        if (isTreasurer) {
           return (
             <Card className="shadow-md">
               <CardHeader>
@@ -94,19 +95,20 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               onClick={() => setActiveView('statement')}
               className={activeView === 'statement' ? 'bg-accent' : ''}
             >
-              Account Statement
+              {isMember ? 'Account Statement' : 'Member Summary'}
             </MenubarTrigger>
           </MenubarMenu>
+          {isTreasurer && (
+            <MenubarMenu>
+              <MenubarTrigger
+                onClick={() => setActiveView('entry')}
+                className={activeView === 'entry' ? 'bg-accent' : ''}
+              >
+                Maintenance Entry
+              </MenubarTrigger>
+            </MenubarMenu>
+          )}
           {isOfficeBearer && (
-            <>
-              <MenubarMenu>
-                <MenubarTrigger
-                  onClick={() => setActiveView('entry')}
-                  className={activeView === 'entry' ? 'bg-accent' : ''}
-                >
-                  Maintenance Entry
-                </MenubarTrigger>
-              </MenubarMenu>
               <MenubarMenu>
                 <MenubarTrigger
                   onClick={() => setActiveView('userEntry')}
@@ -115,7 +117,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                   User Entry
                 </MenubarTrigger>
               </MenubarMenu>
-            </>
           )}
         </Menubar>
         <div className="mt-2">{renderContent()}</div>
