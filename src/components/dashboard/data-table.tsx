@@ -25,7 +25,7 @@ export default function DataTable({ data }: DataTableProps) {
     return (
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Account Statement</CardTitle>
+          <CardTitle>Maintenance charges Statement</CardTitle>
           <CardDescription>Showing records for the last 24 months.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -34,7 +34,7 @@ export default function DataTable({ data }: DataTableProps) {
                     <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
                         <TableHead className="w-[150px]">Month</TableHead>
-                        <TableHead className="text-right">Maintenance Charges</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
                         <TableHead className="text-center w-[120px]">Status</TableHead>
                     </TableRow>
                     </TableHeader>
