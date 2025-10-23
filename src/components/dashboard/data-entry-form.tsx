@@ -69,8 +69,9 @@ const formSchema = z.object({
 const generateMonthYearOptions = () => {
     const options = [];
     const currentYear = new Date().getFullYear();
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    for (let i = -1; i < 2; i++) {
+    // Use full month names to match sheet data
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    for (let i = -1; i < 4; i++) { // Go forward a few years
         const year = currentYear + i;
         for (const month of monthNames) {
             options.push(`${month} ${year}`);
@@ -88,7 +89,7 @@ export default function DataEntryForm() {
     defaultValues: {
         flatNo: "",
         receiptNo: "",
-        amount: 2000,
+        amount: 300,
         tenantName: "",
         transactionRef: "",
     }
@@ -115,7 +116,7 @@ export default function DataEntryForm() {
                 description: "Maintenance record added successfully.",
             });
             form.reset();
-            form.setValue("amount", 2000);
+            form.setValue("amount", 300);
         } else {
             const { error } = await response.json();
             toast({
@@ -181,7 +182,7 @@ export default function DataEntryForm() {
                 <FormControl>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="2000" {...field} className="pl-7" />
+                        <Input type="number" placeholder="300" {...field} className="pl-7" readOnly />
                     </div>
                 </FormControl>
                 <FormMessage />
@@ -297,3 +298,5 @@ export default function DataEntryForm() {
     </Form>
   )
 }
+
+    
