@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/card"
 
 const formSchema = z.object({
+  flatNo: z.string().min(1, { message: "Flat number is required." }),
   monthYear: z.string({
     required_error: "Please select a month and year.",
   }),
@@ -68,6 +69,7 @@ export default function DataEntryForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+        flatNo: "",
         receiptNo: "",
         amount: 2000,
         tenantName: "",
@@ -96,6 +98,19 @@ export default function DataEntryForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <FormField
+              control={form.control}
+              name="flatNo"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Flat Number</FormLabel>
+                  <FormControl>
+                      <Input placeholder="Enter flat number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
             <FormField
             control={form.control}
             name="monthYear"
