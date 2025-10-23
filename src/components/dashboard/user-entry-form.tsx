@@ -46,7 +46,6 @@ const userTypes = [
 export default function UserEntryForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExistingUser, setIsExistingUser] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,55 +58,6 @@ export default function UserEntryForm() {
         isMember: true
     }
   });
-
-  const resetForm = () => {
-    form.reset({
-        flatNo: "" as any,
-        membershipNo: "" as any,
-        ownerName: "",
-        userType: "Member",
-        membershipStatus: "Active",
-        isMember: true
-    });
-    setIsExistingUser(false);
-  }
-
-  const fetchUserDetails = async (flatNo: number) => {
-    if (!flatNo || flatNo <= 0) {
-        if (isExistingUser) {
-           resetForm();
-        }
-        return;
-    }
-    try {
-        const response = await fetch(`/api/users/${flatNo}`);
-        if (response.ok) {
-            const data = await response.json();
-            form.setValue("membershipNo", data.membershipNo);
-            form.setValue("ownerName", data.ownerName);
-            form.setValue("userType", data.userType);
-            form.setValue("membershipStatus", data.membershipStatus);
-            form.setValue("isMember", data.isMember);
-            setIsExistingUser(true);
-            toast({
-                title: "User Found",
-                description: `Displaying existing record for flat ${flatNo}.`,
-            });
-        } else {
-            if (isExistingUser) { 
-               const currentFlat = form.getValues("flatNo");
-               resetForm();
-               form.setValue("flatNo", currentFlat);
-            }
-             setIsExistingUser(false);
-        }
-    } catch (error) {
-        console.error("Failed to fetch user details", error);
-        if (isExistingUser) {
-           resetForm();
-        }
-    }
-  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -126,7 +76,7 @@ export default function UserEntryForm() {
                 title: "Success",
                 description: result.message || "User record saved successfully.",
             });
-            resetForm();
+            form.reset();
         } else {
             toast({
                 variant: "destructive",
@@ -158,9 +108,8 @@ export default function UserEntryForm() {
                     <FormControl>
                         <Input 
                             type="number" 
-                            placeholder="Enter flat no. and move out" 
+                            placeholder="Enter flat no." 
                             {...field}
-                            onBlur={() => fetchUserDetails(field.value)}
                         />
                     </FormControl>
                     <FormMessage />
@@ -178,7 +127,6 @@ export default function UserEntryForm() {
                             type="number" 
                             placeholder="Enter membership number" 
                             {...field} 
-                            readOnly={isExistingUser}
                         />
                     </FormControl>
                     <FormMessage />
@@ -195,7 +143,6 @@ export default function UserEntryForm() {
                         <Input 
                             placeholder="Enter owner's full name" 
                             {...field} 
-                            readOnly={isExistingUser}
                         />
                     </FormControl>
                     <FormMessage />
@@ -264,14 +211,9 @@ export default function UserEntryForm() {
                 )}
                 />
         </div>
-        <div className="flex gap-4">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : isExistingUser ? "Update Record" : "Submit Record"}
-            </Button>
-             <Button type="button" variant="outline" onClick={resetForm} disabled={isSubmitting}>
-                Clear Form
-            </Button>
-        </div>
+        <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Record"}
+        </Button>
       </form>
     </Form>
   )
