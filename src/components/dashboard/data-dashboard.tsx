@@ -8,6 +8,7 @@ import AppHeader from '@/components/dashboard/app-header';
 import DataTable from '@/components/dashboard/data-table';
 import SummaryTable from '@/components/dashboard/summary-table';
 import DataEntryForm from '@/components/dashboard/data-entry-form';
+import UserEntryForm from '@/components/dashboard/user-entry-form';
 import {
   Menubar,
   MenubarContent,
@@ -28,11 +29,12 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry';
+type View = 'statement' | 'entry' | 'userEntry';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
-  const isTreasurer = user.userType === 'Treasurer';
+  
+  const isOfficeBearer = ['President', 'VicePresident', 'GeneralSecretary', 'JointSecretary', 'Treasurer'].includes(user.userType);
   const isMember = user.userType === 'Member';
 
   const renderContent = () => {
@@ -44,7 +46,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           <SummaryTable />
         );
       case 'entry':
-        if (isTreasurer) {
+        if (isOfficeBearer) {
           return (
             <Card className="shadow-md">
               <CardHeader>
@@ -55,6 +57,23 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               </CardHeader>
               <CardContent className="pt-0">
                 <DataEntryForm />
+              </CardContent>
+            </Card>
+          );
+        }
+        return null;
+       case 'userEntry':
+        if (isOfficeBearer) {
+          return (
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle>Member/User Entry</CardTitle>
+                <CardDescription>
+                  Create or update user and membership records.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <UserEntryForm />
               </CardContent>
             </Card>
           );
@@ -78,15 +97,25 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               Account Statement
             </MenubarTrigger>
           </MenubarMenu>
-          {isTreasurer && (
-            <MenubarMenu>
-              <MenubarTrigger
-                onClick={() => setActiveView('entry')}
-                className={activeView === 'entry' ? 'bg-accent' : ''}
-              >
-                Maintenance Entry
-              </MenubarTrigger>
-            </MenubarMenu>
+          {isOfficeBearer && (
+            <>
+              <MenubarMenu>
+                <MenubarTrigger
+                  onClick={() => setActiveView('entry')}
+                  className={activeView === 'entry' ? 'bg-accent' : ''}
+                >
+                  Maintenance Entry
+                </MenubarTrigger>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger
+                  onClick={() => setActiveView('userEntry')}
+                  className={activeView === 'userEntry' ? 'bg-accent' : ''}
+                >
+                  User Entry
+                </MenubarTrigger>
+              </MenubarMenu>
+            </>
           )}
         </Menubar>
         <div className="mt-2">{renderContent()}</div>
