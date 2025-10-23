@@ -48,9 +48,10 @@ export async function GET(request: Request) {
         }
 
         // 2. Fetch all payment records
+        // Columns: Flatno, name of tenant, receipt date, receipt number, monthpaid, amount paid...
         const collectionResponse = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${COLLECTION_SHEET_NAME}!B:D`, // Flat No, Month-Year, Amount
+            range: `${COLLECTION_SHEET_NAME}!A:F`, // Fetch columns A through F
         });
         const payments = collectionResponse.data.values?.slice(1) || [];
         
@@ -61,12 +62,15 @@ export async function GET(request: Request) {
         // 4. Process data
         const summary = users.map(user => {
             // Find all payments for the current user
+            // Column A (index 0) is Flat No
             const userPayments = payments.filter(p => p[0]?.toLowerCase() === user.flatNo?.toLowerCase());
             
             // Filter those payments to be within the requested date range
-            const paidMonthsInPeriod = userPayments.filter(p => periodMonths.includes(p[1]));
+            // Column E (index 4) is monthpaid
+            const paidMonthsInPeriod = userPayments.filter(p => periodMonths.includes(p[4]));
 
-            const totalPaid = paidMonthsInPeriod.reduce((acc, p) => acc + (parseFloat(p[2]) || 0), 0);
+            // Column F (index 5) is amount paid
+            const totalPaid = paidMonthsInPeriod.reduce((acc, p) => acc + (parseFloat(p[5]) || 0), 0);
             const dueMonthsCount = totalMonthsInPeriod - paidMonthsInPeriod.length;
             const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
             
