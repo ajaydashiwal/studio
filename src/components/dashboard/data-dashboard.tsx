@@ -8,7 +8,7 @@ import AppHeader from '@/components/dashboard/app-header';
 import DataTable from '@/components/dashboard/data-table';
 import SummaryTable from '@/components/dashboard/summary-table';
 import DataEntryForm from '@/components/dashboard/data-entry-form';
-import MembershipEntryForm from '@/components/dashboard/membership-entry-form';
+import UserEntryForm from '@/components/dashboard/user-entry-form';
 import {
   Menubar,
   MenubarContent,
@@ -29,13 +29,12 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'membership';
+type View = 'statement' | 'entry' | 'user-entry';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
   const isTreasurer = user.userType === 'Treasurer';
-  const isPresidentOrSecretary =
-    user.userType === 'President' || user.userType === 'GeneralSecretary';
+  const isOfficeBearer = ['President', 'GeneralSecretary', 'Treasurer'].includes(user.userType);
   const isMember = user.userType === 'Member';
 
   const renderContent = () => {
@@ -63,18 +62,18 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           );
         }
         return null;
-      case 'membership':
-        if (isPresidentOrSecretary) {
+      case 'user-entry':
+        if (isOfficeBearer) {
           return (
             <Card className="shadow-md">
               <CardHeader>
-                <CardTitle>Membership Record Update</CardTitle>
+                <CardTitle>Membership Record Entry</CardTitle>
                 <CardDescription>
-                  Update membership fee and status for a resident.
+                  Create or update a user membership record.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <MembershipEntryForm />
+                <UserEntryForm />
               </CardContent>
             </Card>
           );
@@ -108,13 +107,13 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               </MenubarTrigger>
             </MenubarMenu>
           )}
-          {isPresidentOrSecretary && (
+          {isOfficeBearer && (
             <MenubarMenu>
               <MenubarTrigger
-                onClick={() => setActiveView('membership')}
-                className={activeView === 'membership' ? 'bg-accent' : ''}
+                onClick={() => setActiveView('user-entry')}
+                className={activeView === 'user-entry' ? 'bg-accent' : ''}
               >
-                Membership Update
+                User Entry
               </MenubarTrigger>
             </MenubarMenu>
           )}

@@ -58,7 +58,7 @@ export default function MembershipEntryForm() {
         ownerName: "",
         membershipId: "" as any,
         receiptNo: "",
-        membershipFee: 1000,
+        membershipFee: 500,
         membershipStatus: "Active",
     }
   })
