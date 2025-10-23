@@ -37,6 +37,7 @@ import { useEffect, useState } from "react"
 const formSchema = z.object({
   flatNo: z.string().min(1, { message: "Please enter a flat number." }),
   ownerName: z.string().min(1, { message: "Owner name is required." }),
+  membershipId: z.coerce.number().positive({ message: "Membership number is required." }),
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
   }),
@@ -55,6 +56,7 @@ export default function MembershipEntryForm() {
     defaultValues: {
         flatNo: "",
         ownerName: "",
+        membershipId: undefined,
         receiptNo: "",
         membershipFee: 1000,
         membershipStatus: "Active",
@@ -68,11 +70,13 @@ export default function MembershipEntryForm() {
     if (user) {
         form.setValue("membershipStatus", user.membershipStatus);
         form.setValue("ownerName", user.ownerName);
+        form.setValue("membershipId", user.membershipId);
         setIsNewUser(false);
     } else {
         form.setValue("membershipStatus", "Active");
         if (!isNewUser) {
           form.setValue("ownerName", "");
+          form.setValue("membershipId", undefined as any); // To satisfy TS
         }
         setIsNewUser(true);
     }
@@ -99,6 +103,7 @@ export default function MembershipEntryForm() {
     form.setValue("membershipStatus", "Active");
     form.setValue("flatNo", "");
     form.setValue("ownerName", "");
+    form.setValue("membershipId", undefined as any);
   }
 
   const handleFlatNoBlur = () => {
@@ -107,6 +112,7 @@ export default function MembershipEntryForm() {
     if (user) {
         form.setValue("membershipStatus", user.membershipStatus);
         form.setValue("ownerName", user.ownerName);
+        form.setValue("membershipId", user.membershipId);
         setIsNewUser(false);
     } else {
         form.setValue("membershipStatus", "Active");
@@ -146,6 +152,24 @@ export default function MembershipEntryForm() {
                     <Input 
                         placeholder="Owner's full name" 
                         {...field} 
+                        readOnly={!isNewUser}
+                    />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="membershipId"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Membership No</FormLabel>
+                <FormControl>
+                    <Input 
+                        type="number"
+                        placeholder="Enter membership number" 
+                        {...field}
                         readOnly={!isNewUser}
                     />
                 </FormControl>
