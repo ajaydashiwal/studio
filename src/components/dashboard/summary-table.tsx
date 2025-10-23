@@ -106,7 +106,7 @@ export default function SummaryTable() {
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center">
                         <div>
-                            <CardTitle>Residents' Maintenance Summary</CardTitle>
+                            <CardTitle>Maintenance Summary</CardTitle>
                             <CardDescription>Overview of maintenance payments. Click a row to see details.</CardDescription>
                         </div>
                         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
@@ -201,5 +201,3 @@ export default function SummaryTable() {
         </>
     )
 }
-
-    
