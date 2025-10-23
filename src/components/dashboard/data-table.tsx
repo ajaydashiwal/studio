@@ -65,13 +65,13 @@ export default function DataTable({ flatNo }: DataTableProps) {
     );
 
     return (
-      <Card className="shadow-md">
+      <Card className="shadow-md h-full flex flex-col">
         <CardHeader>
           <CardTitle>Maintenance charges Statement</CardTitle>
           <CardDescription>Showing your payment history.</CardDescription>
         </CardHeader>
-        <CardContent>
-            <ScrollArea className="h-[60vh] rounded-md border">
+        <CardContent className="flex-grow">
+            <ScrollArea className="h-[calc(100vh-22rem)] md:h-[calc(100%-2rem)] rounded-md border">
                 <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
@@ -120,3 +120,5 @@ export default function DataTable({ flatNo }: DataTableProps) {
       </Card>
     )
 }
+
+    

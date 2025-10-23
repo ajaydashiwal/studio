@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import {
@@ -22,6 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog"
+import DataTable from "./data-table"
   
 interface SummaryData {
     flatNo: string;
@@ -53,6 +60,7 @@ export default function SummaryTable() {
         from: monthYearOptions[11].value, // Default to 12 months ago
         to: monthYearOptions[0].value,   // Default to current month
     });
+    const [selectedFlat, setSelectedFlat] = useState<{flatNo: string, ownerName: string} | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -77,6 +85,10 @@ export default function SummaryTable() {
         fetchData();
     }, [period]);
 
+    const handleRowClick = (flat: {flatNo: string, ownerName: string}) => {
+        setSelectedFlat(flat);
+    };
+
     const renderSkeletons = () => (
         Array.from({ length: 15 }).map((_, index) => (
             <TableRow key={`skeleton-${index}`}>
@@ -89,83 +101,105 @@ export default function SummaryTable() {
     );
 
     return (
-      <Card className="shadow-md">
-        <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center">
-                <div>
-                    <CardTitle>Residents' Maintenance Summary</CardTitle>
-                    <CardDescription>Overview of maintenance payments for all residents.</CardDescription>
-                </div>
-                <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
-                    <div className="grid gap-2">
-                        <Label htmlFor="from-period">From</Label>
-                        <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                            <SelectTrigger className="w-full sm:w-[160px]" id="from-period">
-                                <SelectValue placeholder="Select Period" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {monthYearOptions.map(option => (
-                                    <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+        <>
+            <Card className="shadow-md">
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+                        <div>
+                            <CardTitle>Residents' Maintenance Summary</CardTitle>
+                            <CardDescription>Overview of maintenance payments. Click a row to see details.</CardDescription>
+                        </div>
+                        <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
+                            <div className="grid gap-2">
+                                <Label htmlFor="from-period">From</Label>
+                                <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[160px]" id="from-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {monthYearOptions.map(option => (
+                                            <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="to-period">To</Label>
+                                <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[160px]" id="to-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {monthYearOptions.slice(0, 12).map(option => ( // Only show last 12 months for "To"
+                                            <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="to-period">To</Label>
-                        <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                            <SelectTrigger className="w-full sm:w-[160px]" id="to-period">
-                                <SelectValue placeholder="Select Period" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {monthYearOptions.slice(0, 12).map(option => ( // Only show last 12 months for "To"
-                                    <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-[60vh] rounded-md border">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-secondary">
+                                <TableRow>
+                                    <TableHead className="w-[120px]">Flat No</TableHead>
+                                    <TableHead>Owner Name</TableHead>
+                                    <TableHead className="text-right">Total Paid</TableHead>
+                                    <TableHead className="text-right">Total Due</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {loading ? (
+                                renderSkeletons()
+                            ) : error ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center text-destructive">
+                                        {error}
+                                    </TableCell>
+                                </TableRow>
+                            ) : summaryData.length === 0 ? (
+                                <TableRow>
+                                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                        No summary data available for the selected period.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                summaryData.map((item) => (
+                                    <TableRow 
+                                        key={item.flatNo} 
+                                        className="cursor-pointer" 
+                                        onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
+                                    >
+                                        <TableCell className="font-medium">{item.flatNo}</TableCell>
+                                        <TableCell>{item.ownerName}</TableCell>
+                                        <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
+                                        <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
+                                    </TableRow>
+                                ))
+                            )}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+
+            <Dialog open={!!selectedFlat} onOpenChange={(isOpen) => !isOpen && setSelectedFlat(null)}>
+                <DialogContent className="max-w-4xl h-[90vh]">
+                    <DialogHeader>
+                        <DialogTitle>Maintenance Statement for {selectedFlat?.ownerName} (Flat: {selectedFlat?.flatNo})</DialogTitle>
+                        <DialogDescription>
+                            Showing payment history for the last 24 months.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 h-full">
+                        {selectedFlat && <DataTable flatNo={selectedFlat.flatNo} />}
                     </div>
-                </div>
-            </div>
-        </CardHeader>
-        <CardContent>
-            <ScrollArea className="h-[60vh] rounded-md border">
-                <Table>
-                    <TableHeader className="sticky top-0 bg-secondary">
-                        <TableRow>
-                            <TableHead className="w-[120px]">Flat No</TableHead>
-                            <TableHead>Owner Name</TableHead>
-                            <TableHead className="text-right">Total Paid</TableHead>
-                            <TableHead className="text-right">Total Due</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {loading ? (
-                        renderSkeletons()
-                    ) : error ? (
-                         <TableRow>
-                            <TableCell colSpan={4} className="text-center text-destructive">
-                                {error}
-                            </TableCell>
-                        </TableRow>
-                    ) : summaryData.length === 0 ? (
-                         <TableRow>
-                           <TableCell colSpan={4} className="text-center text-muted-foreground">
-                                No summary data available for the selected period.
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        summaryData.map((item) => (
-                            <TableRow key={item.flatNo}>
-                                <TableCell className="font-medium">{item.flatNo}</TableCell>
-                                <TableCell>{item.ownerName}</TableCell>
-                                <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
-                                <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
-                            </TableRow>
-                        ))
-                    )}
-                    </TableBody>
-                </Table>
-            </ScrollArea>
-        </CardContent>
-      </Card>
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }
+
+    
