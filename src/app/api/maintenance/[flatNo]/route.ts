@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'monthCollection';
-const RANGE = `${SHEET_NAME}!B:E`; // Flat No, Month-Year, Amount, Date of Receipt
+const RANGE = `${SHEET_NAME}!A:F`; // Flat No, tenant name, receipt date, receipt no, monthpaid, amount
 
 // This function generates a list of months for checking against
 const getMonthRange = (paidMonths: string[]) => {
@@ -20,9 +20,13 @@ const getMonthRange = (paidMonths: string[]) => {
     // Add any future paid months that are outside the 24-month window
     for (const paidMonth of paidMonths) {
         // Attempt to parse the month string to a date to check if it's in the future
-        const paidDate = new Date(paidMonth);
-        if (!isNaN(paidDate.getTime()) && paidDate > now) {
-            months.add(paidMonth);
+        try {
+            const paidDate = new Date(paidMonth);
+            if (!isNaN(paidDate.getTime()) && paidDate > now) {
+                months.add(paidMonth);
+            }
+        } catch (e) {
+            // Ignore if the paidMonth string is not a valid date
         }
     }
     
@@ -58,19 +62,19 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
     if (allRows) {
         // Filter rows for the specific flat, skipping header
-        const userRows = allRows.slice(1).filter(row => row[0]?.toLowerCase() === flatNo.toLowerCase());
-        const paidMonths = userRows.map(row => row[1]); // Get all "Month YYYY" strings for this user
+        const userRows = allRows.slice(1).filter(row => row[0] == flatNo);
+        const paidMonths = userRows.map(row => row[4]); // Column E is monthpaid
 
         const allMonthsToDisplay = getMonthRange(paidMonths);
         
         let idCounter = 0;
         for (const month of allMonthsToDisplay) {
-            const paidRecord = userRows.find(row => row[1] === month);
+            const paidRecord = userRows.find(row => row[4] === month);
 
             records.push({
                 id: ++idCounter,
                 month: month,
-                amount: paidRecord ? paidRecord[2] : defaultMaintenanceAmount, 
+                amount: paidRecord ? paidRecord[5] : defaultMaintenanceAmount, // Column F is amount
                 status: paidRecord ? 'Paid' : 'Due',
             });
         }

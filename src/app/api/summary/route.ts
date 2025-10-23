@@ -65,8 +65,8 @@ export async function GET(request: Request) {
             if (!user.flatNo) return null; // Skip users without a flat number
 
             // Find all payments for the current user
-            // Column A (index 0) is Flat No
-            const userPayments = payments.filter(p => p[0]?.toLowerCase() === user.flatNo?.toLowerCase());
+            // Column A (index 0) is Flat No. Use == for type-insensitive comparison.
+            const userPayments = payments.filter(p => p[0] == user.flatNo);
             
             // Filter those payments to be within the requested date range
             // Column E (index 4) is monthpaid

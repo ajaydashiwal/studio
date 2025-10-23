@@ -36,10 +36,11 @@ export async function POST(request: Request) {
       // Find the user (skip header row)
       const userRow = rows.slice(1).find(
         (row) => {
-          const sheetFlatNo = row[0]?.toLowerCase();
+          const sheetFlatNo = row[0]; // Can be number or string
           const sheetPassword = row[4]; // Corrected password column
           console.log(`Checking row: Flat No: ${sheetFlatNo}, Stored Hash: ${sheetPassword}`);
-          return sheetFlatNo === flatNo.toLowerCase() && sheetPassword === hashedPassword;
+          // Use '==' for type-insensitive comparison between string from req and number from sheet
+          return sheetFlatNo == flatNo && sheetPassword === hashedPassword;
         }
       );
 
