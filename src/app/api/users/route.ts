@@ -36,35 +36,14 @@ export async function POST(request: Request) {
     // Check if user already exists
     const getResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: RANGE,
+        range: `${SHEET_NAME}!A:A`, // Only check flatNo column for existence
     });
 
     const rows = getResponse.data.values || [];
-    const header = rows[0];
-    const existingRowIndex = rows.findIndex(row => row[0] == flatNo);
+    const existingRow = rows.find(row => row[0] == flatNo);
 
-    if (existingRowIndex > 0) { // User exists, so update
-        const updatedRow = [
-            flatNo,
-            membershipNo,
-            ownerName,
-            userType,
-            rows[existingRowIndex][4] || DEFAULT_PASSWORD_HASH, // Keep existing password or set default if empty
-            membershipStatus,
-            isMember ? 'Yes' : 'No'
-        ];
-        
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A${existingRowIndex + 1}:G${existingRowIndex + 1}`,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {
-                values: [updatedRow],
-            },
-        });
-        
-        return NextResponse.json({ success: true, message: 'User record updated successfully.' });
-
+    if (existingRow) { // User exists, so return an error
+        return NextResponse.json({ error: 'User with this flat number already exists in memberUsers.' }, { status: 409 }); // 409 Conflict
     } else { // User does not exist, so append
         const newRow = [
             flatNo,
@@ -85,6 +64,9 @@ export async function POST(request: Request) {
             },
         });
 
+        // Here you might want to update the status in the 'masterMembership' sheet
+        // This part is not implemented yet but would require an additional sheet.values.update call
+        
         return NextResponse.json({ success: true, message: 'New user record created successfully.' });
     }
 

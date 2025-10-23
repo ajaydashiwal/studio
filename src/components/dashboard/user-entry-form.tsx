@@ -41,7 +41,7 @@ const formSchema = z.object({
 
 export default function UserEntryForm() {
   const { toast } = useToast()
-  const [isExistingUser, setIsExistingUser] = useState(false);
+  const [isDataFetched, setIsDataFetched] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,16 +64,17 @@ export default function UserEntryForm() {
         const data = await response.json();
         form.setValue("membershipNo", data.membershipNo);
         form.setValue("ownerName", data.ownerName);
+        // Also set the default values from the fetched data
         form.setValue("userType", data.userType);
         form.setValue("membershipStatus", data.membershipStatus);
         form.setValue("isMember", data.isMember);
-        setIsExistingUser(true);
+        setIsDataFetched(true);
         toast({
-            title: "User Found",
-            description: `Details for ${data.ownerName} loaded.`,
+            title: "Data Found",
+            description: `Details for ${data.ownerName} loaded from master records.`,
         });
       } else {
-        // User not found, clear fields for new entry
+        // User not found in master list or already processed
         form.reset({
             flatNo: flatNo,
             membershipNo: "" as any,
@@ -82,7 +83,12 @@ export default function UserEntryForm() {
             membershipStatus: "Active",
             isMember: true,
         });
-        setIsExistingUser(false);
+        setIsDataFetched(false);
+        toast({
+            variant: "destructive",
+            title: "Not Found",
+            description: "No unprocessed record found for this flat in the master list.",
+        });
       }
     } catch (error) {
       toast({
@@ -112,7 +118,7 @@ export default function UserEntryForm() {
             form.setValue("userType", "Member");
             form.setValue("membershipStatus", "Active");
             form.setValue("isMember", true);
-            setIsExistingUser(false);
+            setIsDataFetched(false);
         } else {
             toast({
                 variant: "destructive",
@@ -141,7 +147,7 @@ export default function UserEntryForm() {
                   <FormLabel>Flat Number</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder="Enter flat number to fetch/create" 
+                        placeholder="Enter flat no to fetch from master" 
                         {...field}
                         onBlur={(e) => handleFetchUserData(e.target.value)}
                        />
@@ -158,9 +164,9 @@ export default function UserEntryForm() {
                   <FormLabel>Owner Name</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder="Enter owner's full name" 
+                        placeholder="Fetched from master record" 
                         {...field}
-                        readOnly={isExistingUser}
+                        readOnly={isDataFetched}
                        />
                   </FormControl>
                   <FormMessage />
@@ -176,9 +182,9 @@ export default function UserEntryForm() {
                   <FormControl>
                       <Input 
                         type="number" 
-                        placeholder="Enter membership number" 
+                        placeholder="Fetched from master record" 
                         {...field}
-                        readOnly={isExistingUser}
+                        readOnly={isDataFetched}
                        />
                   </FormControl>
                   <FormMessage />
@@ -254,7 +260,7 @@ export default function UserEntryForm() {
               )}
             />
         </div>
-        <Button type="submit">{isExistingUser ? 'Update User' : 'Create User'}</Button>
+        <Button type="submit" disabled={!isDataFetched}>Create User</Button>
       </form>
     </Form>
   )
