@@ -6,16 +6,30 @@ const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'monthCollection';
 const RANGE = `${SHEET_NAME}!B:E`; // Flat No, Month-Year, Amount, Date of Receipt
 
-// This function generates a list of the last 24 months for checking against
-const getLast24Months = () => {
-    const months = [];
+// This function generates a list of months for checking against
+const getMonthRange = (paidMonths: string[]) => {
+    const months = new Set<string>();
     const now = new Date();
+
+    // Add the last 24 months from today
     for (let i = 23; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        // Format to "Month YYYY" e.g., "May 2024" to match the sheet
-        months.push(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+        months.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
     }
-    return months.reverse(); // most recent first
+
+    // Add any future paid months that are outside the 24-month window
+    for (const paidMonth of paidMonths) {
+        // Attempt to parse the month string to a date to check if it's in the future
+        const paidDate = new Date(paidMonth);
+        if (!isNaN(paidDate.getTime()) && paidDate > now) {
+            months.add(paidMonth);
+        }
+    }
+    
+    // Sort the months chronologically
+    const sortedMonths = Array.from(months).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    
+    return sortedMonths.reverse(); // most recent first
 };
 
 export async function GET(request: Request, { params }: { params: { flatNo: string } }) {
@@ -39,30 +53,32 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     });
 
     const allRows = response.data.values;
-    const allMonths = getLast24Months();
     const records = [];
     const defaultMaintenanceAmount = '300'; // Standard monthly fee
 
     if (allRows) {
         // Filter rows for the specific flat, skipping header
         const userRows = allRows.slice(1).filter(row => row[0]?.toLowerCase() === flatNo.toLowerCase());
+        const paidMonths = userRows.map(row => row[1]); // Get all "Month YYYY" strings for this user
+
+        const allMonthsToDisplay = getMonthRange(paidMonths);
         
         let idCounter = 0;
-        for (const month of allMonths) {
+        for (const month of allMonthsToDisplay) {
             const paidRecord = userRows.find(row => row[1] === month);
 
             records.push({
                 id: ++idCounter,
                 month: month,
-                // If paid, use the amount from the sheet. If due, use the default amount.
                 amount: paidRecord ? paidRecord[2] : defaultMaintenanceAmount, 
                 status: paidRecord ? 'Paid' : 'Due',
             });
         }
 
     } else {
-        // If no data in sheet, create 'Due' records for all 24 months
-        records.push(...allMonths.map((month, index) => ({
+        // Fallback if sheet is empty: show last 24 months as due
+        const last24Months = getMonthRange([]);
+        records.push(...last24Months.map((month, index) => ({
             id: index + 1,
             month: month,
             amount: defaultMaintenanceAmount,
