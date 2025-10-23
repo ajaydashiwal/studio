@@ -21,26 +21,26 @@ export default function Home() {
         body: JSON.stringify({ flatNo, password }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        const loggedInUser = await response.json();
-        setUser(loggedInUser);
+        setUser(result);
         toast({
           title: "Login Successful",
-          description: `Welcome, ${loggedInUser.ownerName}!`,
+          description: `Welcome, ${result.ownerName}!`,
         });
       } else {
-        const { error } = await response.json();
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: error || "Invalid credentials. Please try again.",
+          description: result.error || "Invalid credentials. Please try again.",
         });
       }
     } catch (error) {
        toast({
           variant: "destructive",
           title: "Error",
-          description: "Could not connect to the server.",
+          description: "Could not connect to the server. Please check your network connection.",
         });
     }
   };
