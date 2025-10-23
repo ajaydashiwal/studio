@@ -56,6 +56,8 @@ export default function DataTable({ flatNo }: DataTableProps) {
         Array.from({ length: 12 }).map((_, index) => (
             <TableRow key={`skeleton-${index}`}>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell className="text-right"><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell className="text-center"><Skeleton className="h-6 w-14 rounded-full" /></TableCell>
             </TableRow>
@@ -74,6 +76,8 @@ export default function DataTable({ flatNo }: DataTableProps) {
                     <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
                         <TableHead className="w-[150px]">Month</TableHead>
+                        <TableHead>Receipt No</TableHead>
+                        <TableHead>Receipt Date</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead className="text-center w-[120px]">Status</TableHead>
                     </TableRow>
@@ -83,13 +87,13 @@ export default function DataTable({ flatNo }: DataTableProps) {
                         renderSkeletons()
                     ) : error ? (
                         <TableRow>
-                            <TableCell colSpan={3} className="text-center text-destructive">
+                            <TableCell colSpan={5} className="text-center text-destructive">
                                 {error}
                             </TableCell>
                         </TableRow>
                     ) : data.length === 0 ? (
                         <TableRow>
-                           <TableCell colSpan={3} className="text-center text-muted-foreground">
+                           <TableCell colSpan={5} className="text-center text-muted-foreground">
                                 No maintenance records found.
                             </TableCell>
                         </TableRow>
@@ -97,6 +101,8 @@ export default function DataTable({ flatNo }: DataTableProps) {
                         data.map((item) => (
                             <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.month}</TableCell>
+                            <TableCell>{item.receiptNo}</TableCell>
+                            <TableCell>{item.receiptDate}</TableCell>
                             <TableCell className="text-right">₹{item.amount}</TableCell>                        
                             <TableCell className="text-center">
                                 <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 

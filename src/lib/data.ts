@@ -12,6 +12,8 @@ export type MonthlyData = {
   month: string;
   amount: string;  
   status: 'Paid' | 'Due';
+  receiptNo: string;
+  receiptDate: string;
 };
 
 // Mock user data from a "master sheet"

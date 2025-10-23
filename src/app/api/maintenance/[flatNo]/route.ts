@@ -76,6 +76,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
                 month: month,
                 amount: paidRecord ? paidRecord[5] : defaultMaintenanceAmount, // Column F is amount
                 status: paidRecord ? 'Paid' : 'Due',
+                receiptNo: paidRecord ? paidRecord[3] : '-',
+                receiptDate: paidRecord ? paidRecord[2] : '-',
             });
         }
 
@@ -87,6 +89,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
             month: month,
             amount: defaultMaintenanceAmount,
             status: 'Due',
+            receiptNo: '-',
+            receiptDate: '-',
         })));
     }
 
