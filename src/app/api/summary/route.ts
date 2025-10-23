@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { parse } from 'date-fns';
+import { parse, format } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const USERS_SHEET_NAME = 'memberUsers';
@@ -15,7 +15,8 @@ const getMonthsInRange = (from: string, to: string): string[] => {
     let currentDate = fromDate;
 
     while (currentDate <= toDate) {
-        months.push(currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }));
+        // Format to "Month YYYY" to match the data in the sheet
+        months.push(format(currentDate, 'MMMM yyyy'));
         currentDate.setMonth(currentDate.getMonth() + 1);
     }
     return months;
