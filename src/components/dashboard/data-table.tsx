@@ -75,11 +75,11 @@ export default function DataTable({ flatNo }: DataTableProps) {
                 <Table>
                     <TableHeader className="sticky top-0 bg-secondary">
                     <TableRow>
-                        <TableHead className="w-[150px]">Month</TableHead>
-                        <TableHead>Receipt No</TableHead>
-                        <TableHead>Receipt Date</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-center w-[120px]">Status</TableHead>
+                        <TableHead className="w-[120px] px-2 text-xs md:w-[150px] md:px-4 md:text-sm">Month</TableHead>
+                        <TableHead className="px-2 text-xs md:px-4 md:text-sm">Receipt No</TableHead>
+                        <TableHead className="px-2 text-xs md:px-4 md:text-sm">Receipt Date</TableHead>
+                        <TableHead className="px-2 text-right text-xs md:px-4 md:text-sm">Amount</TableHead>
+                        <TableHead className="w-[100px] px-2 text-center text-xs md:w-[120px] md:px-4 md:text-sm">Status</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -99,12 +99,12 @@ export default function DataTable({ flatNo }: DataTableProps) {
                         </TableRow>
                     ) : (
                         data.map((item) => (
-                            <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.month}</TableCell>
-                            <TableCell>{item.receiptNo}</TableCell>
-                            <TableCell>{item.receiptDate}</TableCell>
-                            <TableCell className="text-right">₹{item.amount}</TableCell>                        
-                            <TableCell className="text-center">
+                            <TableRow key={item.id} className="text-xs md:text-sm">
+                            <TableCell className="font-medium px-2 md:px-4">{item.month}</TableCell>
+                            <TableCell className="px-2 md:px-4">{item.receiptNo}</TableCell>
+                            <TableCell className="px-2 md:px-4">{item.receiptDate}</TableCell>
+                            <TableCell className="text-right px-2 md:px-4">₹{item.amount}</TableCell>                        
+                            <TableCell className="text-center px-2 md:px-4">
                                 <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
                                 className={item.status === 'Paid' ? 'bg-green-600' : ''}>
                                     {item.status}
