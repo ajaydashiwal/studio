@@ -41,9 +41,10 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const allRows = response.data.values;
     const allMonths = getLast24Months();
     const records = [];
+    const defaultMaintenanceAmount = '2000'; // Standard monthly fee
 
     if (allRows) {
-        // Filter rows for the specific flat
+        // Filter rows for the specific flat, skipping header
         const userRows = allRows.slice(1).filter(row => row[0]?.toLowerCase() === flatNo.toLowerCase());
         
         let idCounter = 0;
@@ -53,7 +54,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
             records.push({
                 id: ++idCounter,
                 month: month,
-                amount: paidRecord ? paidRecord[2] : '2000', // Use record amount or default
+                // If paid, use the amount from the sheet. If due, use the default amount.
+                amount: paidRecord ? paidRecord[2] : defaultMaintenanceAmount, 
                 status: paidRecord ? 'Paid' : 'Due',
             });
         }
@@ -63,7 +65,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
         records.push(...allMonths.map((month, index) => ({
             id: index + 1,
             month: month,
-            amount: '2000',
+            amount: defaultMaintenanceAmount,
             status: 'Due',
         })));
     }
