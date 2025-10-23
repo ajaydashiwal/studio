@@ -153,7 +153,7 @@ export default function DataEntryForm() {
                 control={form.control}
                 name="receiptDate"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                     <FormLabel>Date of receipt</FormLabel>
                     <Popover>
                         <PopoverTrigger asChild>
@@ -161,16 +161,16 @@ export default function DataEntryForm() {
                             <Button
                             variant={"outline"}
                             className={cn(
-                                "pl-3 text-left font-normal",
+                                "w-full justify-start pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                             )}
                             >
+                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
                                 format(field.value, "dd/MM/yyyy")
                             ) : (
                                 <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                         </FormControl>
                         </PopoverTrigger>
