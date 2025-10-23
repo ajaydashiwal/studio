@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -50,7 +51,20 @@ const formSchema = z.object({
   }),
   receiptNo: z.string().min(1, { message: "Receipt number is required." }),
   tenantName: z.string().optional(),
-})
+  modeOfPayment: z.enum(["Cash", "Transfer"], {
+    required_error: "Please select a mode of payment.",
+  }),
+  transactionRef: z.string().optional(),
+}).refine(data => {
+    if (data.modeOfPayment === 'Transfer') {
+        return !!data.transactionRef && data.transactionRef.length > 0;
+    }
+    return true;
+}, {
+    message: "Transaction reference is required for transfers.",
+    path: ["transactionRef"],
+});
+
 
 const generateMonthYearOptions = () => {
     const options = [];
@@ -73,8 +87,11 @@ export default function DataEntryForm() {
         receiptNo: "",
         amount: 2000,
         tenantName: "",
+        transactionRef: "",
     }
   })
+
+  const watchedModeOfPayment = form.watch("modeOfPayment");
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
@@ -153,7 +170,7 @@ export default function DataEntryForm() {
                 control={form.control}
                 name="receiptDate"
                 render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                     <FormLabel>Date of receipt</FormLabel>
                     <Popover>
                         <PopoverTrigger asChild>
@@ -203,6 +220,42 @@ export default function DataEntryForm() {
                 </FormItem>
             )}
             />
+            <FormField
+                control={form.control}
+                name="modeOfPayment"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Mode of Payment</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select payment mode" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="Cash">Cash</SelectItem>
+                            <SelectItem value="Transfer">Transfer</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            {watchedModeOfPayment === 'Transfer' && (
+                <FormField
+                    control={form.control}
+                    name="transactionRef"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Transaction Ref.</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Enter transaction reference" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
             <FormField
             control={form.control}
             name="tenantName"
