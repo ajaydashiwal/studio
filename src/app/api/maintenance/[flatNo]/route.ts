@@ -12,7 +12,8 @@ const getLast24Months = () => {
     const now = new Date();
     for (let i = 23; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push(d.toLocaleString('default', { month: 'short', year: 'numeric' }));
+        // Format to "Month YYYY" e.g., "May 2024" to match the sheet
+        months.push(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
     }
     return months.reverse(); // most recent first
 };
@@ -47,16 +48,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
         
         let idCounter = 0;
         for (const month of allMonths) {
-            const paidRecord = userRows.find(row => {
-                // Normalize sheet date "Month YYYY" to "Mon YYYY"
-                try {
-                    const recordDate = new Date(row[1]);
-                    const formattedMonth = recordDate.toLocaleString('default', { month: 'short', year: 'numeric' });
-                    return formattedMonth === month;
-                } catch (e) {
-                    return row[1] === month; // Fallback to direct comparison
-                }
-            });
+            const paidRecord = userRows.find(row => row[1] === month);
 
             records.push({
                 id: ++idCounter,

@@ -11,7 +11,7 @@ async function getNextSerialNumber() {
     scopes: 'https://www.googleapis.com/auth/spreadsheets',
   });
   const sheets = google.sheets({ version: 'v4', auth });
-  const range = `${SHEET_NAME}!A:A`;
+  const range = `${SHEET_NAME}!A:H`; // FlatNo,NameTenant,ReceiptDate,ReceiptNumber,MonthPaid,AmountPaid,ModePayment,transactionReg
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
