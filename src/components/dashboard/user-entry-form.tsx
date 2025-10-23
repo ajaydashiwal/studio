@@ -41,6 +41,7 @@ const formSchema = z.object({
 
 export default function UserEntryForm() {
   const { toast } = useToast()
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const [isDataFetched, setIsDataFetched] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -55,6 +56,19 @@ export default function UserEntryForm() {
     }
   })
 
+  const resetForm = (flatNo = "") => {
+    form.reset({
+        flatNo: flatNo,
+        membershipNo: "" as any,
+        ownerName: "",
+        userType: "Member",
+        membershipStatus: "Active",
+        isMember: false,
+    });
+    setIsExistingUser(false);
+    setIsDataFetched(false);
+  }
+
   const handleFetchUserData = async (flatNo: string) => {
     if (!flatNo) return;
 
@@ -64,33 +78,27 @@ export default function UserEntryForm() {
         const data = await response.json();
         form.setValue("membershipNo", data.membershipNo);
         form.setValue("ownerName", data.ownerName);
-        // Also set the default values from the fetched data
         form.setValue("userType", data.userType);
         form.setValue("membershipStatus", data.membershipStatus);
         form.setValue("isMember", data.isMember);
+        
+        setIsExistingUser(data.isExistingUser);
         setIsDataFetched(true);
+
         toast({
-            title: "Data Found",
-            description: `Details for ${data.ownerName} loaded from master records.`,
+            title: data.isExistingUser ? "Existing User Found" : "New User Data Found",
+            description: `Details for ${data.ownerName} loaded.`,
         });
       } else {
-        // User not found in master list or already processed
-        form.reset({
-            flatNo: flatNo,
-            membershipNo: "" as any,
-            ownerName: "",
-            userType: "Member",
-            membershipStatus: "Active",
-            isMember: false,
-        });
-        setIsDataFetched(false);
+        resetForm(flatNo);
         toast({
             variant: "destructive",
             title: "Not Found",
-            description: "No unprocessed record found for this flat in the master list.",
+            description: "No record found for this flat number.",
         });
       }
     } catch (error) {
+      resetForm(flatNo);
       toast({
         variant: "destructive",
         title: "Error",
@@ -100,11 +108,17 @@ export default function UserEntryForm() {
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    const url = '/api/users';
+    const method = isExistingUser ? 'PUT' : 'POST';
+    const body = isExistingUser 
+      ? JSON.stringify({ flatNo: values.flatNo, isMember: values.isMember })
+      : JSON.stringify(values);
+
     try {
-        const response = await fetch('/api/users', {
-            method: 'POST',
+        const response = await fetch(url, {
+            method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(values),
+            body,
         });
 
         const result = await response.json();
@@ -114,11 +128,7 @@ export default function UserEntryForm() {
                 title: "Success",
                 description: result.message || "User data submitted successfully.",
             });
-            form.reset();
-            form.setValue("userType", "Member");
-            form.setValue("membershipStatus", "Active");
-            form.setValue("isMember", false);
-            setIsDataFetched(false);
+            resetForm();
         } else {
             toast({
                 variant: "destructive",
@@ -135,6 +145,9 @@ export default function UserEntryForm() {
     }
   }
 
+  const isReadOnly = isDataFetched && !isExistingUser;
+  const isUpdateOnly = isDataFetched && isExistingUser;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -147,9 +160,10 @@ export default function UserEntryForm() {
                   <FormLabel>Flat Number</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder="Enter flat no to fetch from master" 
+                        placeholder="Enter flat no & press Tab to fetch" 
                         {...field}
                         onBlur={(e) => handleFetchUserData(e.target.value)}
+                        disabled={isDataFetched}
                        />
                   </FormControl>
                   <FormMessage />
@@ -164,9 +178,9 @@ export default function UserEntryForm() {
                   <FormLabel>Owner Name</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder="Fetched from master record" 
+                        placeholder="Fetched automatically" 
                         {...field}
-                        readOnly={isDataFetched}
+                        readOnly={isReadOnly || isUpdateOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -182,9 +196,9 @@ export default function UserEntryForm() {
                   <FormControl>
                       <Input 
                         type="number" 
-                        placeholder="Fetched from master record" 
+                        placeholder="Fetched automatically" 
                         {...field}
-                        readOnly={isDataFetched}
+                        readOnly={isReadOnly || isUpdateOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -197,7 +211,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>User Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isUpdateOnly}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a user type" />
@@ -222,7 +236,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Membership Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isUpdateOnly}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
@@ -260,7 +274,14 @@ export default function UserEntryForm() {
               )}
             />
         </div>
-        <Button type="submit" disabled={!isDataFetched}>Create User</Button>
+        <div className="flex gap-4">
+            <Button type="submit" disabled={!isDataFetched}>
+                {isExistingUser ? 'Update User' : 'Create User'}
+            </Button>
+            <Button variant="outline" type="button" onClick={() => resetForm()}>
+                Cancel
+            </Button>
+        </div>
       </form>
     </Form>
   )

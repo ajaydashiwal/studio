@@ -21,60 +21,104 @@ export async function POST(request: Request) {
         isMember
     } = body;
 
-    // Basic validation
     if (!flatNo || !membershipNo || !ownerName || !userType || !membershipStatus) {
-        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        return NextResponse.json({ error: 'Missing required fields for creation' }, { status: 400 });
     }
 
     const auth = new google.auth.GoogleAuth({
       keyFile: 'google-credentials.json',
       scopes: 'https://www.googleapis.com/auth/spreadsheets',
     });
-
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Check if user already exists
     const getResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:A`, // Only check flatNo column for existence
+        range: `${SHEET_NAME}!A:A`,
     });
-
     const rows = getResponse.data.values || [];
-    const existingRow = rows.find(row => row[0] == flatNo);
+    const existingRowIndex = rows.findIndex(row => row[0] == flatNo);
 
-    if (existingRow) { // User exists, so return an error
-        return NextResponse.json({ error: 'User with this flat number already exists in memberUsers.' }, { status: 409 }); // 409 Conflict
-    } else { // User does not exist, so append
-        const newRow = [
-            flatNo,
-            membershipNo,
-            ownerName,
-            userType,
-            DEFAULT_PASSWORD_HASH,
-            membershipStatus,
-            isMember ? 'Yes' : 'No'
-        ];
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEET_ID,
-            range: SHEET_NAME,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {
-                values: [newRow],
-            },
-        });
-
-        // Here you might want to update the status in the 'masterMembership' sheet
-        // This part is not implemented yet but would require an additional sheet.values.update call
-        
-        return NextResponse.json({ success: true, message: 'New user record created successfully.' });
+    if (existingRowIndex > -1) {
+        return NextResponse.json({ error: 'User with this flat number already exists. Use PUT to update.' }, { status: 409 });
     }
 
+    const newRow = [
+        flatNo,
+        membershipNo,
+        ownerName,
+        userType,
+        DEFAULT_PASSWORD_HASH,
+        membershipStatus,
+        isMember ? 'Yes' : 'No'
+    ];
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: SHEET_NAME,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+            values: [newRow],
+        },
+    });
+
+    return NextResponse.json({ success: true, message: 'New user created successfully.' });
+
   } catch (error: any) {
-    console.error('Error writing to Google Sheets:', error);
+    console.error('Error in POST /api/users:', error);
     if (error.code === 'ENOENT') {
         return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
     }
-    return NextResponse.json({ error: 'Internal Server Error while writing to Google Sheets.' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error.' }, { status: 500 });
   }
+}
+
+
+export async function PUT(request: Request) {
+    try {
+        const body = await request.json();
+        const { flatNo, isMember } = body;
+
+        if (!flatNo || typeof isMember !== 'boolean') {
+            return NextResponse.json({ error: 'Missing required fields for update (flatNo, isMember)' }, { status: 400 });
+        }
+
+        const auth = new google.auth.GoogleAuth({
+          keyFile: 'google-credentials.json',
+          scopes: 'https://www.googleapis.com/auth/spreadsheets',
+        });
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const getResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A:A`, // Only need column A to find the row index
+        });
+        const rows = getResponse.data.values || [];
+        // FindIndex is 0-based, but sheets are 1-based. Header is row 1. So, data starts at row 2.
+        const rowIndex = rows.findIndex(row => row[0] == flatNo);
+        
+        if (rowIndex === -1) {
+            return NextResponse.json({ error: 'User with this flat number not found.' }, { status: 404 });
+        }
+        
+        // Sheet row number is array index + 1 (for 0-based index) + 1 (for header row).
+        const sheetRowNumber = rowIndex + 2; 
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            // Update column G for the specific row
+            range: `${SHEET_NAME}!G${sheetRowNumber}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+                values: [[isMember ? 'Yes' : 'No']],
+            },
+        });
+        
+        return NextResponse.json({ success: true, message: 'User updated successfully.' });
+
+    } catch (error: any) {
+        console.error('Error in PUT /api/users:', error);
+        if (error.code === 'ENOENT') {
+            return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
+        }
+        return NextResponse.json({ error: 'Internal Server Error.' }, { status: 500 });
+    }
 }
