@@ -20,11 +20,12 @@ async function getNextSerialNumber() {
 
   const rows = response.data.values;
   if (rows && rows.length > 1) {
-    const lastRow = rows[rows.length - 1];
-    const lastId = parseInt(lastRow[0], 10);
-    if (!isNaN(lastId)) {
-        return lastId + 1;
-    }
+    // Find the last valid number in the column
+    const lastId = rows.slice(1).reduce((maxId, row) => {
+        const currentId = parseInt(row[0], 10);
+        return !isNaN(currentId) && currentId > maxId ? currentId : maxId;
+    }, 0);
+    return lastId + 1;
   }
   return 1; // Start from 1 if sheet is empty or has no valid numbers
 }
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Record added successfully.' });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error writing to Google Sheets:', error);
     if (error.code === 'ENOENT') {
         return NextResponse.json({ error: 'Server configuration error: The `google-credentials.json` file was not found.' }, { status: 500 });

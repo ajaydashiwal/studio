@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       const userRow = rows.slice(1).find(
         (row) => {
           const sheetFlatNo = row[0]?.toLowerCase();
-          const sheetPassword = row[3];
+          const sheetPassword = row[4]; // Corrected password column
           console.log(`Checking row: Flat No: ${sheetFlatNo}, Stored Hash: ${sheetPassword}`);
           return sheetFlatNo === flatNo.toLowerCase() && sheetPassword === hashedPassword;
         }
@@ -45,21 +45,19 @@ export async function POST(request: Request) {
 
       if (userRow) {
         console.log("Login successful: Found matching user.");
-        // Find userType from mock data as it's not in the sheet
-        const mockUser = mockUsers.find(u => u.flatNo.toLowerCase() === userRow[0]?.toLowerCase());
         
         const user = {
             flatNo: userRow[0],
-            ownerName: userRow[1],
-            membershipId: userRow[2],
-            userType: mockUser ? mockUser.userType : 'Member', // Default to 'Member'
+            ownerName: userRow[2],
+            membershipId: userRow[1],
+            userType: userRow[3],
         };
         return NextResponse.json(user);
       }
     }
     console.log("Login failed: No matching user found in spreadsheet.");
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error accessing Google Sheets:', error);
     // Check for specific error indicating file not found
     if (error.code === 'ENOENT') {
