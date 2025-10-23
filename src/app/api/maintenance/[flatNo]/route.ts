@@ -41,7 +41,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const allRows = response.data.values;
     const allMonths = getLast24Months();
     const records = [];
-    const defaultMaintenanceAmount = '2000'; // Standard monthly fee
+    const defaultMaintenanceAmount = '300'; // Standard monthly fee
 
     if (allRows) {
         // Filter rows for the specific flat, skipping header
