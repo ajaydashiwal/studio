@@ -7,7 +7,7 @@ const USERS_SHEET_NAME = 'memberUsers';
 const MASTER_SHEET_NAME = 'masterMembership'; 
 // Columns in memberUsers: flatNo,membershipNo,ownerName,userType,password,membershipStatus,IsMember (A-G)
 const USERS_RANGE = `${USERS_SHEET_NAME}!A:F`; 
-// Columns in masterMembership: flatNo, memberName,membershipNo,status (C-G) -> flatNo is C, name D, no E, status G
+// Columns in masterMembership: D:flatNo, E:memberName, F:membershipNo, G:status
 const MASTER_RANGE = `${MASTER_SHEET_NAME}!D:G`; 
 
 
@@ -56,9 +56,9 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
     const masterRows = masterResponse.data.values;
     if (masterRows) {
-      // flatNo=C(0), memberName=D(1), membershipNo=E(2), status=G(4)
+      // flatNo=D(0), memberName=E(1), membershipNo=F(2), status=G(3)
       const masterRecord = masterRows.slice(1).find(
-        (row) => row[0] == flatNo && (row[4] === '' || row[4] === undefined || row[4] === null)
+        (row) => row[0] == flatNo && (row[3] === '' || row[3] === undefined || row[3] === null)
       );
 
       if (masterRecord) {

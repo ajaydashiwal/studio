@@ -89,10 +89,8 @@ export default function UserEntryForm() {
         });
       } else {
         // Not found, allow manual entry
-        setIsDataFetched(false);
-        setIsExistingUser(false);
+        resetForm(flatNo);
         setIsManuallyCreatable(true);
-        form.setValue("flatNo", flatNo); // Keep the flat number
         toast({
             title: "New User",
             description: "No record found. Please enter details manually to create a new user.",
@@ -179,8 +177,7 @@ export default function UserEntryForm() {
                       <Input 
                         placeholder={isDataFetched ? "Fetched automatically" : "Enter owner name"}
                         {...field}
-                        readOnly={isReadOnly}
-                        disabled={isFieldsDisabled}
+                        readOnly={isReadOnly || isFieldsDisabled}
                        />
                   </FormControl>
                   <FormMessage />
@@ -198,8 +195,7 @@ export default function UserEntryForm() {
                         type="number" 
                         placeholder={isDataFetched ? "Fetched automatically" : "Enter membership number"}
                         {...field}
-                        readOnly={isReadOnly}
-                        disabled={isFieldsDisabled}
+                        readOnly={isReadOnly || isFieldsDisabled}
                        />
                   </FormControl>
                   <FormMessage />
