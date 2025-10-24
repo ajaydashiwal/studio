@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 import { format } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
-const SHEET_NAME = 'complaints';
-// Columns: Submission Date, Flat No, Owner Name, Form Type, Issue Category, Description, Status, Remarks, Action Date
+const SHEET_NAME = 'complaintTrans';
+// Columns: complaintId, submissionDate, flatNo, formType, issueCategory, description, status, remarks, actionDate
 const RANGE = `${SHEET_NAME}!A:I`;
 
 export async function GET(request: Request) {
@@ -23,16 +23,14 @@ export async function GET(request: Request) {
     });
 
     const rows = response.data.values || [];
-    const complaints = rows.slice(1).map((row, index) => ({
-      // Add a unique ID based on row index, +2 because sheets are 1-indexed and we skip the header
-      id: index + 2, 
-      submissionDate: row[0],
-      flatNo: row[1],
-      ownerName: row[2],
+    const complaints = rows.slice(1).map((row) => ({
+      id: row[0], // complaintId
+      submissionDate: row[1],
+      flatNo: row[2],
       formType: row[3],
       issueCategory: row[4],
       description: row[5],
-      status: row[6] || 'New', // Default status to 'New' if not set
+      status: row[6] || 'New',
       remarks: row[7] || '',
       actionDate: row[8] || '',
     })).reverse(); // Show most recent first
@@ -55,14 +53,13 @@ export async function POST(request: Request) {
     
     const { 
         flatNo,
-        ownerName,
-        formType, // "Complaint" or "Suggestion"
-        issueCategory, // e.g., "Water Overflow", "Others", or "" for suggestions
+        formType,
+        issueCategory,
         description,
     } = body;
 
     // Basic validation
-    if (!flatNo || !ownerName || !formType || !description) {
+    if (!flatNo || !formType || !description) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     if (formType === 'Complaint' && !issueCategory) {
@@ -76,13 +73,15 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    const submissionDate = format(new Date(), "dd/MM/yyyy HH:mm:ss");
+    const now = new Date();
+    const complaintId = format(now, "yyyyMMddHHmmss");
+    const submissionDate = format(now, "dd/MM/yyyy HH:mm:ss");
 
-    // Columns: Submission Date, Flat No, Owner Name, Form Type, Issue Category, Description, Status (default to New)
+    // Columns: complaintId, submissionDate, flatNo, formType, issueCategory, description, status
     const newRow = [
+      complaintId,
       submissionDate,
       flatNo,
-      ownerName,
       formType,
       issueCategory || '',
       description,
@@ -112,10 +111,10 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const body = await request.json();
-        const { rowId, status, remarks } = body;
+        const { complaintId, status, remarks } = body;
 
-        if (!rowId || !status) {
-            return NextResponse.json({ error: 'Missing required fields for update (rowId, status)' }, { status: 400 });
+        if (!complaintId || !status) {
+            return NextResponse.json({ error: 'Missing required fields for update (complaintId, status)' }, { status: 400 });
         }
 
         const auth = new google.auth.GoogleAuth({
@@ -123,11 +122,24 @@ export async function PUT(request: Request) {
             scopes: 'https://www.googleapis.com/auth/spreadsheets',
         });
         const sheets = google.sheets({ version: 'v4', auth });
+        
+        const getResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A:A`, // Check only complaintId column
+        });
+
+        const rows = getResponse.data.values || [];
+        // +2 because sheets are 1-indexed and we skip the header row with slice(1)
+        const rowIndex = rows.slice(1).findIndex(row => row[0] === complaintId) + 2;
+
+        if (rowIndex < 2) {
+            return NextResponse.json({ error: 'Complaint record not found.' }, { status: 404 });
+        }
 
         const actionDate = format(new Date(), "dd/MM/yyyy HH:mm:ss");
 
         // Columns G (Status), H (Remarks), I (Action Date)
-        const updateRange = `${SHEET_NAME}!G${rowId}:I${rowId}`;
+        const updateRange = `${SHEET_NAME}!G${rowIndex}:I${rowIndex}`;
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,

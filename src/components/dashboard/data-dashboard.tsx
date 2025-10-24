@@ -160,7 +160,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ComplaintSuggestionForm flatNo={user.flatNo} ownerName={user.ownerName} />
+                            <ComplaintSuggestionForm flatNo={user.flatNo} />
                         </CardContent>
                     </Card>
                 )

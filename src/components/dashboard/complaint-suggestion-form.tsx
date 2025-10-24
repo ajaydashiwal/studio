@@ -42,7 +42,6 @@ const formSchema = z.object({
 
 interface ComplaintSuggestionFormProps {
     flatNo: string;
-    ownerName: string;
 }
 
 const issueCategories = [
@@ -54,7 +53,7 @@ const issueCategories = [
     "Others"
 ];
 
-export default function ComplaintSuggestionForm({ flatNo, ownerName }: ComplaintSuggestionFormProps) {
+export default function ComplaintSuggestionForm({ flatNo }: ComplaintSuggestionFormProps) {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState<"Complaint" | "Suggestion">("Complaint");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,7 +85,6 @@ export default function ComplaintSuggestionForm({ flatNo, ownerName }: Complaint
     const submissionData = {
         ...values,
         flatNo,
-        ownerName
     };
     
     try {

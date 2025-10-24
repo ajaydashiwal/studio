@@ -37,10 +37,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 interface Complaint {
-    id: number;
+    id: string; // Now complaintId
     submissionDate: string;
     flatNo: string;
-    ownerName: string;
     formType: string;
     issueCategory: string;
     description: string;
@@ -111,7 +110,7 @@ export default function ComplaintManagement() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    rowId: selectedComplaint.id,
+                    complaintId: selectedComplaint.id,
                     status: updateStatus,
                     remarks: updateRemarks,
                 }),
@@ -164,7 +163,7 @@ export default function ComplaintManagement() {
                                     <TableHead>Date</TableHead>
                                     <TableHead>Flat</TableHead>
                                     <TableHead>Category/Type</TableHead>
-                                    <TableHead>Submitted By</TableHead>
+                                    <TableHead>Complaint ID</TableHead>
                                     <TableHead className="text-center">Status</TableHead>
                                     <TableHead className="text-center">Action</TableHead>
                                 </TableRow>
@@ -180,7 +179,7 @@ export default function ComplaintManagement() {
                                             <TableCell>{item.submissionDate}</TableCell>
                                             <TableCell>{item.flatNo}</TableCell>
                                             <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
-                                            <TableCell>{item.ownerName}</TableCell>
+                                            <TableCell>{item.id}</TableCell>
                                             <TableCell className="text-center">
                                                 <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
                                             </TableCell>
