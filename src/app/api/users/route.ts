@@ -17,10 +17,11 @@ export async function POST(request: Request) {
         membershipNo,
         ownerName,
         userType,
-        membershipStatus,
+        membershipStatus, // This is still being sent from the form but we also have isOfficeBearer
+        isOfficeBearer,
     } = body;
 
-    if (!flatNo || !membershipNo || !ownerName || !userType || !membershipStatus) {
+    if (!flatNo || !membershipNo || !ownerName || !userType || !membershipStatus || !isOfficeBearer) {
         return NextResponse.json({ error: 'Missing required fields for creation' }, { status: 400 });
     }
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
         userType,
         DEFAULT_PASSWORD_HASH,
         membershipStatus,
-        'No' // Default 'IsMember' to 'No'
+        isOfficeBearer // Save "Yes" or "No" to the 'IsMember' column
     ];
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,

@@ -32,8 +32,9 @@ const formSchema = z.object({
   userType: z.enum(["Member", "President", "VicePresident", "GeneralSecretary", "JointSecretary", "Treasurer"], {
     required_error: "Please select a user type.",
   }),
-  membershipStatus: z.enum(["Active", "Inactive"], {
-    required_error: "Please select a membership status.",
+  membershipStatus: z.enum(["Active", "Inactive"]),
+  isOfficeBearer: z.enum(["Yes", "No"], {
+    required_error: "Please select if this user is an office bearer.",
   }),
 })
 
@@ -50,7 +51,8 @@ export default function UserEntryForm() {
         membershipNo: "" as any,
         ownerName: "",
         userType: "Member",
-        membershipStatus: "Active",
+        membershipStatus: "Active", // Still needed to pass validation
+        isOfficeBearer: "No",
     }
   })
 
@@ -61,6 +63,7 @@ export default function UserEntryForm() {
         ownerName: "",
         userType: "Member",
         membershipStatus: "Active",
+        isOfficeBearer: "No",
     });
     setIsFetchedAndPending(false);
     setIsManuallyCreatable(false);
@@ -78,7 +81,6 @@ export default function UserEntryForm() {
         form.setValue("membershipNo", data.membershipNo);
         form.setValue("ownerName", data.ownerName);
         form.setValue("userType", data.userType);
-        form.setValue("membershipStatus", data.membershipStatus);
         
         setIsFetchedAndPending(true);
         setIsManuallyCreatable(false);
@@ -230,19 +232,19 @@ export default function UserEntryForm() {
             />
             <FormField
             control={form.control}
-            name="membershipStatus"
+            name="isOfficeBearer"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Membership Status</FormLabel>
+                <FormLabel>Office Bearer</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                     <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
+                        <SelectValue placeholder="Is this user an office bearer?" />
                     </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                        <SelectItem value="Yes">Yes</SelectItem>
                     </SelectContent>
                 </Select>
                 <FormMessage />
