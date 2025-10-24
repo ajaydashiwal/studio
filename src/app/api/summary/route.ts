@@ -4,9 +4,12 @@ import { NextResponse } from 'next/server';
 import { parse, format } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
-const USERS_SHEET_NAME = 'memberUsers';
+const MASTER_MEMBERSHIP_SHEET_NAME = 'masterMembership';
 const COLLECTION_SHEET_NAME = 'monthCollection';
 const DEFAULT_MAINTENANCE_FEE = 300;
+
+// Columns in masterMembership: C:flatNo, D:memberName, E:membershipNo, G:status
+const USERS_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:G`;
 
 const getMonthsInRange = (from: string, to: string): string[] => {
     const fromDate = parse(from, 'yyyy-MM', new Date());
@@ -38,14 +41,18 @@ export async function GET(request: Request) {
         });
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // 1. Fetch all users
+        // 1. Fetch all potential users from masterMembership sheet
         const usersResponse = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${USERS_SHEET_NAME}!A:C`, // flatNo, membershipNo, ownerName
+            range: USERS_RANGE, // C:flatNo, D:memberName, E:membershipNo, F:?, G:status
         });
-        const users = usersResponse.data.values?.slice(1).map(row => ({ flatNo: row[0], ownerName: row[2] })) || [];
+        
+        // Filter for users where status (column G, index 4 in C:G range) is blank
+        const users = usersResponse.data.values?.slice(1).filter(row => row[4] === '' || row[4] === undefined || row[4] === null)
+            .map(row => ({ flatNo: row[0], ownerName: row[1] })) || [];
+        
         if (!users.length) {
-             return NextResponse.json({ error: 'No users found in memberUsers sheet.' }, { status: 404 });
+             return NextResponse.json({ error: 'No users with blank status found in masterMembership sheet.' }, { status: 404 });
         }
 
         // 2. Fetch all payment records
