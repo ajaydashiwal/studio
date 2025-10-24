@@ -11,6 +11,7 @@ import UserEntryForm from '@/components/dashboard/user-entry-form';
 import MembershipEntryForm from '@/components/dashboard/membership-entry-form';
 import ChangePasswordForm from '@/components/dashboard/change-password-form';
 import ExpenditureEntryForm from '@/components/dashboard/expenditure-entry-form';
+import ComplaintSuggestionForm from '@/components/dashboard/complaint-suggestion-form';
 import {
   Menubar,
   MenubarContent,
@@ -31,7 +32,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials';
+type View = 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
@@ -149,6 +150,23 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 );
             }
             return null;
+        case 'feedback':
+            if(isMember) {
+                return (
+                     <Card className="shadow-md">
+                        <CardHeader>
+                            <CardTitle>Complaints & Suggestions</CardTitle>
+                            <CardDescription>
+                                Submit your feedback to the association.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ComplaintSuggestionForm flatNo={user.flatNo} ownerName={user.ownerName} />
+                        </CardContent>
+                    </Card>
+                )
+            }
+            return null;
       case 'changePassword':
         return (
             <Card className="shadow-md">
@@ -217,6 +235,15 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 <MenubarItem onClick={() => setActiveView('membershipEntry')}>Membership Entry</MenubarItem>
                 <MenubarItem onClick={() => setActiveView('userEntry')}>User Entry</MenubarItem>
               </MenubarContent>
+            </MenubarMenu>
+          )}
+
+          {isMember && (
+            <MenubarMenu>
+                <MenubarTrigger>Feedback</MenubarTrigger>
+                <MenubarContent>
+                    <MenubarItem onClick={() => setActiveView('feedback')}>Complaints & Suggestions</MenubarItem>
+                </MenubarContent>
             </MenubarMenu>
           )}
 
