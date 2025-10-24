@@ -32,7 +32,8 @@ import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
+import debounce from "lodash.debounce";
 
 const formSchema = z.object({
   flatNo: z.coerce.number().positive({ message: "Flat number is required." }),
@@ -63,9 +64,8 @@ const formSchema = z.object({
 const generateMonthYearOptions = () => {
     const options = [];
     const currentYear = new Date().getFullYear();
-    // Use full month names to match sheet data
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    for (let i = -1; i < 4; i++) { // Go forward a few years
+    for (let i = -1; i < 4; i++) {
         const year = currentYear + i;
         for (const month of monthNames) {
             options.push(`${month} ${year}`);
@@ -78,6 +78,9 @@ export default function DataEntryForm() {
   const { toast } = useToast()
   const monthYearOptions = generateMonthYearOptions();
   
+  const [isDuplicate, setIsDuplicate] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -90,8 +93,57 @@ export default function DataEntryForm() {
   })
 
   const watchedModeOfPayment = form.watch("modeOfPayment");
+  const watchedFlatNo = form.watch("flatNo");
+  const watchedMonthYear = form.watch("monthYear");
+
+  const checkRecord = useCallback(debounce(async (flatNo, monthYear) => {
+    if (!flatNo || !monthYear) {
+      setIsDuplicate(false);
+      setIsMember(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/maintenance/${flatNo}/${encodeURIComponent(monthYear)}`);
+      if (response.ok) {
+        const { isDuplicate, isMember } = await response.json();
+        setIsDuplicate(isDuplicate);
+        setIsMember(isMember);
+        if (isDuplicate) {
+          toast({
+            variant: "destructive",
+            title: "Duplicate Record",
+            description: `A maintenance record for this flat and month already exists.`,
+          });
+        }
+      } else {
+         // Reset on error to allow submission attempt
+         setIsDuplicate(false);
+         setIsMember(false);
+      }
+    } catch (error) {
+      console.error("Failed to check record:", error);
+      setIsDuplicate(false);
+      setIsMember(false);
+    }
+  }, 500), []);
+
+
+  useEffect(() => {
+    checkRecord(watchedFlatNo, watchedMonthYear);
+  }, [watchedFlatNo, watchedMonthYear, checkRecord]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isDuplicate) {
+        toast({
+            variant: "destructive",
+            title: "Submission Blocked",
+            description: "Cannot submit a duplicate record.",
+        });
+        return;
+    }
+    
     const formattedValues = {
       ...values,
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
@@ -111,6 +163,8 @@ export default function DataEntryForm() {
             });
             form.reset();
             form.setValue("amount", 300);
+            setIsDuplicate(false);
+            setIsMember(false);
         } else {
             const { error } = await response.json();
             toast({
@@ -155,7 +209,7 @@ export default function DataEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Month & Year</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a month" />
@@ -277,21 +331,26 @@ export default function DataEntryForm() {
                     )}
                 />
             )}
-            <FormField
-            control={form.control}
-            name="tenantName"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Tenant Name (Optional)</FormLabel>
-                <FormControl>
-                    <Input placeholder="Enter tenant's name" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
+            {!isMember && (
+              <FormField
+                control={form.control}
+                name="tenantName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Tenant Name</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Enter tenant's name" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                        This field is for non-members only.
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+              />
             )}
-            />
         </div>
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={isDuplicate}>Submit</Button>
       </form>
     </Form>
   )
