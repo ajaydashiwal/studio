@@ -30,7 +30,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'userEntry' | 'changePassword';
+type View = 'statement' | 'entry' | 'userEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
@@ -38,15 +38,31 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const isTreasurer = user.userType === 'Treasurer';
   const isMember = user.userType === 'Member';
   const isGeneralSecretary = user.userType === 'GeneralSecretary';
+  const isOfficeBearer = !isMember;
+
+  // Set initial view based on user type
+  useState(() => {
+    if (isMember) {
+      setActiveView('statement');
+    } else {
+      setActiveView('memberSummary');
+    }
+  });
 
   const renderContent = () => {
     switch (activeView) {
       case 'statement':
-        return isMember ? (
-          <DataTable flatNo={user.flatNo} />
-        ) : (
-          <SummaryTable />
-        );
+        return <DataTable flatNo={user.flatNo} />;
+      case 'memberSummary':
+         if (isOfficeBearer) {
+          return <SummaryTable summaryType="member" />;
+        }
+        return null;
+      case 'nonMemberSummary':
+        if (isOfficeBearer) {
+          return <SummaryTable summaryType="non-member" />;
+        }
+        return null;
       case 'entry':
         if (isTreasurer) {
           return (
@@ -96,7 +112,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             </Card>
         );
       default:
-        return null;
+        return isMember ? <DataTable flatNo={user.flatNo} /> : <SummaryTable summaryType="member" />;
     }
   };
 
@@ -105,14 +121,36 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       <AppHeader user={user} onLogout={onLogout} />
       <main>
         <Menubar className="mb-4">
-          <MenubarMenu>
-            <MenubarTrigger
-              onClick={() => setActiveView('statement')}
-              className={activeView === 'statement' ? 'bg-accent' : ''}
-            >
-              {isMember ? 'Account Statement' : 'Member Summary'}
-            </MenubarTrigger>
-          </MenubarMenu>
+          {isMember && (
+            <MenubarMenu>
+              <MenubarTrigger
+                onClick={() => setActiveView('statement')}
+                className={activeView === 'statement' ? 'bg-accent' : ''}
+              >
+                Account Statement
+              </MenubarTrigger>
+            </MenubarMenu>
+          )}
+          {isOfficeBearer && (
+            <>
+              <MenubarMenu>
+                <MenubarTrigger
+                  onClick={() => setActiveView('memberSummary')}
+                  className={activeView === 'memberSummary' ? 'bg-accent' : ''}
+                >
+                  Member Summary
+                </MenubarTrigger>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger
+                  onClick={() => setActiveView('nonMemberSummary')}
+                  className={activeView === 'nonMemberSummary' ? 'bg-accent' : ''}
+                >
+                  Non-Member Summary
+                </MenubarTrigger>
+              </MenubarMenu>
+            </>
+          )}
           {isTreasurer && (
             <MenubarMenu>
               <MenubarTrigger

@@ -37,6 +37,10 @@ interface SummaryData {
     totalPaid: number;
     totalDue: number;
 }
+
+interface SummaryTableProps {
+    summaryType: 'member' | 'non-member';
+}
   
 const generateMonthYearOptions = () => {
     const options = [];
@@ -53,7 +57,7 @@ const generateMonthYearOptions = () => {
 
 const monthYearOptions = generateMonthYearOptions();
   
-export default function SummaryTable() {
+export default function SummaryTable({ summaryType }: SummaryTableProps) {
     const [summaryData, setSummaryData] = useState<SummaryData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -69,7 +73,12 @@ export default function SummaryTable() {
             setLoading(true);
             setError(null);
             const { from, to } = period;
+            
             const query = new URLSearchParams({ from, to });
+            if (summaryType === 'non-member') {
+                query.set('type', 'non-member');
+            }
+
             try {
                 const response = await fetch(`/api/summary?${query}`);
                 if (!response.ok) {
@@ -85,7 +94,7 @@ export default function SummaryTable() {
             }
         };
         fetchData();
-    }, [period]);
+    }, [period, summaryType]);
 
     const handleRowClick = (flat: {flatNo: string, ownerName: string}) => {
         setSelectedFlat(flat);
@@ -106,21 +115,26 @@ export default function SummaryTable() {
         ))
     );
 
+    const cardTitle = summaryType === 'member' ? "Member Maintenance Summary" : "Non-Member Maintenance Summary";
+    const cardDescription = summaryType === 'member' 
+        ? "Overview of maintenance payments for members. Click a row to see details."
+        : "Overview of maintenance payments for non-members. Click a row to see details.";
+
     return (
         <>
             <Card className="shadow-md">
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center">
                         <div>
-                            <CardTitle>Maintenance Summary</CardTitle>
-                            <CardDescription>Overview of maintenance payments. Click a row to see details.</CardDescription>
+                            <CardTitle>{cardTitle}</CardTitle>
+                            <CardDescription>{cardDescription}</CardDescription>
                         </div>
                         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4 sm:items-end">
                             <div className="grid gap-2">
                                 <Label htmlFor="flat-filter">Filter by Flat No.</Label>
                                 <Input 
                                     id="flat-filter"
-                                    placeholder="e.g., A-101"
+                                    placeholder="e.g., 101"
                                     value={flatNoFilter}
                                     onChange={(e) => setFlatNoFilter(e.target.value)}
                                     className="w-full sm:w-[160px]"
@@ -161,7 +175,7 @@ export default function SummaryTable() {
                             <TableHeader className="sticky top-0 bg-secondary">
                                 <TableRow>
                                     <TableHead className="w-[120px]">Flat No</TableHead>
-                                    <TableHead>Owner Name</TableHead>
+                                    <TableHead>Owner/Tenant Name</TableHead>
                                     <TableHead className="text-right">Total Paid</TableHead>
                                     <TableHead className="text-right">Total Due</TableHead>
                                 </TableRow>

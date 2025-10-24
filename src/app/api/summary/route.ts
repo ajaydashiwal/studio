@@ -10,7 +10,7 @@ const DEFAULT_MAINTENANCE_FEE = 300;
 
 // Columns in masterMembership: D:flatNo, E:memberName, G:status
 const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!D:G`;
-// Columns in monthCollection: A:Flatno, E:monthpaid, F:amount paid
+// Columns in monthCollection: A:Flatno, B:tenantName, E:monthpaid, F:amount paid
 const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:F`;
 
 const getMonthsInRange = (from: string, to: string): string[] => {
@@ -26,10 +26,91 @@ const getMonthsInRange = (from: string, to: string): string[] => {
     return months;
 };
 
+const getMemberSummary = async (sheets: any, periodMonths: string[], allPayments: any[][]) => {
+    const masterResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: MASTER_RANGE });
+    const masterMembers = masterResponse.data.values?.slice(1) || [];
+
+    const filteredMasterMembers = masterMembers.filter(member => {
+        const status = member[3]; // Column G is the 4th column (index 3)
+        return status === null || status === undefined || status === '';
+    });
+
+    const summary = filteredMasterMembers.map(member => {
+        const flatNo = String(member[0]).trim();
+        const ownerName = member[1] || "NOT KNOWN";
+
+        const paidMonthsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
+
+        const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
+            const amount = parseFloat(p[5]);
+            return acc + (isNaN(amount) ? 0 : amount);
+        }, 0);
+
+        const dueMonthsCount = periodMonths.length - paidMonthsInPeriod.length;
+        const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
+        
+        return {
+            flatNo,
+            ownerName,
+            totalPaid,
+            totalDue: totalDue > 0 ? totalDue : 0,
+        };
+    });
+
+    return summary;
+};
+
+const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayments: any[][]) => {
+    const masterResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${MASTER_MEMBERSHIP_SHEET_NAME}!D:D` });
+    const masterFlatNos = new Set((masterResponse.data.values?.slice(1) || []).map(row => String(row[0]).trim()));
+
+    const paymentTenantMap = new Map<string, string>();
+    // Reverse to get the latest tenant name first
+    for (const payment of [...allPayments].reverse()) {
+        const flatNo = String(payment[0]).trim();
+        const tenantName = payment[1] || '';
+        if (!paymentTenantMap.has(flatNo) && tenantName) {
+            paymentTenantMap.set(flatNo, tenantName);
+        }
+    }
+
+    const nonMemberFlats = new Set<string>();
+    allPayments.forEach(p => {
+        const flatNo = String(p[0]).trim();
+        if (!masterFlatNos.has(flatNo)) {
+            nonMemberFlats.add(flatNo);
+        }
+    });
+
+    const summary = Array.from(nonMemberFlats).map(flatNo => {
+        const ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
+
+        const paidMonthsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
+
+        const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
+            const amount = parseFloat(p[5]);
+            return acc + (isNaN(amount) ? 0 : amount);
+        }, 0);
+
+        const dueMonthsCount = periodMonths.length - paidMonthsInPeriod.length;
+        const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
+
+        return {
+            flatNo,
+            ownerName,
+            totalPaid,
+            totalDue: totalDue > 0 ? totalDue : 0,
+        };
+    });
+
+    return summary;
+};
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
+    const type = searchParams.get('type'); // 'non-member' or null
 
     if (!from || !to) {
         return NextResponse.json({ error: 'Missing "from" or "to" date range parameters' }, { status: 400 });
@@ -38,51 +119,21 @@ export async function GET(request: Request) {
     try {
         const auth = new google.auth.GoogleAuth({
             keyFile: 'google-credentials.json',
-            scopes: 'https://www.googleapis.com/auth/spreadsheets',
+            scopes: 'https://www.googleapis.com/auth/spreadsheets.readonly',
         });
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // 1. Fetch all data from both sheets at once
-        const [masterResponse, collectionResponse] = await Promise.all([
-            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: MASTER_RANGE }),
-            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: COLLECTION_RANGE })
-        ]);
-
-        const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName, ..., status], ...]
-        const allPayments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, ..., month, amount], ...]
-
-        // 2. Generate the list of months for the period
-        const periodMonths = getMonthsInRange(from, to);
-        const totalMonthsInPeriod = periodMonths.length;
+        const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: COLLECTION_RANGE });
+        const allPayments = collectionResponse.data.values?.slice(1) || [];
         
-        // 3. Process data for each flat from the master membership list, filtered by status in Column G
-        const filteredMasterMembers = masterMembers.filter(member => {
-            const status = member[3]; // Column G is the 4th column (index 3)
-            return status === null || status === undefined || status === '';
-        });
-
-        const summary = filteredMasterMembers.map(member => {
-            const flatNo = String(member[0]).trim();
-            const ownerName = member[1] || "NOT KNOWN";
-
-            // Find all payments for the current flat within the requested date range
-            const paidMonthsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
-
-            const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
-                const amount = parseFloat(p[5]);
-                return acc + (isNaN(amount) ? 0 : amount);
-            }, 0);
-
-            const dueMonthsCount = totalMonthsInPeriod - paidMonthsInPeriod.length;
-            const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
-            
-            return {
-                flatNo,
-                ownerName,
-                totalPaid,
-                totalDue: totalDue > 0 ? totalDue : 0, // Don't show negative dues
-            };
-        });
+        const periodMonths = getMonthsInRange(from, to);
+        
+        let summary;
+        if (type === 'non-member') {
+            summary = await getNonMemberSummary(sheets, periodMonths, allPayments);
+        } else {
+            summary = await getMemberSummary(sheets, periodMonths, allPayments);
+        }
 
         return NextResponse.json(summary);
 
