@@ -39,9 +39,9 @@ const formSchema = z.object({
 
 export default function UserEntryForm() {
   const { toast } = useToast()
-  const [isExistingUser, setIsExistingUser] = useState(false);
-  const [isDataFetched, setIsDataFetched] = useState(false);
+  const [isFetchedAndPending, setIsFetchedAndPending] = useState(false);
   const [isManuallyCreatable, setIsManuallyCreatable] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,13 +62,14 @@ export default function UserEntryForm() {
         userType: "Member",
         membershipStatus: "Active",
     });
-    setIsExistingUser(false);
-    setIsDataFetched(false);
+    setIsFetchedAndPending(false);
     setIsManuallyCreatable(false);
+    setIsChecking(false);
   }
 
   const handleFetchUserData = async (flatNo: string) => {
     if (!flatNo) return;
+    setIsChecking(true);
 
     try {
       const response = await fetch(`/api/users/${flatNo}`);
@@ -79,13 +80,12 @@ export default function UserEntryForm() {
         form.setValue("userType", data.userType);
         form.setValue("membershipStatus", data.membershipStatus);
         
-        setIsExistingUser(data.isExistingUser);
-        setIsDataFetched(true);
+        setIsFetchedAndPending(true);
         setIsManuallyCreatable(false);
 
         toast({
-            title: data.isExistingUser ? "Existing User Found" : "New User Data Found",
-            description: `Details for ${data.ownerName} loaded.`,
+            title: "Pending User Data Found",
+            description: `Details for ${data.ownerName} loaded. You can now create this user.`,
         });
       } else {
         // Not found, allow manual entry
@@ -93,7 +93,7 @@ export default function UserEntryForm() {
         setIsManuallyCreatable(true);
         toast({
             title: "New User",
-            description: "No record found. Please enter details manually to create a new user.",
+            description: "No pending record found. Please enter details manually to create a new user.",
         });
       }
     } catch (error) {
@@ -103,6 +103,8 @@ export default function UserEntryForm() {
         title: "Error",
         description: "Failed to fetch user data.",
       });
+    } finally {
+        setIsChecking(false);
     }
   };
 
@@ -123,7 +125,7 @@ export default function UserEntryForm() {
         if (response.ok) {
             toast({
                 title: "Success",
-                description: result.message || "User data submitted successfully.",
+                description: result.message || "User created successfully.",
             });
             resetForm();
         } else {
@@ -142,8 +144,7 @@ export default function UserEntryForm() {
     }
   }
 
-  const isReadOnly = isDataFetched && !isExistingUser;
-  const isFieldsDisabled = isDataFetched && isExistingUser;
+  const isReadOnly = isFetchedAndPending;
 
   return (
     <Form {...form}>
@@ -160,7 +161,7 @@ export default function UserEntryForm() {
                         placeholder="Enter flat no & press Tab to fetch" 
                         {...field}
                         onBlur={(e) => handleFetchUserData(e.target.value)}
-                        disabled={isDataFetched || isManuallyCreatable}
+                        disabled={isFetchedAndPending || isManuallyCreatable || isChecking}
                        />
                   </FormControl>
                   <FormMessage />
@@ -175,9 +176,9 @@ export default function UserEntryForm() {
                   <FormLabel>Owner Name</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder={isDataFetched ? "Fetched automatically" : "Enter owner name"}
+                        placeholder={isChecking ? "Checking..." : "Auto-filled or enter manually"}
                         {...field}
-                        readOnly={isReadOnly || isFieldsDisabled}
+                        readOnly={isReadOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -193,9 +194,9 @@ export default function UserEntryForm() {
                   <FormControl>
                       <Input 
                         type="number" 
-                        placeholder={isDataFetched ? "Fetched automatically" : "Enter membership number"}
+                        placeholder={isChecking ? "Checking..." : "Auto-filled or enter manually"}
                         {...field}
-                        readOnly={isReadOnly || isFieldsDisabled}
+                        readOnly={isReadOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -208,7 +209,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>User Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isFieldsDisabled}>
+                <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a user type" />
@@ -233,7 +234,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Membership Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isFieldsDisabled}>
+                <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
@@ -250,14 +251,16 @@ export default function UserEntryForm() {
             />
         </div>
         <div className="flex gap-4">
-            <Button type="submit" disabled={(!isDataFetched && !isManuallyCreatable) || isExistingUser}>
+            <Button type="submit" disabled={isChecking || (!isFetchedAndPending && !isManuallyCreatable)}>
                 Create User
             </Button>
             <Button variant="outline" type="button" onClick={() => resetForm()}>
                 Cancel
             </Button>
         </div>
-        {isExistingUser && <p className="text-sm text-muted-foreground">This user already exists. To update them, please modify the Google Sheet directly.</p>}
+        <FormDescription>
+            Enter a flat number and press Tab to find a pending membership record. If found, details will be auto-filled. If not, you can create a new user manually.
+        </FormDescription>
       </form>
     </Form>
   )

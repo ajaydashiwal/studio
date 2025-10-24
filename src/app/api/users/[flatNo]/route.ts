@@ -25,30 +25,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-
-    // 1. Check if user exists in `memberUsers` sheet first
-    const usersResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: USERS_RANGE,
-    });
-
-    const usersRows = usersResponse.data.values;
-    if (usersRows) {
-        const existingUserRow = usersRows.slice(1).find(row => row[0] == flatNo);
-        if (existingUserRow) {
-            const userDetails = {
-                flatNo: existingUserRow[0],
-                membershipNo: existingUserRow[1],
-                ownerName: existingUserRow[2],
-                userType: existingUserRow[3],
-                membershipStatus: existingUserRow[5],
-                isExistingUser: true,
-            };
-            return NextResponse.json(userDetails);
-        }
-    }
-
-    // 2. If not in `memberUsers`, check `masterMembership` for a new record
+    
+    // Search masterMembership for a pending record (blank status)
     const masterResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: MASTER_RANGE,
@@ -69,14 +47,14 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
             // Default other fields for the form, these are not from master
             userType: 'Member',
             membershipStatus: 'Active',
-            isExistingUser: false,
+            isExistingUser: false, // This record can be converted to a user
         };
         return NextResponse.json(userDetails);
       }
     }
 
-    // 3. If not found in either sheet
-    return NextResponse.json({ error: 'User not found in memberUsers or no unprocessed record found in masterMembership' }, { status: 404 });
+    // If no pending record is found in masterMembership
+    return NextResponse.json({ error: 'No unprocessed record found in masterMembership. User can be created manually.' }, { status: 404 });
 
   } catch (error: any) {
     console.error('Error accessing Google Sheets:', error);
