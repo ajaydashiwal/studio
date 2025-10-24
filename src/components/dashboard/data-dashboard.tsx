@@ -140,72 +140,48 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
         <Menubar className="mb-4">
           {isMember && (
             <MenubarMenu>
-              <MenubarTrigger
-                onClick={() => setActiveView('statement')}
-                className={activeView === 'statement' ? 'bg-accent' : ''}
-              >
-                Account Statement
-              </MenubarTrigger>
+              <MenubarTrigger>Dashboard</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem onClick={() => setActiveView('statement')}>Account Statement</MenubarItem>
+              </MenubarContent>
             </MenubarMenu>
           )}
+
           {isOfficeBearer && (
-            <>
-              <MenubarMenu>
-                <MenubarTrigger
-                  onClick={() => setActiveView('memberSummary')}
-                  className={activeView === 'memberSummary' ? 'bg-accent' : ''}
-                >
-                  Member Summary
-                </MenubarTrigger>
-              </MenubarMenu>
-              <MenubarMenu>
-                <MenubarTrigger
-                  onClick={() => setActiveView('nonMemberSummary')}
-                  className={activeView === 'nonMemberSummary' ? 'bg-accent' : ''}
-                >
-                  Non-Member Summary
-                </MenubarTrigger>
-              </MenubarMenu>
-            </>
+            <MenubarMenu>
+              <MenubarTrigger>Reports</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
+                <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
           )}
+
           {isTreasurer && (
             <MenubarMenu>
-              <MenubarTrigger
-                onClick={() => setActiveView('entry')}
-                className={activeView === 'entry' ? 'bg-accent' : ''}
-              >
-                Maintenance Entry
-              </MenubarTrigger>
+              <MenubarTrigger>Data Entry</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem onClick={() => setActiveView('entry')}>Maintenance Entry</MenubarItem>
+              </MenubarContent>
             </MenubarMenu>
           )}
+
           {isGeneralSecretary && (
-            <>
-              <MenubarMenu>
-                <MenubarTrigger
-                  onClick={() => setActiveView('membershipEntry')}
-                  className={activeView === 'membershipEntry' ? 'bg-accent' : ''}
-                >
-                  Membership Entry
-                </MenubarTrigger>
-              </MenubarMenu>
-              <MenubarMenu>
-                <MenubarTrigger
-                  onClick={() => setActiveView('userEntry')}
-                  className={activeView === 'userEntry' ? 'bg-accent' : ''}
-                >
-                  User Entry
-                </MenubarTrigger>
-              </MenubarMenu>
-            </>
+             <MenubarMenu>
+              <MenubarTrigger>Data Entry</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem onClick={() => setActiveView('membershipEntry')}>Membership Entry</MenubarItem>
+                <MenubarItem onClick={() => setActiveView('userEntry')}>User Entry</MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
           )}
-           <MenubarMenu>
-                <MenubarTrigger
-                  onClick={() => setActiveView('changePassword')}
-                  className={activeView === 'changePassword' ? 'bg-accent' : ''}
-                >
-                  Change Password
-                </MenubarTrigger>
-              </MenubarMenu>
+
+          <MenubarMenu>
+            <MenubarTrigger>Account</MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem onClick={() => setActiveView('changePassword')}>Change Password</MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
         </Menubar>
         <div className="mt-2">{renderContent()}</div>
       </main>
