@@ -41,6 +41,7 @@ export default function UserEntryForm() {
   const { toast } = useToast()
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [isDataFetched, setIsDataFetched] = useState(false);
+  const [isManuallyCreatable, setIsManuallyCreatable] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -63,6 +64,7 @@ export default function UserEntryForm() {
     });
     setIsExistingUser(false);
     setIsDataFetched(false);
+    setIsManuallyCreatable(false);
   }
 
   const handleFetchUserData = async (flatNo: string) => {
@@ -79,17 +81,21 @@ export default function UserEntryForm() {
         
         setIsExistingUser(data.isExistingUser);
         setIsDataFetched(true);
+        setIsManuallyCreatable(false);
 
         toast({
             title: data.isExistingUser ? "Existing User Found" : "New User Data Found",
             description: `Details for ${data.ownerName} loaded.`,
         });
       } else {
-        resetForm(flatNo);
+        // Not found, allow manual entry
+        setIsDataFetched(false);
+        setIsExistingUser(false);
+        setIsManuallyCreatable(true);
+        form.setValue("flatNo", flatNo); // Keep the flat number
         toast({
-            variant: "destructive",
-            title: "Not Found",
-            description: "No record found for this flat number.",
+            title: "New User",
+            description: "No record found. Please enter details manually to create a new user.",
         });
       }
     } catch (error) {
@@ -104,7 +110,6 @@ export default function UserEntryForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const url = '/api/users';
-    // Since we are only creating users now, method is always POST
     const method = 'POST';
     const body = JSON.stringify(values);
 
@@ -139,7 +144,8 @@ export default function UserEntryForm() {
     }
   }
 
-  const isReadOnly = isDataFetched;
+  const isReadOnly = isDataFetched && !isExistingUser;
+  const isFieldsDisabled = isDataFetched && isExistingUser;
 
   return (
     <Form {...form}>
@@ -156,7 +162,7 @@ export default function UserEntryForm() {
                         placeholder="Enter flat no & press Tab to fetch" 
                         {...field}
                         onBlur={(e) => handleFetchUserData(e.target.value)}
-                        disabled={isDataFetched}
+                        disabled={isDataFetched || isManuallyCreatable}
                        />
                   </FormControl>
                   <FormMessage />
@@ -171,9 +177,10 @@ export default function UserEntryForm() {
                   <FormLabel>Owner Name</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder="Fetched automatically" 
+                        placeholder={isDataFetched ? "Fetched automatically" : "Enter owner name"}
                         {...field}
                         readOnly={isReadOnly}
+                        disabled={isFieldsDisabled}
                        />
                   </FormControl>
                   <FormMessage />
@@ -189,9 +196,10 @@ export default function UserEntryForm() {
                   <FormControl>
                       <Input 
                         type="number" 
-                        placeholder="Fetched automatically" 
+                        placeholder={isDataFetched ? "Fetched automatically" : "Enter membership number"}
                         {...field}
                         readOnly={isReadOnly}
+                        disabled={isFieldsDisabled}
                        />
                   </FormControl>
                   <FormMessage />
@@ -204,7 +212,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>User Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isExistingUser}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isFieldsDisabled}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a user type" />
@@ -229,7 +237,7 @@ export default function UserEntryForm() {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Membership Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isExistingUser}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isFieldsDisabled}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
@@ -246,7 +254,7 @@ export default function UserEntryForm() {
             />
         </div>
         <div className="flex gap-4">
-            <Button type="submit" disabled={!isDataFetched || isExistingUser}>
+            <Button type="submit" disabled={(!isDataFetched && !isManuallyCreatable) || isExistingUser}>
                 Create User
             </Button>
             <Button variant="outline" type="button" onClick={() => resetForm()}>
