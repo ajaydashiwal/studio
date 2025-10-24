@@ -53,12 +53,12 @@ export async function GET(request: Request) {
         const payments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, tenantName, ..., month, amount], ...]
 
         // Create fast-lookup maps
-        const masterNameMap = new Map(masterMembers.map(row => [String(row[0]), row[1]]));
+        const masterNameMap = new Map(masterMembers.map(row => [String(row[0]).trim(), row[1]]));
         const paymentTenantMap = new Map();
         // Iterate backwards to get the most recent name for a flat
         for (let i = payments.length - 1; i >= 0; i--) {
             const row = payments[i];
-            const flatNo = String(row[0]);
+            const flatNo = String(row[0]).trim();
             const tenantName = row[1];
             if (flatNo && tenantName && !paymentTenantMap.has(flatNo)) {
                 paymentTenantMap.set(flatNo, tenantName);
@@ -74,16 +74,11 @@ export async function GET(request: Request) {
         for (let i = 1; i <= TOTAL_FLATS; i++) {
             const flatNo = String(i);
 
-            // Determine owner name with fallback logic
-            let ownerName = "NOT KNOWN";
-            if (masterNameMap.has(flatNo)) {
-                ownerName = masterNameMap.get(flatNo) || paymentTenantMap.get(flatNo) || "NOT KNOWN";
-            } else {
-                 ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
-            }
-
+            // Correctly determine owner name with fallback logic
+            const ownerName = masterNameMap.get(flatNo) || paymentTenantMap.get(flatNo) || "NOT KNOWN";
+            
             // Find all payments for the current flat
-            const userPayments = payments.filter(p => String(p[0]) === flatNo);
+            const userPayments = payments.filter(p => String(p[0]).trim() === flatNo);
             
             // Filter those payments to be within the requested date range
             const paidMonthsInPeriod = userPayments.filter(p => periodMonths.includes(p[4]));
