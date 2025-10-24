@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       formType: row[3],
       issueCategory: row[4],
       description: row[5],
-      status: row[6] || 'New',
+      status: row[6] || 'Open',
       remarks: row[7] || '',
       actionDate: row[8] || '',
     })).reverse(); // Show most recent first
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       formType,
       issueCategory || '',
       description,
-      'New' // Default status
+      'Open' // Default status
     ];
 
     await sheets.spreadsheets.values.append({

@@ -48,11 +48,11 @@ interface Complaint {
     actionDate: string;
 }
 
-const statusOptions = ["New", "In Progress", "Resolved", "Closed"];
+const statusOptions = ["Open", "In Progress", "Resolved", "Closed"];
 
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-        case 'New': return 'destructive';
+        case 'Open': return 'destructive';
         case 'In Progress': return 'secondary';
         case 'Resolved': return 'default';
         case 'Closed': return 'outline';
