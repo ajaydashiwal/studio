@@ -8,8 +8,8 @@ const MASTER_MEMBERSHIP_SHEET_NAME = 'masterMembership';
 const COLLECTION_SHEET_NAME = 'monthCollection';
 const DEFAULT_MAINTENANCE_FEE = 300;
 
-// Columns in masterMembership: C:flatNo, D:memberName
-const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:D`;
+// Columns in masterMembership: D:flatNo, E:memberName, G:status
+const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!D:G`;
 // Columns in monthCollection: A:Flatno, E:monthpaid, F:amount paid
 const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:F`;
 
@@ -48,15 +48,20 @@ export async function GET(request: Request) {
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: COLLECTION_RANGE })
         ]);
 
-        const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName], ...]
+        const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName, ..., status], ...]
         const allPayments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, ..., month, amount], ...]
 
         // 2. Generate the list of months for the period
         const periodMonths = getMonthsInRange(from, to);
         const totalMonthsInPeriod = periodMonths.length;
         
-        // 3. Process data for each flat from the master membership list
-        const summary = masterMembers.map(member => {
+        // 3. Process data for each flat from the master membership list, filtered by status in Column G
+        const filteredMasterMembers = masterMembers.filter(member => {
+            const status = member[3]; // Column G is the 4th column (index 3)
+            return status === null || status === undefined || status === '';
+        });
+
+        const summary = filteredMasterMembers.map(member => {
             const flatNo = String(member[0]).trim();
             const ownerName = member[1] || "NOT KNOWN";
 
