@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Building, KeyRound } from 'lucide-react';
+import imageData from '@/app/lib/placeholder-images.json';
 
 interface LoginFormProps {
   onLogin: (flatNo: string, password: string) => void;
@@ -21,6 +23,7 @@ interface LoginFormProps {
 export default function LoginForm({ onLogin }: LoginFormProps) {
   const [flatNo, setFlatNo] = useState('');
   const [password, setPassword] = useState('');
+  const { login_building } = imageData;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +31,18 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-sm shadow-xl">
+    <Card className="w-full max-w-sm shadow-xl overflow-hidden">
+      <div className="relative">
+          <Image 
+              src={login_building.src}
+              alt={login_building.alt}
+              width={login_building.width}
+              height={login_building.height}
+              className="w-full object-cover"
+              priority
+              data-ai-hint={login_building.hint}
+          />
+      </div>
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-headline">Upvan Apartment Resident Welfare Association</CardTitle>
         <CardDescription>Please sign in to view your maintenance records</CardDescription>
