@@ -10,7 +10,7 @@ const DEFAULT_MAINTENANCE_FEE = 300;
 
 // Columns in masterMembership: C:flatNo, D:memberName
 const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:D`;
-// Columns in monthCollection: A:Flatno, E:monthpaid, F:amount paid
+// Columns in monthCollection: A:Flatno, B: name of tenant, E:monthpaid, F:amount paid
 const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:F`;
 
 const getMonthsInRange = (from: string, to: string): string[] => {
@@ -49,16 +49,34 @@ export async function GET(request: Request) {
         ]);
 
         const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName], ...]
-        const allPayments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, ..., month, amount], ...]
+        const allPayments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, tenantName, ..., month, amount], ...]
 
-        // 2. Generate the list of months for the period
+        // 2. Create efficient lookup maps
+        const masterNameMap = new Map<string, string>();
+        for (const row of masterMembers) {
+            if(row[0]) masterNameMap.set(String(row[0]).trim(), row[1]);
+        }
+
+        const paymentTenantMap = new Map<string, string>();
+        // We assume payments are roughly chronological, so the last one wins
+        for (const row of allPayments) {
+            if(row[0] && row[1]) paymentTenantMap.set(String(row[0]).trim(), row[1]);
+        }
+        
+        // 3. Generate the list of months for the period
         const periodMonths = getMonthsInRange(from, to);
         const totalMonthsInPeriod = periodMonths.length;
         
-        // 3. Process data for each flat in the master list
-        const summary = masterMembers.map(memberRow => {
-            const flatNo = String(memberRow[0]).trim();
-            const ownerName = memberRow[1] || "NOT KNOWN";
+        // 4. Process data for each flat from 1 to 1380
+        const summary = [];
+        for (let i = 1; i <= 1380; i++) {
+            const flatNo = String(i);
+
+            // Determine Owner Name with fallback
+            let ownerName = masterNameMap.get(flatNo);
+            if (!ownerName) {
+                ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
+            }
             
             // Find all payments for the current flat within the requested date range
             const paidMonthsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
@@ -71,13 +89,13 @@ export async function GET(request: Request) {
             const dueMonthsCount = totalMonthsInPeriod - paidMonthsInPeriod.length;
             const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
             
-            return {
+            summary.push({
                 flatNo,
                 ownerName,
                 totalPaid,
                 totalDue: totalDue > 0 ? totalDue : 0, // Don't show negative dues
-            };
-        });
+            });
+        }
 
         return NextResponse.json(summary);
 
