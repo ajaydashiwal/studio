@@ -12,6 +12,7 @@ import MembershipEntryForm from '@/components/dashboard/membership-entry-form';
 import ChangePasswordForm from '@/components/dashboard/change-password-form';
 import ExpenditureEntryForm from '@/components/dashboard/expenditure-entry-form';
 import ComplaintSuggestionForm from '@/components/dashboard/complaint-suggestion-form';
+import ComplaintManagement from '@/components/dashboard/complaint-management';
 import {
   Menubar,
   MenubarContent,
@@ -32,7 +33,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback';
+type View = 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback' | 'complaintManagement';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
@@ -167,6 +168,11 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 )
             }
             return null;
+        case 'complaintManagement':
+            if (isOfficeBearer) {
+                return <ComplaintManagement />;
+            }
+            return null;
       case 'changePassword':
         return (
             <Card className="shadow-md">
@@ -213,6 +219,12 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                     <MenubarTrigger>Financials</MenubarTrigger>
                     <MenubarContent>
                         <MenubarItem onClick={() => setActiveView('financials')}>Dashboard</MenubarItem>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Complaints</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarItem onClick={() => setActiveView('complaintManagement')}>Manage Feedback</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
              </>
