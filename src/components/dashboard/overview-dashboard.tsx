@@ -80,7 +80,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardDescription>Summary of your submitted complaints.</CardDescription>
         </CardHeader>
         <CardContent>
-          {memberData.complaints.length > 0 ? (
+          {memberData.complaints && memberData.complaints.length > 0 ? (
             <FeedbackBarChart data={memberData.complaints} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -95,7 +95,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardDescription>Summary of your submitted suggestions.</CardDescription>
         </CardHeader>
         <CardContent>
-          {memberData.suggestions.length > 0 ? (
+          {memberData.suggestions && memberData.suggestions.length > 0 ? (
             <FeedbackBarChart data={memberData.suggestions} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
