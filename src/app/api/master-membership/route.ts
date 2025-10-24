@@ -4,16 +4,16 @@ import { NextResponse } from 'next/server';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'masterMembership';
-// Columns in masterMembership: flatNo, memberName, membershipNo, status (D, E, F, G)
+// Columns in masterMembership: B:receiptNo, C:receiptDate, D:flatNo, E:memberName, F:membershipNo, G:status
 const RANGE_TO_CHECK = `${SHEET_NAME}!D:D`; 
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { flatNo, memberName, membershipNo } = body;
+    const { flatNo, memberName, membershipNo, receiptNo, receiptDate } = body;
 
     // Basic validation
-    if (!flatNo || !memberName || !membershipNo) {
+    if (!flatNo || !memberName || !membershipNo || !receiptNo || !receiptDate) {
         return NextResponse.json({ error: 'Missing required fields for new member creation' }, { status: 400 });
     }
 
@@ -36,19 +36,19 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'A member with this flat number already exists in the master list.' }, { status: 409 });
     }
     
-    // Append the new member data. Note the empty string for the status column.
-    // The columns are B, C, D, E, F, G but we are writing from D.
-    // So the data corresponds to columns D, E, F, G
+    // The data corresponds to columns B, C, D, E, F, G
     const newRow = [
-      flatNo,
-      memberName,
-      membershipNo,
-      '' // Blank status
+      receiptNo,      // Column B
+      receiptDate,    // Column C
+      flatNo,         // Column D
+      memberName,     // Column E
+      membershipNo,   // Column F
+      ''              // Column G (Blank status)
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!D:G`,
+      range: `${SHEET_NAME}!B:G`,
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
