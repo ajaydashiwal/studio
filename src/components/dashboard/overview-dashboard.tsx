@@ -17,7 +17,8 @@ interface OverviewDashboardProps {
 
 interface MemberData {
   maintenance: { name: string; value: number; fill: string }[];
-  feedback: { name: string; value: number }[];
+  complaints: { name: string; value: number }[];
+  suggestions: { name: string; value: number }[];
 }
 
 interface OfficeBearerData {
@@ -75,15 +76,30 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>My Feedback Status</CardTitle>
-          <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
+          <CardTitle>My Complaints Status</CardTitle>
+          <CardDescription>Summary of your submitted complaints.</CardDescription>
         </CardHeader>
         <CardContent>
-          {memberData.feedback.length > 0 ? (
-            <FeedbackBarChart data={memberData.feedback} />
+          {memberData.complaints.length > 0 ? (
+            <FeedbackBarChart data={memberData.complaints} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              You have not submitted any feedback yet.
+              You have not submitted any complaints yet.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+       <Card>
+        <CardHeader>
+          <CardTitle>My Suggestions Status</CardTitle>
+          <CardDescription>Summary of your submitted suggestions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {memberData.suggestions.length > 0 ? (
+            <FeedbackBarChart data={memberData.suggestions} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              You have not submitted any suggestions yet.
             </div>
           )}
         </CardContent>

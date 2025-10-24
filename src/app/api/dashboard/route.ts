@@ -37,22 +37,33 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
     const dueCount = 24 - paidCount;
 
     // Feedback Data from complaintTrans sheet
-    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!A:G`; // Submission Date, Flat No, ..., Status
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!C:G`; // flatNo, formType, issueCategory, description, status
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
-    const userComplaints = (complaintsResponse.data.values || []).slice(1).filter((row: any[]) => row[1] == flatNo);
+    const userFeedback = (complaintsResponse.data.values || []).slice(1).filter((row: any[]) => row[0] == flatNo);
 
-    const feedbackSummary = userComplaints.reduce((acc: any, row: any[]) => {
-        const status = row[6] || 'New';
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-    }, {});
+    const complaintsSummary = userFeedback
+        .filter((row: any[]) => row[1] === 'Complaint')
+        .reduce((acc: any, row: any[]) => {
+            const status = row[4] || 'New';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+        }, {});
+
+    const suggestionsSummary = userFeedback
+        .filter((row: any[]) => row[1] === 'Suggestion')
+        .reduce((acc: any, row: any[]) => {
+            const status = row[4] || 'New';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+        }, {});
 
     return {
         maintenance: [
             { name: 'Paid', value: paidCount, fill: 'var(--color-paid)' },
             { name: 'Due', value: dueCount, fill: 'var(--color-due)' },
         ],
-        feedback: Object.keys(feedbackSummary).map(key => ({ name: key, value: feedbackSummary[key] })),
+        complaints: Object.keys(complaintsSummary).map(key => ({ name: key, value: complaintsSummary[key] })),
+        suggestions: Object.keys(suggestionsSummary).map(key => ({ name: key, value: suggestionsSummary[key] })),
     };
 };
 
