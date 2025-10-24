@@ -11,7 +11,7 @@ const TOTAL_FLATS = 1380;
 
 // Columns in masterMembership: C:flatNo, D:memberName
 const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:D`;
-// Columns in monthCollection: A:Flatno, B:name of tenant, E:monthpaid, F:amount paid
+// Columns in monthCollection: A:Flatno, E:monthpaid, F:amount paid
 const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:F`;
 
 const getMonthsInRange = (from: string, to: string): string[] => {
@@ -52,18 +52,8 @@ export async function GET(request: Request) {
         const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName], ...]
         const payments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, tenantName, ..., month, amount], ...]
 
-        // Create fast-lookup maps
+        // Create a fast-lookup map for master members
         const masterNameMap = new Map(masterMembers.map(row => [String(row[0]).trim(), row[1]]));
-        const paymentTenantMap = new Map();
-        // Iterate backwards to get the most recent name for a flat
-        for (let i = payments.length - 1; i >= 0; i--) {
-            const row = payments[i];
-            const flatNo = String(row[0]).trim();
-            const tenantName = row[1];
-            if (flatNo && tenantName && !paymentTenantMap.has(flatNo)) {
-                paymentTenantMap.set(flatNo, tenantName);
-            }
-        }
         
         // 2. Generate the list of months for the period
         const periodMonths = getMonthsInRange(from, to);
@@ -74,23 +64,11 @@ export async function GET(request: Request) {
         for (let i = 1; i <= TOTAL_FLATS; i++) {
             const flatNo = String(i);
             
-            let ownerName = masterNameMap.get(flatNo);
-
-            if (!ownerName) {
-                // If not found in master, check the payments sheet
-                ownerName = paymentTenantMap.get(flatNo);
-            }
-
-            if (!ownerName) {
-                // If still not found, set to NOT KNOWN
-                ownerName = "NOT KNOWN";
-            }
+            // Get owner name ONLY from master membership
+            const ownerName = masterNameMap.get(flatNo) || "NOT KNOWN";
             
-            // Find all payments for the current flat
-            const userPayments = payments.filter(p => String(p[0]).trim() === flatNo);
-            
-            // Filter those payments to be within the requested date range
-            const paidMonthsInPeriod = userPayments.filter(p => periodMonths.includes(p[4]));
+            // Find all payments for the current flat within the requested date range
+            const paidMonthsInPeriod = payments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
 
             const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
                 const amount = parseFloat(p[5]);
