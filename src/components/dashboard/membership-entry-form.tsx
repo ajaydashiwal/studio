@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Building, Hash, User as UserIcon, Receipt, CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { useState } from "react"
 
 const formSchema = z.object({
   flatNo: z.string().min(1, { message: "Flat number is required." }),
@@ -37,6 +38,8 @@ const formSchema = z.object({
 
 export default function MembershipEntryForm() {
   const { toast } = useToast()
+  const [isChecking, setIsChecking] = useState(false);
+  const [memberExists, setMemberExists] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,8 +50,46 @@ export default function MembershipEntryForm() {
         receiptNo: "",
     }
   })
+  
+  const handleCheckExistingMember = async (flatNo: string) => {
+    if (!flatNo) {
+        setMemberExists(false);
+        return;
+    };
+    setIsChecking(true);
+    setMemberExists(false);
+
+    try {
+        const response = await fetch(`/api/master-membership/${flatNo}`);
+        if (response.ok) {
+            const { exists } = await response.json();
+            if (exists) {
+                setMemberExists(true);
+                toast({
+                    variant: "destructive",
+                    title: "Active Member Exists",
+                    description: `An active membership record for flat number ${flatNo} already exists.`,
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Failed to check for existing member", error);
+    } finally {
+        setIsChecking(false);
+    }
+  }
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+     if (memberExists) {
+        toast({
+            variant: "destructive",
+            title: "Submission Blocked",
+            description: "Cannot create a record for a flat number that already has an active membership.",
+        });
+        return;
+     }
+
      const formattedValues = {
       ...values,
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
@@ -69,12 +110,16 @@ export default function MembershipEntryForm() {
                 description: result.message || "New membership record created successfully.",
             });
             form.reset();
+            setMemberExists(false);
         } else {
              toast({
                 variant: "destructive",
                 title: response.status === 409 ? "Duplicate Record" : "Submission Failed",
                 description: result.error || "Could not save the new membership record.",
             });
+             if(response.status === 409){
+                setMemberExists(true);
+             }
         }
     } catch (error) {
         toast({
@@ -98,9 +143,11 @@ export default function MembershipEntryForm() {
                     <div className="relative">
                         <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
-                            placeholder="Enter flat number" 
+                            placeholder="Enter flat no. & press Tab" 
                             {...field} 
                             className="pl-10" 
+                            onBlur={(e) => handleCheckExistingMember(e.target.value)}
+                            disabled={isChecking}
                          />
                     </div>
                 </FormControl>
@@ -197,7 +244,7 @@ export default function MembershipEntryForm() {
               </FormItem>
           )}
         />
-        <Button type="submit">Create Membership Record</Button>
+        <Button type="submit" disabled={isChecking || memberExists}>Create Membership Record</Button>
       </form>
     </Form>
   )
