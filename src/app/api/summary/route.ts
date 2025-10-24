@@ -76,7 +76,6 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
     const fromDate = parse(from, 'yyyy-MM', new Date());
     const toDate = parse(to, 'yyyy-MM', new Date());
     const totalMonthsInPeriod = differenceInCalendarMonths(toDate, fromDate) + 1;
-    const totalPeriodExpected = totalMonthsInPeriod * DEFAULT_MAINTENANCE_FEE;
 
     const summary = [];
     for (let i = 1; i <= 1380; i++) {
@@ -86,12 +85,7 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
         }
 
         const paymentsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
-        const allPaymentsForFlat = allPayments.filter(p => String(p[0]).trim() === flatNo);
-
-        if (allPaymentsForFlat.length === 0) {
-            continue; // Skip non-members with no payment history at all
-        }
-
+        
         const ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
 
         const totalPaid = paymentsInPeriod.reduce((acc, p) => {
@@ -99,6 +93,7 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
             return acc + (isNaN(amount) ? 0 : amount);
         }, 0);
         
+        const totalPeriodExpected = totalMonthsInPeriod * DEFAULT_MAINTENANCE_FEE;
         const totalDue = totalPeriodExpected - totalPaid;
 
         summary.push({
