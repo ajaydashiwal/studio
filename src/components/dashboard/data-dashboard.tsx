@@ -141,7 +141,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                             <CardDescription>
                                 Visualizing income and expenditure. (Coming Soon)
                             </CardDescription>
-                        </Header>
+                        </CardHeader>
                         <CardContent>
                            <p>Financial charts will be displayed here.</p>
                         </CardContent>
@@ -158,7 +158,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                             <CardDescription>
                                 Submit your feedback to the association.
                             </CardDescription>
-                        </Header>
+                        </CardHeader>
                         <CardContent>
                             <ComplaintSuggestionForm flatNo={user.flatNo} ownerName={user.ownerName} />
                         </CardContent>
