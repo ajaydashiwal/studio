@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
+import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
   flatNo: z.string().min(1, { message: "Flat number is required." }),
@@ -31,10 +32,6 @@ const formSchema = z.object({
   ownerName: z.string().min(1, { message: "Owner name is required." }),
   userType: z.enum(["Member", "President", "VicePresident", "GeneralSecretary", "JointSecretary", "Treasurer"], {
     required_error: "Please select a user type.",
-  }),
-  membershipStatus: z.enum(["Active", "Inactive"]),
-  isOfficeBearer: z.enum(["Yes", "No"], {
-    required_error: "Please select if this user is an office bearer.",
   }),
 })
 
@@ -51,8 +48,6 @@ export default function UserEntryForm() {
         membershipNo: "" as any,
         ownerName: "",
         userType: "Member",
-        membershipStatus: "Active", // Still needed to pass validation
-        isOfficeBearer: "No",
     }
   })
 
@@ -62,8 +57,6 @@ export default function UserEntryForm() {
         membershipNo: "" as any,
         ownerName: "",
         userType: "Member",
-        membershipStatus: "Active",
-        isOfficeBearer: "No",
     });
     setIsFetchedAndPending(false);
     setIsManuallyCreatable(false);
@@ -111,15 +104,18 @@ export default function UserEntryForm() {
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const url = '/api/users';
-    const method = 'POST';
-    const body = JSON.stringify(values);
+    const isOfficeBearer = values.userType !== 'Member' ? 'Yes' : 'No';
+    const submissionData = {
+        ...values,
+        isOfficeBearer,
+        membershipStatus: "Active", // Always active on creation
+    };
 
     try {
-        const response = await fetch(url, {
-            method,
+        const response = await fetch('/api/users', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body,
+            body: JSON.stringify(submissionData),
         });
 
         const result = await response.json();
@@ -230,33 +226,13 @@ export default function UserEntryForm() {
                 </FormItem>
             )}
             />
-            <FormField
-            control={form.control}
-            name="isOfficeBearer"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Office Bearer</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Is this user an office bearer?" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectItem value="No">No</SelectItem>
-                        <SelectItem value="Yes">Yes</SelectItem>
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
         </div>
         <div className="flex gap-4">
             <Button type="submit" disabled={isChecking || (!isFetchedAndPending && !isManuallyCreatable)}>
+                {isChecking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create User
             </Button>
-            <Button variant="outline" type="button" onClick={() => resetForm()}>
+            <Button variant="outline" type="button" onClick={() => resetForm()} disabled={isChecking}>
                 Cancel
             </Button>
         </div>

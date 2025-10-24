@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         membershipNo,
         ownerName,
         userType,
-        membershipStatus, // This is still being sent from the form but we also have isOfficeBearer
+        membershipStatus,
         isOfficeBearer,
     } = body;
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error in POST /api/users:', error);
     if (error.code === 'ENOENT') {
-        return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
+        return NextResponse.json({ error: 'Server configuration error: The `google-credentials.json` file was not found.' }, { status: 500 });
     }
     return NextResponse.json({ error: 'Internal Server Error.' }, { status: 500 });
   }
