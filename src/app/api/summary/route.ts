@@ -86,7 +86,7 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
     const fromDate = parse(from, 'yyyy-MM', new Date());
     const toDate = parse(to, 'yyyy-MM', new Date());
     const totalMonthsInPeriod = differenceInCalendarMonths(toDate, fromDate) + 1;
-    const totalPeriodDue = totalMonthsInPeriod * DEFAULT_MAINTENANCE_FEE;
+    const totalPeriodExpected = totalMonthsInPeriod * DEFAULT_MAINTENANCE_FEE;
 
     const summary = Array.from(nonMemberFlats).map(flatNo => {
         const ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
@@ -97,7 +97,7 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
             return acc + (isNaN(amount) ? 0 : amount);
         }, 0);
         
-        const totalDue = totalPeriodDue - totalPaid;
+        const totalDue = totalPeriodExpected - totalPaid;
 
         return {
             flatNo,
