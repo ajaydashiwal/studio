@@ -65,7 +65,6 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
     const masterFlatNos = new Set((masterResponse.data.values?.slice(1) || []).map(row => String(row[0]).trim()));
 
     const paymentTenantMap = new Map<string, string>();
-    // Reverse to get the latest tenant name first
     for (const payment of [...allPayments].reverse()) {
         const flatNo = String(payment[0]).trim();
         const tenantName = payment[1] || '';
@@ -74,23 +73,26 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
         }
     }
 
-    const nonMemberFlats = new Set<string>();
-    allPayments.forEach(p => {
-        const flatNo = String(p[0]).trim();
-        if (!masterFlatNos.has(flatNo)) {
-            nonMemberFlats.add(flatNo);
-        }
-    });
-
-    // Calculate total months in period for due calculation
     const fromDate = parse(from, 'yyyy-MM', new Date());
     const toDate = parse(to, 'yyyy-MM', new Date());
     const totalMonthsInPeriod = differenceInCalendarMonths(toDate, fromDate) + 1;
     const totalPeriodExpected = totalMonthsInPeriod * DEFAULT_MAINTENANCE_FEE;
 
-    const summary = Array.from(nonMemberFlats).map(flatNo => {
-        const ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
+    const summary = [];
+    for (let i = 1; i <= 1380; i++) {
+        const flatNo = String(i);
+        if (masterFlatNos.has(flatNo)) {
+            continue; // Skip members
+        }
+
         const paymentsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
+        const allPaymentsForFlat = allPayments.filter(p => String(p[0]).trim() === flatNo);
+
+        if (allPaymentsForFlat.length === 0) {
+            continue; // Skip non-members with no payment history at all
+        }
+
+        const ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
 
         const totalPaid = paymentsInPeriod.reduce((acc, p) => {
             const amount = parseFloat(p[5]);
@@ -99,13 +101,13 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
         
         const totalDue = totalPeriodExpected - totalPaid;
 
-        return {
+        summary.push({
             flatNo,
             ownerName,
             totalPaid,
             totalDue: totalDue > 0 ? totalDue : 0,
-        };
-    });
+        });
+    }
 
     return summary;
 };
