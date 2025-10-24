@@ -1,9 +1,9 @@
 {
   "login_building": {
-    "src": "https://picsum.photos/seed/loginbuilding/400/250",
+    "src": "https://picsum.photos/seed/tower/400/250",
     "width": 400,
     "height": 250,
-    "alt": "Exterior view of an apartment building",
-    "hint": "apartment building"
+    "alt": "Exterior view of a multistory apartment tower",
+    "hint": "multistory apartment"
   }
 }
