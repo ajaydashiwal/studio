@@ -115,10 +115,10 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
         ))
     );
 
-    const cardTitle = summaryType === 'member' ? "Member Maintenance Summary" : "Non-Member Maintenance Summary";
+    const cardTitle = summaryType === 'member' ? "Member Summary" : "Non-Member Summary";
     const cardDescription = summaryType === 'member' 
-        ? "Overview of maintenance payments for members. Click a row to see details."
-        : "Overview of maintenance payments for non-members. Click a row to see details.";
+        ? "Click a row to see details of maintenance payments for Member."
+        : "Click a row to see details of maintenance payments for Non-Member.";
 
     return (
         <>

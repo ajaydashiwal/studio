@@ -61,8 +61,16 @@ const getMemberSummary = async (sheets: any, periodMonths: string[], allPayments
 };
 
 const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayments: any[][], from: string, to: string) => {
-    const masterResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${MASTER_MEMBERSHIP_SHEET_NAME}!D:D` });
-    const masterFlatNos = new Set((masterResponse.data.values?.slice(1) || []).map(row => String(row[0]).trim()));
+    // Fetch master members who have a blank status. These are the "true" members to be excluded.
+    const masterResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: MASTER_RANGE });
+    const masterMembersWithBlankStatus = (masterResponse.data.values?.slice(1) || [])
+        .filter(member => {
+            const status = member[3]; // Column G is status
+            return status === null || status === undefined || status === '';
+        })
+        .map(row => String(row[0]).trim());
+    const masterFlatNos = new Set(masterMembersWithBlankStatus);
+
 
     const paymentTenantMap = new Map<string, string>();
     for (const payment of [...allPayments].reverse()) {
@@ -81,7 +89,7 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
     for (let i = 1; i <= 1380; i++) {
         const flatNo = String(i);
         if (masterFlatNos.has(flatNo)) {
-            continue; // Skip members
+            continue; // Skip members with blank status
         }
 
         const paymentsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
