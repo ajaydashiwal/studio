@@ -88,7 +88,39 @@ export default function MembershipEntryForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-md">
-         <FormField
+        <FormField
+          control={form.control}
+          name="flatNo"
+          render={({ field }) => (
+              <FormItem>
+              <FormLabel>Flat Number</FormLabel>
+                <FormControl>
+                    <div className="relative">
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Enter flat number" {...field} className="pl-10" />
+                    </div>
+                </FormControl>
+              <FormMessage />
+              </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="memberName"
+          render={({ field }) => (
+              <FormItem>
+              <FormLabel>Owner/Member Name</FormLabel>
+                <FormControl>
+                    <div className="relative">
+                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Enter the full name of the member" {...field} className="pl-10" />
+                    </div>
+                </FormControl>
+              <FormMessage />
+              </FormItem>
+          )}
+        />
+        <FormField
           control={form.control}
           name="receiptNo"
           render={({ field }) => (
@@ -109,7 +141,7 @@ export default function MembershipEntryForm() {
             name="receiptDate"
             render={({ field }) => (
                 <FormItem className="flex flex-col">
-                <FormLabel>Date of receipt</FormLabel>
+                <FormLabel>Receipt Date</FormLabel>
                 <Popover>
                     <PopoverTrigger asChild>
                     <FormControl>
@@ -144,38 +176,6 @@ export default function MembershipEntryForm() {
                 <FormMessage />
                 </FormItem>
             )}
-        />
-        <FormField
-          control={form.control}
-          name="flatNo"
-          render={({ field }) => (
-              <FormItem>
-              <FormLabel>Flat Number</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Enter flat number" {...field} className="pl-10" />
-                    </div>
-                </FormControl>
-              <FormMessage />
-              </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="memberName"
-          render={({ field }) => (
-              <FormItem>
-              <FormLabel>Member Name</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Enter the full name of the member" {...field} className="pl-10" />
-                    </div>
-                </FormControl>
-              <FormMessage />
-              </FormItem>
-          )}
         />
         <FormField
           control={form.control}
