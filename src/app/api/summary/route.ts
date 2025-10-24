@@ -7,9 +7,12 @@ const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const MASTER_MEMBERSHIP_SHEET_NAME = 'masterMembership';
 const COLLECTION_SHEET_NAME = 'monthCollection';
 const DEFAULT_MAINTENANCE_FEE = 300;
+const TOTAL_FLATS = 1380;
 
-// Columns in masterMembership: C:flatNo, D:memberName, E:membershipNo, G:status
-const USERS_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:G`;
+// Columns in masterMembership: C:flatNo, D:memberName
+const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:D`;
+// Columns in monthCollection: A:Flatno, B:name of tenant, E:monthpaid, F:amount paid
+const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:F`;
 
 const getMonthsInRange = (from: string, to: string): string[] => {
     const fromDate = parse(from, 'yyyy-MM', new Date());
@@ -18,7 +21,6 @@ const getMonthsInRange = (from: string, to: string): string[] => {
     let currentDate = fromDate;
 
     while (currentDate <= toDate) {
-        // Format to "Month YYYY" to match the data in the sheet
         months.push(format(currentDate, 'MMMM yyyy'));
         currentDate.setMonth(currentDate.getMonth() + 1);
     }
@@ -41,45 +43,46 @@ export async function GET(request: Request) {
         });
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // 1. Fetch all potential users from masterMembership sheet
-        const usersResponse = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: USERS_RANGE, // C:flatNo, D:memberName, E:membershipNo, F:?, G:status
-        });
-        
-        // Filter for users where status (column G, index 4 in C:G range) is blank
-        const users = usersResponse.data.values?.slice(1).filter(row => row[4] === '' || row[4] === undefined || row[4] === null)
-            .map(row => ({ flatNo: row[0], ownerName: row[1] })) || [];
-        
-        if (!users.length) {
-             return NextResponse.json({ error: 'No users with blank status found in masterMembership sheet.' }, { status: 404 });
-        }
+        // 1. Fetch all data from both sheets at once
+        const [masterResponse, collectionResponse] = await Promise.all([
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: MASTER_RANGE }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: COLLECTION_RANGE })
+        ]);
 
-        // 2. Fetch all payment records
-        // Columns: Flatno, name of tenant, receipt date, receipt number, monthpaid, amount paid...
-        const collectionResponse = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${COLLECTION_SHEET_NAME}!A:F`, // Fetch columns A through F
-        });
-        const payments = collectionResponse.data.values?.slice(1) || [];
+        const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName], ...]
+        const payments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, tenantName, ..., month, amount], ...]
+
+        // Create fast-lookup maps
+        const masterNameMap = new Map(masterMembers.map(row => [String(row[0]), row[1]]));
+        const paymentTenantMap = new Map();
+        // Iterate backwards to get the most recent name for a flat
+        for (let i = payments.length - 1; i >= 0; i--) {
+            const row = payments[i];
+            const flatNo = String(row[0]);
+            const tenantName = row[1];
+            if (flatNo && tenantName && !paymentTenantMap.has(flatNo)) {
+                paymentTenantMap.set(flatNo, tenantName);
+            }
+        }
         
-        // 3. Generate the list of months for the period
+        // 2. Generate the list of months for the period
         const periodMonths = getMonthsInRange(from, to);
         const totalMonthsInPeriod = periodMonths.length;
 
-        // 4. Process data
-        const summary = users.map(user => {
-            if (!user.flatNo) return null; // Skip users without a flat number
+        // 3. Process data for all flats from 1 to 1380
+        const summary = [];
+        for (let i = 1; i <= TOTAL_FLATS; i++) {
+            const flatNo = String(i);
 
-            // Find all payments for the current user
-            // Column A (index 0) is Flat No. Use == for type-insensitive comparison.
-            const userPayments = payments.filter(p => p[0] == user.flatNo);
+            // Determine owner name with fallback logic
+            let ownerName = masterNameMap.get(flatNo) || paymentTenantMap.get(flatNo) || "NOT KNOWN";
+
+            // Find all payments for the current flat
+            const userPayments = payments.filter(p => String(p[0]) === flatNo);
             
             // Filter those payments to be within the requested date range
-            // Column E (index 4) is monthpaid
             const paidMonthsInPeriod = userPayments.filter(p => periodMonths.includes(p[4]));
 
-            // Column F (index 5) is amount paid
             const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
                 const amount = parseFloat(p[5]);
                 return acc + (isNaN(amount) ? 0 : amount);
@@ -88,13 +91,13 @@ export async function GET(request: Request) {
             const dueMonthsCount = totalMonthsInPeriod - paidMonthsInPeriod.length;
             const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
             
-            return {
-                flatNo: user.flatNo,
-                ownerName: user.ownerName,
+            summary.push({
+                flatNo,
+                ownerName,
                 totalPaid,
                 totalDue: totalDue > 0 ? totalDue : 0, // Don't show negative dues
-            };
-        }).filter(Boolean); // Filter out any null entries
+            });
+        }
 
         return NextResponse.json(summary);
 
