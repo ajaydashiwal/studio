@@ -7,6 +7,7 @@ const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
 const EXPENDITURE_SHEET = 'expenditure';
 const COMPLAINTS_SHEET = 'complaints';
+const COMPLAINT_TRANS_SHEET = 'complaintTrans';
 
 const getAuth = () => new google.auth.GoogleAuth({
     keyFile: 'google-credentials.json',
@@ -35,8 +36,8 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
     }
     const dueCount = 24 - paidCount;
 
-    // Feedback Data
-    const complaintsRange = `${COMPLAINTS_SHEET}!A:G`; // Submission Date, Flat No, ..., Status
+    // Feedback Data from complaintTrans sheet
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!A:G`; // Submission Date, Flat No, ..., Status
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const userComplaints = (complaintsResponse.data.values || []).slice(1).filter((row: any[]) => row[1] == flatNo);
 
@@ -75,7 +76,7 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
         return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
     
-    // Feedback
+    // Feedback from main complaints sheet
     const complaintsRange = `${COMPLAINTS_SHEET}!G:H`; // Status, Remarks
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = (complaintsResponse.data.values || []).slice(1);
