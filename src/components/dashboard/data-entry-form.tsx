@@ -79,7 +79,7 @@ export default function DataEntryForm() {
   const monthYearOptions = generateMonthYearOptions();
   
   const [isDuplicate, setIsDuplicate] = useState(false);
-  const [isMember, setIsMember] = useState(false);
+  const [isMember, setIsMember] = useState(true); // Default to true to hide tenant name initially
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,42 +96,56 @@ export default function DataEntryForm() {
   const watchedFlatNo = form.watch("flatNo");
   const watchedMonthYear = form.watch("monthYear");
 
-  const checkRecord = useCallback(debounce(async (flatNo, monthYear) => {
-    if (!flatNo || !monthYear) {
-      setIsDuplicate(false);
-      setIsMember(false);
+  const checkMembership = useCallback(debounce(async (flatNo) => {
+    if (!flatNo || flatNo <= 0) {
+      setIsMember(true); // Reset to default
       return;
     }
-    
+    try {
+      const response = await fetch(`/api/users/${flatNo}/status`);
+      if (response.ok) {
+        const { membershipStatus } = await response.json();
+        // A member is anyone with 'Active' or 'Inactive' status. 'NotFound' means they are not a member.
+        setIsMember(membershipStatus === 'Active' || membershipStatus === 'Inactive');
+      } else {
+        setIsMember(false); // Assume not a member if API fails or returns 404
+      }
+    } catch (error) {
+      console.error("Failed to check membership:", error);
+      setIsMember(false); // Assume not a member on network error
+    }
+  }, 300), []);
+
+  const checkDuplicateRecord = useCallback(async (flatNo, monthYear) => {
+    if (!flatNo || !monthYear) {
+      setIsDuplicate(false);
+      return;
+    }
     try {
       const response = await fetch(`/api/maintenance/${flatNo}/${encodeURIComponent(monthYear)}`);
       if (response.ok) {
-        const { isDuplicate, isMember } = await response.json();
+        const { isDuplicate } = await response.json();
         setIsDuplicate(isDuplicate);
-        setIsMember(isMember);
         if (isDuplicate) {
           toast({
             variant: "destructive",
-            title: "Duplicate Record",
+            title: "Duplicate Record Found",
             description: `A maintenance record for this flat and month already exists.`,
           });
         }
       } else {
-         // Reset on error to allow submission attempt
-         setIsDuplicate(false);
-         setIsMember(false);
+         setIsDuplicate(false); // Reset on error
       }
     } catch (error) {
-      console.error("Failed to check record:", error);
-      setIsDuplicate(false);
-      setIsMember(false);
+      console.error("Failed to check for duplicate record:", error);
+      setIsDuplicate(false); // Reset on error
     }
-  }, 500), []);
+  }, [toast]);
 
 
   useEffect(() => {
-    checkRecord(watchedFlatNo, watchedMonthYear);
-  }, [watchedFlatNo, watchedMonthYear, checkRecord]);
+    checkDuplicateRecord(watchedFlatNo, watchedMonthYear);
+  }, [watchedFlatNo, watchedMonthYear, checkDuplicateRecord]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -139,7 +153,7 @@ export default function DataEntryForm() {
         toast({
             variant: "destructive",
             title: "Submission Blocked",
-            description: "Cannot submit a duplicate record.",
+            description: "Cannot submit a duplicate record. Please correct the flat number or month.",
         });
         return;
     }
@@ -164,7 +178,7 @@ export default function DataEntryForm() {
             form.reset();
             form.setValue("amount", 300);
             setIsDuplicate(false);
-            setIsMember(false);
+            setIsMember(true);
         } else {
             const { error } = await response.json();
             toast({
@@ -197,6 +211,10 @@ export default function DataEntryForm() {
                         type="number" 
                         placeholder="Enter flat number" 
                         {...field}
+                        onChange={(e) => {
+                            field.onChange(e);
+                            checkMembership(e.target.value);
+                        }}
                        />
                   </FormControl>
                   <FormMessage />
@@ -342,7 +360,7 @@ export default function DataEntryForm() {
                         <Input placeholder="Enter tenant's name" {...field} />
                     </FormControl>
                     <FormDescription>
-                        This field is for non-members only.
+                        This field is required for non-members.
                     </FormDescription>
                     <FormMessage />
                     </FormItem>
