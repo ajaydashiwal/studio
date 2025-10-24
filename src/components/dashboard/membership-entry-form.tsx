@@ -21,25 +21,22 @@ import {
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { useToast } from "@/hooks/use-toast"
-import { Building, Hash, User as UserIcon, Receipt, CalendarIcon, Loader2 } from "lucide-react"
+import { Building, Hash, User as UserIcon, Receipt, CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { useState } from "react"
 
 const formSchema = z.object({
   flatNo: z.string().min(1, { message: "Flat number is required." }),
   memberName: z.string().min(3, { message: "Member name is required." }),
-  membershipNo: z.coerce.number().positive({ message: "A valid membership number is required." }),
   receiptNo: z.string().min(1, { message: "Receipt number is required." }),
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
   }),
+  membershipNo: z.coerce.number().positive({ message: "A valid membership number is required." }),
 })
 
 export default function MembershipEntryForm() {
   const { toast } = useToast()
-  const [pendingRecordExists, setPendingRecordExists] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,56 +48,11 @@ export default function MembershipEntryForm() {
     }
   })
 
-  const resetFormState = () => {
-    form.reset();
-    setPendingRecordExists(false);
-    setIsUpdating(false);
-  }
-
-  const handleUpdateStatus = async () => {
-    const flatNo = form.getValues("flatNo");
-    if (!flatNo) return;
-    setIsUpdating(true);
-    
-    try {
-        const response = await fetch('/api/master-membership', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ flatNo, newStatus: 'Inactive' }),
-        });
-        const result = await response.json();
-        
-        if (response.ok) {
-             toast({
-                title: "Status Updated",
-                description: result.message,
-            });
-            resetFormState();
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Update Failed",
-                description: result.error || "Could not update the record status.",
-            });
-        }
-    } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not connect to the server.",
-        });
-    } finally {
-        setIsUpdating(false);
-    }
-  }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
      const formattedValues = {
       ...values,
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
     };
-
-    setPendingRecordExists(false);
 
     try {
         const response = await fetch('/api/master-membership', {
@@ -116,19 +68,11 @@ export default function MembershipEntryForm() {
                 title: "Success",
                 description: result.message || "New membership record created successfully.",
             });
-            resetFormState();
-        } else if (response.status === 409) {
-             setPendingRecordExists(true);
+            form.reset();
+        } else {
              toast({
                 variant: "destructive",
-                title: "Duplicate Record",
-                description: result.error,
-            });
-        }
-        else {
-            toast({
-                variant: "destructive",
-                title: "Submission Failed",
+                title: response.status === 409 ? "Duplicate Record" : "Submission Failed",
                 description: result.error || "Could not save the new membership record.",
             });
         }
@@ -157,10 +101,6 @@ export default function MembershipEntryForm() {
                             placeholder="Enter flat number" 
                             {...field} 
                             className="pl-10" 
-                            onChange={(e) => {
-                                field.onChange(e);
-                                if (pendingRecordExists) setPendingRecordExists(false);
-                            }}
                          />
                     </div>
                 </FormControl>
@@ -257,20 +197,7 @@ export default function MembershipEntryForm() {
               </FormItem>
           )}
         />
-        <div className="flex items-center gap-4">
-            <Button type="submit" disabled={pendingRecordExists}>Create Membership Record</Button>
-            {pendingRecordExists && (
-                <Button 
-                    type="button" 
-                    variant="destructive"
-                    onClick={handleUpdateStatus}
-                    disabled={isUpdating}
-                >
-                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Update Status to Inactive
-                </Button>
-            )}
-        </div>
+        <Button type="submit">Create Membership Record</Button>
       </form>
     </Form>
   )
