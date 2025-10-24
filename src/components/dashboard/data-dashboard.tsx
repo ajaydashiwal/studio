@@ -8,6 +8,7 @@ import DataTable from '@/components/dashboard/data-table';
 import SummaryTable from '@/components/dashboard/summary-table';
 import DataEntryForm from '@/components/dashboard/data-entry-form';
 import UserEntryForm from '@/components/dashboard/user-entry-form';
+import MembershipEntryForm from '@/components/dashboard/membership-entry-form';
 import ChangePasswordForm from '@/components/dashboard/change-password-form';
 import {
   Menubar,
@@ -29,7 +30,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'userEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary';
+type View = 'statement' | 'entry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
@@ -96,6 +97,23 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           );
         }
         return null;
+        case 'membershipEntry':
+            if (isGeneralSecretary) {
+                return (
+                    <Card className="shadow-md">
+                        <CardHeader>
+                            <CardTitle>New Membership Record</CardTitle>
+                            <CardDescription>
+                                Add a new record to the master membership list.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <MembershipEntryForm />
+                        </CardContent>
+                    </Card>
+                );
+            }
+            return null;
       case 'changePassword':
         return (
             <Card className="shadow-md">
@@ -161,6 +179,15 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             </MenubarMenu>
           )}
           {isGeneralSecretary && (
+            <>
+              <MenubarMenu>
+                <MenubarTrigger
+                  onClick={() => setActiveView('membershipEntry')}
+                  className={activeView === 'membershipEntry' ? 'bg-accent' : ''}
+                >
+                  Membership Entry
+                </MenubarTrigger>
+              </MenubarMenu>
               <MenubarMenu>
                 <MenubarTrigger
                   onClick={() => setActiveView('userEntry')}
@@ -169,6 +196,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                   User Entry
                 </MenubarTrigger>
               </MenubarMenu>
+            </>
           )}
            <MenubarMenu>
                 <MenubarTrigger
