@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'masterMembership';
-// Columns in masterMembership: B:receiptNo, C:receiptDate, D:flatNo, E:memberName, F:membershipNo, G:status
-const RANGE_TO_CHECK = `${SHEET_NAME}!D:D`; 
+// Columns in masterMembership: D:flatNo, G:status
+const RANGE_TO_CHECK = `${SHEET_NAME}!D:G`; 
 
 export async function POST(request: Request) {
   try {
@@ -24,16 +24,21 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    // Check if flat number already exists to prevent duplicates
+    // Check if a record with the same flat number and a blank status already exists
     const getResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: RANGE_TO_CHECK,
+        range: RANGE_TO_CHECK, // Check flatNo (D) and status (G)
     });
+
     const rows = getResponse.data.values || [];
-    const existingRow = rows.find(row => row[0] == flatNo);
+    const existingRow = rows.find(row => {
+        const sheetFlatNo = row[0]; // Column D
+        const status = row[3];      // Column G
+        return sheetFlatNo == flatNo && (status === '' || status === undefined || status === null);
+    });
 
     if (existingRow) {
-        return NextResponse.json({ error: 'A member with this flat number already exists in the master list.' }, { status: 409 });
+        return NextResponse.json({ error: 'A pending membership record for this flat number already exists.' }, { status: 409 });
     }
     
     // The data corresponds to columns B, C, D, E, F, G
