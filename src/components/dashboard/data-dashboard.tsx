@@ -9,6 +9,7 @@ import DataTable from '@/components/dashboard/data-table';
 import SummaryTable from '@/components/dashboard/summary-table';
 import DataEntryForm from '@/components/dashboard/data-entry-form';
 import UserEntryForm from '@/components/dashboard/user-entry-form';
+import ChangePasswordForm from '@/components/dashboard/change-password-form';
 import {
   Menubar,
   MenubarContent,
@@ -29,7 +30,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'userEntry';
+type View = 'statement' | 'entry' | 'userEntry' | 'changePassword';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
@@ -37,6 +38,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const isOfficeBearer = ['President', 'VicePresident', 'GeneralSecretary', 'JointSecretary', 'Treasurer'].includes(user.userType);
   const isTreasurer = user.userType === 'Treasurer';
   const isMember = user.userType === 'Member';
+  const isGeneralSecretary = user.userType === 'GeneralSecretary';
 
   const renderContent = () => {
     switch (activeView) {
@@ -64,13 +66,13 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
         }
         return null;
        case 'userEntry':
-        if (isOfficeBearer) {
+        if (isGeneralSecretary) {
           return (
             <Card className="shadow-md">
               <CardHeader>
                 <CardTitle>Member/User Entry</CardTitle>
                 <CardDescription>
-                  Create or update user and membership records.
+                  Create new user and membership records.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
@@ -80,6 +82,20 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           );
         }
         return null;
+      case 'changePassword':
+        return (
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle>Change Your Password</CardTitle>
+                <CardDescription>
+                  Update your login password here.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <ChangePasswordForm flatNo={user.flatNo} />
+              </CardContent>
+            </Card>
+        );
       default:
         return null;
     }
@@ -108,7 +124,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               </MenubarTrigger>
             </MenubarMenu>
           )}
-          {isOfficeBearer && (
+          {isGeneralSecretary && (
               <MenubarMenu>
                 <MenubarTrigger
                   onClick={() => setActiveView('userEntry')}
@@ -118,6 +134,14 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 </MenubarTrigger>
               </MenubarMenu>
           )}
+           <MenubarMenu>
+                <MenubarTrigger
+                  onClick={() => setActiveView('changePassword')}
+                  className={activeView === 'changePassword' ? 'bg-accent' : ''}
+                >
+                  Change Password
+                </MenubarTrigger>
+              </MenubarMenu>
         </Menubar>
         <div className="mt-2">{renderContent()}</div>
       </main>

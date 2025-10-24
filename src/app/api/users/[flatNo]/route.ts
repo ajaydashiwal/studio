@@ -8,7 +8,7 @@ const MASTER_SHEET_NAME = 'masterMembership';
 // Columns in memberUsers: flatNo,membershipNo,ownerName,userType,password,membershipStatus,IsMember (A-G)
 const USERS_RANGE = `${USERS_SHEET_NAME}!A:F`; 
 // Columns in masterMembership: flatNo, memberName,membershipNo,status (C-G) -> flatNo is C, name D, no E, status G
-const MASTER_RANGE = `${MASTER_SHEET_NAME}!C:G`; 
+const MASTER_RANGE = `${MASTER_SHEET_NAME}!D:G`; 
 
 
 export async function GET(request: Request, { params }: { params: { flatNo: string } }) {
