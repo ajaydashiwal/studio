@@ -64,6 +64,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/recharts": "^1.8.29",
     "@types/wav": "^1.0.3",
     "genkit-cli": "^1.20.0",
     "postcss": "^8",

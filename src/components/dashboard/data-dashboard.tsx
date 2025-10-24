@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { User } from '@/lib/data';
 import AppHeader from '@/components/dashboard/app-header';
 import DataTable from '@/components/dashboard/data-table';
@@ -13,6 +13,7 @@ import ChangePasswordForm from '@/components/dashboard/change-password-form';
 import ExpenditureEntryForm from '@/components/dashboard/expenditure-entry-form';
 import ComplaintSuggestionForm from '@/components/dashboard/complaint-suggestion-form';
 import ComplaintManagement from '@/components/dashboard/complaint-management';
+import OverviewDashboard from '@/components/dashboard/overview-dashboard';
 import {
   Menubar,
   MenubarContent,
@@ -33,27 +34,24 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback' | 'complaintManagement';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback' | 'complaintManagement';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
-  const [activeView, setActiveView] = useState<View>('statement');
+  const [activeView, setActiveView] = useState<View>('overview');
   
   const isTreasurer = user.userType === 'Treasurer';
   const isMember = user.userType === 'Member';
   const isGeneralSecretary = user.userType === 'GeneralSecretary';
   const isOfficeBearer = !isMember;
 
-  // Set initial view based on user type
-  useState(() => {
-    if (isMember) {
-      setActiveView('statement');
-    } else {
-      setActiveView('memberSummary');
-    }
-  });
+  useEffect(() => {
+    setActiveView('overview');
+  }, [user]);
 
   const renderContent = () => {
     switch (activeView) {
+      case 'overview':
+        return <OverviewDashboard user={user} />;
       case 'statement':
         return <DataTable flatNo={user.flatNo} />;
       case 'memberSummary':
@@ -143,7 +141,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                             <CardDescription>
                                 Visualizing income and expenditure. (Coming Soon)
                             </CardDescription>
-                        </CardHeader>
+                        </Header>
                         <CardContent>
                            <p>Financial charts will be displayed here.</p>
                         </CardContent>
@@ -160,7 +158,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                             <CardDescription>
                                 Submit your feedback to the association.
                             </CardDescription>
-                        </CardHeader>
+                        </Header>
                         <CardContent>
                             <ComplaintSuggestionForm flatNo={user.flatNo} ownerName={user.ownerName} />
                         </CardContent>
@@ -188,7 +186,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             </Card>
         );
       default:
-        return isMember ? <DataTable flatNo={user.flatNo} /> : <SummaryTable summaryType="member" />;
+        return <OverviewDashboard user={user} />;
     }
   };
 
@@ -197,14 +195,13 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       <AppHeader user={user} onLogout={onLogout} />
       <main>
         <Menubar className="mb-4 flex-wrap h-auto">
-          {isMember && (
             <MenubarMenu>
               <MenubarTrigger>Dashboard</MenubarTrigger>
               <MenubarContent>
-                <MenubarItem onClick={() => setActiveView('statement')}>Account Statement</MenubarItem>
+                <MenubarItem onClick={() => setActiveView('overview')}>Overview</MenubarItem>
+                {isMember && <MenubarItem onClick={() => setActiveView('statement')}>Account Statement</MenubarItem>}
               </MenubarContent>
             </MenubarMenu>
-          )}
 
           {isOfficeBearer && (
              <>
