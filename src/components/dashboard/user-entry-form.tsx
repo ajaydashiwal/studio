@@ -160,7 +160,7 @@ export default function UserEntryForm() {
                       <Input 
                         placeholder="Enter flat no & press Tab to fetch" 
                         {...field}
-                        onBlur={(e) => handleFetchUserData(e.target.value)}
+                        onBlur={() => handleFetchUserData(field.value)}
                         disabled={isFetchedAndPending || isManuallyCreatable || isChecking}
                        />
                   </FormControl>
