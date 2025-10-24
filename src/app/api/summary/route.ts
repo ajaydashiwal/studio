@@ -1,13 +1,12 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { parse, format } from 'date-fns';
+import { parse, format, differenceInMonths, startOfMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const MASTER_MEMBERSHIP_SHEET_NAME = 'masterMembership';
 const COLLECTION_SHEET_NAME = 'monthCollection';
 const DEFAULT_MAINTENANCE_FEE = 300;
-const TOTAL_FLATS = 1380;
 
 // Columns in masterMembership: C:flatNo, D:memberName
 const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!C:D`;
@@ -50,25 +49,19 @@ export async function GET(request: Request) {
         ]);
 
         const masterMembers = masterResponse.data.values?.slice(1) || []; // [[flatNo, memberName], ...]
-        const payments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, tenantName, ..., month, amount], ...]
+        const allPayments = collectionResponse.data.values?.slice(1) || []; // [[flatNo, ..., month, amount], ...]
 
-        // Create a fast-lookup map for master members
-        const masterNameMap = new Map(masterMembers.map(row => [String(row[0]).trim(), row[1]]));
-        
         // 2. Generate the list of months for the period
         const periodMonths = getMonthsInRange(from, to);
         const totalMonthsInPeriod = periodMonths.length;
-
-        // 3. Process data for all flats from 1 to 1380
-        const summary = [];
-        for (let i = 1; i <= TOTAL_FLATS; i++) {
-            const flatNo = String(i);
-            
-            // Get owner name ONLY from master membership
-            const ownerName = masterNameMap.get(flatNo) || "NOT KNOWN";
+        
+        // 3. Process data for each flat in the master list
+        const summary = masterMembers.map(memberRow => {
+            const flatNo = String(memberRow[0]).trim();
+            const ownerName = memberRow[1] || "NOT KNOWN";
             
             // Find all payments for the current flat within the requested date range
-            const paidMonthsInPeriod = payments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
+            const paidMonthsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
 
             const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
                 const amount = parseFloat(p[5]);
@@ -78,13 +71,13 @@ export async function GET(request: Request) {
             const dueMonthsCount = totalMonthsInPeriod - paidMonthsInPeriod.length;
             const totalDue = dueMonthsCount * DEFAULT_MAINTENANCE_FEE;
             
-            summary.push({
+            return {
                 flatNo,
                 ownerName,
                 totalPaid,
                 totalDue: totalDue > 0 ? totalDue : 0, // Don't show negative dues
-            });
-        }
+            };
+        });
 
         return NextResponse.json(summary);
 
