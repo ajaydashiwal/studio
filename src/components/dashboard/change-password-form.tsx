@@ -79,7 +79,7 @@ export default function ChangePasswordForm({ flatNo }: ChangePasswordFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-md">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-md">
         <FormField
           control={form.control}
           name="oldPassword"

@@ -10,6 +10,7 @@ import DataEntryForm from '@/components/dashboard/data-entry-form';
 import UserEntryForm from '@/components/dashboard/user-entry-form';
 import MembershipEntryForm from '@/components/dashboard/membership-entry-form';
 import ChangePasswordForm from '@/components/dashboard/change-password-form';
+import ExpenditureEntryForm from '@/components/dashboard/expenditure-entry-form';
 import {
   Menubar,
   MenubarContent,
@@ -30,7 +31,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'statement' | 'entry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary';
+type View = 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
@@ -73,7 +74,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                   Enter new maintenance fee payment records.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent>
                 <DataEntryForm />
               </CardContent>
             </Card>
@@ -90,7 +91,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                   Create new user and membership records.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent>
                 <UserEntryForm />
               </CardContent>
             </Card>
@@ -107,8 +108,42 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                                 Add a new record to the master membership list.
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
+                        <CardContent>
                             <MembershipEntryForm />
+                        </CardContent>
+                    </Card>
+                );
+            }
+            return null;
+        case 'expenditureEntry':
+            if (isTreasurer) {
+                return (
+                    <Card className="shadow-md">
+                        <CardHeader>
+                            <CardTitle>Expenditure Entry</CardTitle>
+                            <CardDescription>
+                                Record an outgoing payment or expense.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ExpenditureEntryForm />
+                        </CardContent>
+                    </Card>
+                );
+            }
+            return null;
+        case 'financials':
+             if (isOfficeBearer) {
+                return (
+                    <Card className="shadow-md">
+                        <CardHeader>
+                            <CardTitle>Financial Dashboard</CardTitle>
+                            <CardDescription>
+                                Visualizing income and expenditure. (Coming Soon)
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <p>Financial charts will be displayed here.</p>
                         </CardContent>
                     </Card>
                 );
@@ -123,7 +158,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                   Update your login password here.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent>
                 <ChangePasswordForm flatNo={user.flatNo} />
               </CardContent>
             </Card>
@@ -137,7 +172,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
     <div className="w-full max-w-6xl space-y-6">
       <AppHeader user={user} onLogout={onLogout} />
       <main>
-        <Menubar className="mb-4">
+        <Menubar className="mb-4 flex-wrap h-auto">
           {isMember && (
             <MenubarMenu>
               <MenubarTrigger>Dashboard</MenubarTrigger>
@@ -148,13 +183,21 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           )}
 
           {isOfficeBearer && (
-            <MenubarMenu>
-              <MenubarTrigger>Reports</MenubarTrigger>
-              <MenubarContent>
-                <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
-                <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
-              </MenubarContent>
-            </MenubarMenu>
+             <>
+                <MenubarMenu>
+                    <MenubarTrigger>Reports</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
+                        <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Financials</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarItem onClick={() => setActiveView('financials')}>Dashboard</MenubarItem>
+                    </MenubarContent>
+                </MenubarMenu>
+             </>
           )}
 
           {isTreasurer && (
@@ -162,6 +205,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               <MenubarTrigger>Data Entry</MenubarTrigger>
               <MenubarContent>
                 <MenubarItem onClick={() => setActiveView('entry')}>Maintenance Entry</MenubarItem>
+                <MenubarItem onClick={() => setActiveView('expenditureEntry')}>Expenditure Entry</MenubarItem>
               </MenubarContent>
             </MenubarMenu>
           )}

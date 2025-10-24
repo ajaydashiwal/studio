@@ -204,141 +204,143 @@ export default function MembershipEntryForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-lg">
-        <FormField
-          control={form.control}
-          name="flatNo"
-          render={({ field }) => (
-              <FormItem>
-              <FormLabel>Flat Number</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                            placeholder="Enter flat no. & press Tab" 
-                            {...field} 
-                            className="pl-10" 
-                            onBlur={(e) => handleCheckExistingMember(e.target.value)}
-                            disabled={isChecking || memberExists}
-                         />
-                         {isChecking && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
-                    </div>
-                </FormControl>
-              <FormMessage />
-              </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="memberName"
-          render={({ field }) => (
-              <FormItem>
-              <FormLabel>Owner/Member Name</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Enter the full name of the member" {...field} className="pl-10" readOnly={isReadOnly} />
-                    </div>
-                </FormControl>
-              <FormMessage />
-              </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="receiptNo"
-          render={({ field }) => (
-              <FormItem>
-              <FormLabel>Receipt No.</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Enter receipt number" {...field} className="pl-10" readOnly={isReadOnly} />
-                    </div>
-                </FormControl>
-              <FormMessage />
-              </FormItem>
-          )}
-        />
-        <FormField
-            control={form.control}
-            name="receiptDate"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                <FormLabel>Receipt Date</FormLabel>
-                <Popover>
-                    <PopoverTrigger asChild>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            <FormField
+              control={form.control}
+              name="flatNo"
+              render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                  <FormLabel>Flat Number</FormLabel>
                     <FormControl>
-                        <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-full justify-start pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                        )}
-                        disabled={isReadOnly}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
-                        ) : (
-                            <span>Pick a date</span>
-                        )}
-                        </Button>
+                        <div className="relative">
+                            <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                placeholder="Enter flat no. & press Tab" 
+                                {...field} 
+                                className="pl-10" 
+                                onBlur={(e) => handleCheckExistingMember(e.target.value)}
+                                disabled={isChecking || memberExists}
+                             />
+                             {isChecking && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
+                        </div>
                     </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                    />
-                    </PopoverContent>
-                </Popover>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
-        <FormField
-          control={form.control}
-          name="membershipNo"
-          render={({ field }) => (
-              <FormItem>
-              <FormLabel>Membership No.</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input type="number" placeholder="Enter membership number" {...field} className="pl-10" readOnly={isReadOnly} />
-                    </div>
-                </FormControl>
-              <FormMessage />
-              </FormItem>
-          )}
-        />
-        {memberExists && (
-             <FormField
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="memberName"
+              render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                  <FormLabel>Owner/Member Name</FormLabel>
+                    <FormControl>
+                        <div className="relative">
+                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Enter the full name of the member" {...field} className="pl-10" readOnly={isReadOnly} />
+                        </div>
+                    </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="receiptNo"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Receipt No.</FormLabel>
+                    <FormControl>
+                        <div className="relative">
+                            <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Enter receipt number" {...field} className="pl-10" readOnly={isReadOnly} />
+                        </div>
+                    </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
+            <FormField
                 control={form.control}
-                name="status"
+                name="receiptDate"
                 render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Update Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a new status" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="Active" disabled>Active</SelectItem>
-                                <SelectItem value="Inactive">Inactive</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
+                    <FormItem className="flex flex-col pt-2">
+                    <FormLabel>Receipt Date</FormLabel>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <FormControl>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                            )}
+                            disabled={isReadOnly}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? (
+                                format(field.value, "dd/MM/yyyy")
+                            ) : (
+                                <span>Pick a date</span>
+                            )}
+                            </Button>
+                        </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
+                    <FormMessage />
                     </FormItem>
                 )}
             />
-        )}
+            <FormField
+              control={form.control}
+              name="membershipNo"
+              render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                  <FormLabel>Membership No.</FormLabel>
+                    <FormControl>
+                        <div className="relative">
+                            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input type="number" placeholder="Enter membership number" {...field} className="pl-10" readOnly={isReadOnly} />
+                        </div>
+                    </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
+            {memberExists && (
+                 <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                            <FormLabel>Update Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a new status" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Active" disabled>Active</SelectItem>
+                                    <SelectItem value="Inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
+        </div>
         <div className="flex gap-4">
             <Button type="submit" disabled={isChecking || isUpdating}>
                 {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
