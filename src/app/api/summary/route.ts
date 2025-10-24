@@ -18,7 +18,7 @@ const getMonthsInRange = (from: string, to: string): string[] => {
     const fromDate = parse(from, 'yyyy-MM', new Date());
     const toDate = parse(to, 'yyyy-MM', new Date());
     const months = [];
-    let currentDate = fromDate;
+    let currentDate = new Date(fromDate);
 
     while (currentDate <= toDate) {
         months.push(format(currentDate, 'MMMM yyyy'));
