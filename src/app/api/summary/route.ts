@@ -74,7 +74,7 @@ export async function GET(request: Request) {
         for (let i = 1; i <= TOTAL_FLATS; i++) {
             const flatNo = String(i);
 
-            // Correctly determine owner name with fallback logic
+            // Determine owner name with fallback logic as requested
             const ownerName = masterNameMap.get(flatNo) || paymentTenantMap.get(flatNo) || "NOT KNOWN";
             
             // Find all payments for the current flat
