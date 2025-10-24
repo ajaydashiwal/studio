@@ -35,7 +35,6 @@ type View = 'statement' | 'entry' | 'userEntry' | 'changePassword';
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('statement');
   
-  const isOfficeBearer = ['President', 'VicePresident', 'GeneralSecretary', 'JointSecretary', 'Treasurer'].includes(user.userType);
   const isTreasurer = user.userType === 'Treasurer';
   const isMember = user.userType === 'Member';
   const isGeneralSecretary = user.userType === 'GeneralSecretary';
