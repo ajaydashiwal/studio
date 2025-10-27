@@ -53,7 +53,6 @@ export async function POST(request: Request) {
       description,
       amount,
       transactionDetails,
-      paymentDate,
       submissionTimestamp
     ];
 
