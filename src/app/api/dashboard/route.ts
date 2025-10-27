@@ -73,21 +73,21 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
     }, 0);
     
     // Feedback from complaintTrans sheet
-    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!G:G`; // Status column
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!D:G`; // formType, issueCategory, description, status
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = (complaintsResponse.data.values || []).slice(1);
     
     const openFeedbackCount = complaintsRows.filter((row: any[]) => {
         // Add a guard clause to prevent crash on empty rows
-        if (!row || !row[0]) return false;
-        const status = row[0] || 'Open';
+        if (!row || !row[3]) return false;
+        const status = row[3] || 'Open';
         return status === 'Open';
     }).length;
     
     const feedbackSummary = complaintsRows.reduce((acc: any, row: any[]) => {
         // Add a guard clause to prevent crash on empty rows
-        if (!row || !row[0]) return acc;
-        const status = row[0] || 'Open';
+        if (!row || !row[3]) return acc;
+        const status = row[3] || 'Open';
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});

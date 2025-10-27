@@ -137,8 +137,8 @@ export async function PUT(request: Request) {
 
         const actionDate = format(new Date(), "dd/MM/yyyy HH:mm:ss");
 
-        // Columns G (Status), H (Remarks), I (Action Date)
-        const updateRange = `${SHEET_NAME}!G${rowIndex}:I${rowIndex}`;
+        // Columns G (Status), H (Remarks)
+        const updateRange = `${SHEET_NAME}!G${rowIndex}:H${rowIndex}`;
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
