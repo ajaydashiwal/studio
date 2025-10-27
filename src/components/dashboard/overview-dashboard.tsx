@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import MaintenancePieChart from '@/components/charts/maintenance-pie-chart';
 import FeedbackBarChart from '@/components/charts/feedback-bar-chart';
-import { DollarSign, HandCoins, MessageSquareWarning } from 'lucide-react';
+import { HandCoins, MessageSquareWarning } from 'lucide-react';
 
 interface OverviewDashboardProps {
   user: Omit<User, 'membershipStatus'>;
@@ -23,6 +23,7 @@ interface MemberData {
 interface OfficeBearerData {
   collections: number;
   expenditure: number;
+  financialSummary: { name: string; value: number }[];
   openFeedback: number;
   feedback: { name: string; value: number }[];
 }
@@ -92,51 +93,52 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   );
 
   const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => (
-    <>
-        <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Collections</CardTitle>
-                    <HandCoins className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">₹{officeData.collections.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">From all maintenance fees received.</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Expenditure</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">₹{officeData.expenditure.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">Total amount spent by the association.</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Open Feedback</CardTitle>
-                    <MessageSquareWarning className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{officeData.openFeedback}</div>
-                    <p className="text-xs text-muted-foreground">New feedback items requiring action.</p>
-                </CardContent>
-            </Card>
-        </div>
-        <div className="grid gap-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Overall Feedback Status</CardTitle>
-                    <CardDescription>Summary of all submitted complaints and suggestions.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <FeedbackBarChart data={officeData.feedback} />
-                </CardContent>
-            </Card>
-        </div>
-    </>
+    <div className="grid gap-6">
+      <div className="grid gap-4 md:grid-cols-3">
+          <Card className="md:col-span-2">
+              <CardHeader>
+                  <CardTitle>Financial Summary</CardTitle>
+                  <CardDescription>
+                      Comparison of total collections vs. total expenditure.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
+                      <FeedbackBarChart data={officeData.financialSummary} />
+                  ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                          No financial data available.
+                      </div>
+                  )}
+              </CardContent>
+          </Card>
+          <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Open Feedback</CardTitle>
+                  <MessageSquareWarning className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{officeData.openFeedback}</div>
+                  <p className="text-xs text-muted-foreground">New feedback items requiring action.</p>
+              </CardContent>
+          </Card>
+      </div>
+      <Card>
+          <CardHeader>
+              <CardTitle>Overall Feedback Status</CardTitle>
+              <CardDescription>Summary of all submitted complaints and suggestions.</CardDescription>
+          </CardHeader>
+          <CardContent>
+              {officeData.feedback && officeData.feedback.length > 0 ? (
+                  <FeedbackBarChart data={officeData.feedback} />
+              ) : (
+                   <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No feedback data available.
+                  </div>
+              )}
+          </CardContent>
+      </Card>
+    </div>
   );
   
   if (loading) {

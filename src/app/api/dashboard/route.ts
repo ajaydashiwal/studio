@@ -5,7 +5,7 @@ import { startOfToday, subMonths, format } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
-const EXPENDITURE_SHEET = 'expenditure';
+const EXPENDITURE_SHEET = 'expTransaction';
 const COMPLAINT_TRANS_SHEET = 'complaintTrans';
 
 const getAuth = () => new google.auth.GoogleAuth({
@@ -38,7 +38,7 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
     // Feedback Data from complaintTrans sheet
     const complaintsRange = `${COMPLAINT_TRANS_SHEET}!C:G`; // flatNo, formType, issueCategory, description, status
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
-    const userFeedback = (complaintsResponse.data.values || []).slice(1).filter((row: any[]) => row[0] == flatNo);
+    const userFeedback = (complaintsResponse.data.values || []).slice(1).filter((row: any[]) => row && row[0] == flatNo);
 
     const feedbackSummary = userFeedback.reduce((acc: any, row: any[]) => {
         const status = row[4] || 'Open'; // Status is at index 4 (column G)
@@ -57,18 +57,20 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
 
 const getOfficeBearerDashboardData = async (sheets: any) => {
     // Collections
-    const collectionRange = `${COLLECTION_SHEET}!C:F`; // receipt date, receipt no, monthpaid, amount
+    const collectionRange = `${COLLECTION_SHEET}!F:F`; // amount
     const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: collectionRange });
     const totalCollections = (collectionResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        const amount = parseFloat(row[3]);
+        if (!row || !row[0]) return acc;
+        const amount = parseFloat(row[0]);
         return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
 
     // Expenditures
-    const expenditureRange = `${EXPENDITURE_SHEET}!A:C`; // payment date, description, amount
+    const expenditureRange = `${EXPENDITURE_SHEET}!C:C`; // amount
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        const amount = parseFloat(row[2]);
+        if (!row || !row[0]) return acc;
+        const amount = parseFloat(row[0]);
         return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
     
@@ -78,14 +80,12 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
     const complaintsRows = (complaintsResponse.data.values || []).slice(1);
     
     const openFeedbackCount = complaintsRows.filter((row: any[]) => {
-        // Add a guard clause to prevent crash on empty rows
         if (!row || !row[3]) return false;
         const status = row[3] || 'Open';
         return status === 'Open';
     }).length;
     
     const feedbackSummary = complaintsRows.reduce((acc: any, row: any[]) => {
-        // Add a guard clause to prevent crash on empty rows
         if (!row || !row[3]) return acc;
         const status = row[3] || 'Open';
         acc[status] = (acc[status] || 0) + 1;
@@ -95,6 +95,10 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
     return {
         collections: totalCollections,
         expenditure: totalExpenditure,
+        financialSummary: [
+            { name: 'Collections', value: totalCollections },
+            { name: 'Expenditure', value: totalExpenditure },
+        ],
         openFeedback: openFeedbackCount,
         feedback: Object.keys(feedbackSummary).map(key => ({ name: key, value: feedbackSummary[key] })),
     };
