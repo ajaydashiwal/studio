@@ -6,7 +6,6 @@ import { startOfToday, subMonths, format } from 'date-fns';
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
 const EXPENDITURE_SHEET = 'expenditure';
-const COMPLAINTS_SHEET = 'complaints';
 const COMPLAINT_TRANS_SHEET = 'complaintTrans';
 
 const getAuth = () => new google.auth.GoogleAuth({
@@ -76,15 +75,14 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
         return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
     
-    // Feedback from main complaints sheet
-    const complaintsRange = `${COMPLAINTS_SHEET}!G:H`; // Status, Remarks
+    // Feedback from complaintTrans sheet
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!G:H`; // Status, Remarks
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = (complaintsResponse.data.values || []).slice(1);
     
     const openFeedbackCount = complaintsRows.filter((row: any[]) => {
         const status = row[0] || 'Open';
-        const remarks = row[1] || '';
-        return (status === 'Open' && remarks === '');
+        return status === 'Open';
     }).length;
     
     const feedbackSummary = complaintsRows.reduce((acc: any, row: any[]) => {
