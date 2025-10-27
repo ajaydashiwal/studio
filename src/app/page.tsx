@@ -55,7 +55,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background font-body">
-        <div className="flex flex-col items-center justify-center p-4 md:p-8 min-h-screen">
+        <div className="flex flex-col items-center justify-center p-4 md:p-8">
             {user ? (
                 <DataDashboard user={user} onLogout={handleLogout} />
             ) : (

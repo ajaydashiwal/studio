@@ -131,11 +131,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
           <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="h-[300px]">
            {memberData.maintenance && memberData.maintenance.length > 0 ? (
             <MaintenancePieChart data={memberData.maintenance} />
           ) : (
-             <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+             <div className="flex items-center justify-center h-full text-muted-foreground">
               No maintenance data to display.
             </div>
           )}
@@ -146,11 +146,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardTitle>My Feedback Status</CardTitle>
           <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="h-[300px]">
           {(memberData.feedback && memberData.feedback.length > 0) ? (
             <FeedbackBarChart data={memberData.feedback} />
           ) : (
-            <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            <div className="flex items-center justify-center h-full text-muted-foreground">
               You have not submitted any feedback yet.
             </div>
           )}
@@ -160,37 +160,84 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   );
 
   const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Financial Summary</CardTitle>
+                    <CardDescription>
+                        Total collections vs. total expenditure.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                    {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
+                        <FeedbackBarChart data={officeData.financialSummary} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                            No financial data available.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Community Feedback Summary</CardTitle>
+                    <CardDescription>An overview of all submitted feedback.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                     {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
+                        <FeedbackBarChart data={officeData.feedbackSummary} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                            No feedback data available.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
         <Card>
             <CardHeader>
-                <CardTitle>Financial Summary</CardTitle>
-                <CardDescription>
-                    Total collections vs. total expenditure.
-                </CardDescription>
+                <CardTitle>Community Feedback Status</CardTitle>
+                <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-                {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
-                    <FeedbackBarChart data={officeData.financialSummary} />
-                ) : (
-                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                        No financial data available.
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Community Feedback Summary</CardTitle>
-                <CardDescription>An overview of all submitted feedback.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
-                    <FeedbackBarChart data={officeData.feedbackSummary} />
-                ) : (
-                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                        No feedback data available.
-                    </div>
-                )}
+                <ScrollArea className="h-96 rounded-md border">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-secondary">
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Type/Category</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="text-center">Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {complaintsLoading ? (
+                                Array.from({ length: 5 }).map((_, index) => (
+                                <TableRow key={`skeleton-${index}`}>
+                                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                    <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                </TableRow>
+                                ))
+                            ) : allComplaints.length === 0 ? (
+                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
+                            ) : (
+                                allComplaints.slice(0, 20).map((item) => ( // Show recent 20
+                                    <TableRow key={item.id}>
+                                        <TableCell className="text-xs">{item.submissionDate}</TableCell>
+                                        <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
+                                        <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
             </CardContent>
         </Card>
     </div>
@@ -201,11 +248,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         <div className="grid gap-6 md:grid-cols-2">
             <Card>
                 <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
-                <CardContent><Skeleton className="h-[250px] w-full" /></CardContent>
+                <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
             </Card>
             <Card>
                 <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
-                <CardContent><Skeleton className="h-[250px] w-full" /></CardContent>
+                <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
             </Card>
         </div>
     );

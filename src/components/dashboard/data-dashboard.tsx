@@ -139,7 +139,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                         <CardHeader>
                             <CardTitle>Financial Dashboard</CardTitle>
                             <CardDescription>
-                                Visualizing income and expenditure. (Coming Soon)
+                                Visualizing income and expenditure.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>

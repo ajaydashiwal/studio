@@ -67,7 +67,7 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
     }, 0);
 
     // Total Expenditure
-    const expenditureRange = `${EXPENDITURE_SHEET}!C:C`; // amount
+    const expenditureRange = `${EXPENDITURE_SHEET}!D:D`; // amount
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
         if (!row || !row[0]) return acc;

@@ -23,11 +23,19 @@ const chartConfig = {
     label: "Count",
     color: "hsl(var(--chart-1))",
   },
+  Collections: {
+     label: "Collections",
+     color: "hsl(var(--chart-2))",
+  },
+  Expenditure: {
+      label: "Expenditure",
+      color: "hsl(var(--chart-5))",
+  }
 };
 
 export default function FeedbackBarChart({ data }: FeedbackBarChartProps) {
   return (
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full h-[250px]">
+    <ChartContainer config={chartConfig} className="min-h-[250px] h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart accessibilityLayer data={data} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
           <CartesianGrid vertical={false} />
