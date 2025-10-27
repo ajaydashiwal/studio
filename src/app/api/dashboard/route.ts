@@ -41,7 +41,7 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
     const userFeedback = (complaintsResponse.data.values || []).slice(1).filter((row: any[]) => row[0] == flatNo);
 
     const feedbackSummary = userFeedback.reduce((acc: any, row: any[]) => {
-        const status = row[4] || 'Open';
+        const status = row[4] || 'Open'; // Status is at index 4 (column G)
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
@@ -76,17 +76,17 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
     }, 0);
     
     // Feedback from complaintTrans sheet
-    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!G:H`; // Status, Remarks
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!G:G`; // Status column
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = (complaintsResponse.data.values || []).slice(1);
     
     const openFeedbackCount = complaintsRows.filter((row: any[]) => {
-        const status = row[0] || 'Open';
+        const status = row[0] || 'Open'; // Status is the first column in our range G:G
         return status === 'Open';
     }).length;
     
     const feedbackSummary = complaintsRows.reduce((acc: any, row: any[]) => {
-        const status = row[0] || 'Open';
+        const status = row[0] || 'Open'; // Status is the first column in our range G:G
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
