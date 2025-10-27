@@ -1,6 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { format } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'expTransaction';
@@ -11,6 +12,7 @@ export async function POST(request: Request) {
     
     const { 
         paymentDate, 
+        expenditureType,
         description, 
         amount, 
         modeOfPayment,
@@ -20,7 +22,7 @@ export async function POST(request: Request) {
     } = body;
 
     // Basic validation
-    if (!paymentDate || !description || !amount || !modeOfPayment) {
+    if (!paymentDate || !description || !amount || !modeOfPayment || !expenditureType) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -31,14 +33,25 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
+    const expenditureId = format(new Date(), "yyyyMMddHHmm");
+    
+    let transactionDetails = '';
+    if (modeOfPayment === 'Transfer') {
+        transactionDetails = `Ref: ${transactionRef}`;
+    } else if (modeOfPayment === 'Cheque') {
+        transactionDetails = `Cheque No: ${chequeNo}, Date: ${chequeDate}`;
+    } else {
+        transactionDetails = 'Cash';
+    }
+    
+    // Columns: expenditureId, expenditureType, description, amount, transactionDetails, date
     const newRow = [
-      paymentDate,
+      expenditureId,
+      expenditureType,
       description,
       amount,
-      modeOfPayment,
-      transactionRef || '',
-      chequeNo || '',
-      chequeDate || '',
+      transactionDetails,
+      paymentDate
     ];
 
     await sheets.spreadsheets.values.append({

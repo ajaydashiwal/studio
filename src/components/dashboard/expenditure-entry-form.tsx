@@ -33,8 +33,19 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { Textarea } from "../ui/textarea"
 
+const expenditureTypes = [
+    "Salary", 
+    "Wages", 
+    "Guard Payment", 
+    "Repairing", 
+    "Gardener Payment", 
+    "Electricity Bill for temple", 
+    "Others"
+];
+
 const formSchema = z.object({
   paymentDate: z.date({ required_error: "A payment date is required." }),
+  expenditureType: z.string({ required_error: "Please select an expenditure type."}),
   description: z.string().min(1, { message: "Description is required." }),
   amount: z.coerce.number().positive({ message: "Please enter a valid amount." }),
   modeOfPayment: z.enum(["Cash", "Cheque", "Transfer"], {
@@ -170,6 +181,28 @@ export default function ExpenditureEntryForm() {
                 <FormMessage />
                 </FormItem>
             )}
+            />
+            <FormField
+                control={form.control}
+                name="expenditureType"
+                render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                    <FormLabel>Expenditure Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select expenditure type" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                           {expenditureTypes.map(type => (
+                             <SelectItem key={type} value={type}>{type}</SelectItem>
+                           ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
             />
              <FormField
               control={form.control}
