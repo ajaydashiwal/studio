@@ -58,9 +58,9 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
 };
 
 const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: string) => {
-    // Determine the date range for collections
+    // Determine the date range, defaulting to the last 12 months if not provided.
     const toDate = to ? endOfMonth(parse(to, 'yyyy-MM', new Date())) : new Date();
-    const fromDate = from ? startOfMonth(parse(from, 'yyyy-MM', new Date())) : subMonths(new Date(), 12);
+    const fromDate = from ? startOfMonth(parse(from, 'yyyy-MM', new Date())) : subMonths(toDate, 11);
 
     // Total Collections within the specified period
     const collectionRange = `${COLLECTION_SHEET}!C:F`; // receipt date, ..., amount
@@ -77,7 +77,7 @@ const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: str
         return acc;
     }, 0);
 
-    // Total Expenditure (all time)
+    // Total Expenditure (all time - expenditure is not date-filtered for this dashboard view)
     const expenditureRange = `${EXPENDITURE_SHEET}!D:D`; // amount
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
@@ -86,19 +86,26 @@ const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: str
         return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
 
-    // Feedback Breakdown (all time)
-    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!D:D`; // formType
+    // Feedback Breakdown within the specified period
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!B:D`; // submissionDate, flatNo, formType
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = complaintsResponse.data.values || [];
     
     const feedbackSummary = complaintsRows.slice(1).reduce((acc: any, row: any[]) => {
-        if (!row || !row[0]) return acc; // Ensure row and formType exist
-        const formType = row[0]; // 'Complaint' or 'Suggestion'
-        if (formType === 'Complaint' || formType === 'Suggestion') {
-             acc[formType] = (acc[formType] || 0) + 1;
-        }
+        if (!row || !row[0] || !row[2]) return acc; // Ensure submissionDate and formType exist
+        try {
+             // Date format is "dd/MM/yyyy HH:mm:ss"
+            const submissionDate = parse(row[0], 'dd/MM/yyyy HH:mm:ss', new Date());
+            if (submissionDate >= fromDate && submissionDate <= toDate) {
+                const formType = row[2]; // 'Complaint' or 'Suggestion'
+                if (formType === 'Complaint' || formType === 'Suggestion') {
+                    acc[formType] = (acc[formType] || 0) + 1;
+                }
+            }
+        } catch (e) { /* Ignore rows with invalid dates */ }
         return acc;
     }, {});
+
 
     return {
        financialSummary: [

@@ -71,13 +71,24 @@ const getStatusBadgeColor = (status: string) => {
     }
 }
 
-const generateDateOptions = (startMonthsAgo: number, endMonthsFuture: number) => {
+const generateDateOptions = () => {
     const options = [];
     const now = new Date();
     
-    // Generate months from the past up to the future
-    for (let i = startMonthsAgo; i >= -endMonthsFuture; i--) {
+    // Past 24 months
+    for (let i = 23; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const month = date.toLocaleString('default', { month: 'short' });
+        const year = date.getFullYear();
+        options.push({ 
+            value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, 
+            label: `${month} ${year}` 
+        });
+    }
+
+    // Future 24 months
+     for (let i = 1; i <= 24; i++) {
+        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
         const month = date.toLocaleString('default', { month: 'short' });
         const year = date.getFullYear();
         options.push({ 
@@ -88,10 +99,7 @@ const generateDateOptions = (startMonthsAgo: number, endMonthsFuture: number) =>
     return options;
 };
 
-
-const fromDateOptions = generateDateOptions(23, 0); // 24 months including current
-const toDateOptions = generateDateOptions(23, 24); // Past 2 years and future 2 years
-
+const dateOptions = generateDateOptions();
 
 export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -99,9 +107,14 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [error, setError] = useState<string | null>(null);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
+  
+  const now = new Date();
+  const defaultFrom = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  const defaultTo = new Date(now.getFullYear(), now.getMonth(), 1);
+
   const [period, setPeriod] = useState<{ from: string; to: string }>({ 
-      from: fromDateOptions[11]?.value || fromDateOptions[0]?.value, // Default to 12 months ago
-      to: fromDateOptions[0]?.value,   // Default to current month
+      from: `${defaultFrom.getFullYear()}-${String(defaultFrom.getMonth() + 1).padStart(2, '0')}`,
+      to: `${defaultTo.getFullYear()}-${String(defaultTo.getMonth() + 1).padStart(2, '0')}`,
   });
 
   useEffect(() => {
@@ -167,7 +180,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
         </CardHeader>
         <CardContent>
-           {memberData.maintenance && memberData.maintenance.length > 0 ? (
+           {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
             <MaintenancePieChart data={memberData.maintenance} />
           ) : (
              <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -203,7 +216,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                         <div>
                             <CardTitle>Financial Summary</CardTitle>
                             <CardDescription>
-                                Total collections vs. total expenditure.
+                                Collections vs. total expenditure for the period.
                             </CardDescription>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2">
@@ -214,7 +227,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {fromDateOptions.map(option => (
+                                        {dateOptions.map(option => (
                                             <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -227,7 +240,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {toDateOptions.map(option => (
+                                        {dateOptions.map(option => (
                                             <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -237,11 +250,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                    </div>
                 </CardHeader>
                 <CardContent>
-                    {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
+                    {officeData.financialSummary && officeData.financialSummary.some(d => d.value > 0) ? (
                         <MaintenancePieChart data={officeData.financialSummary} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">
-                            No financial data available.
+                            No financial data for the selected period.
                         </div>
                     )}
                 </CardContent>
@@ -249,14 +262,14 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             <Card>
                 <CardHeader>
                     <CardTitle>Feedback Breakdown</CardTitle>
-                    <CardDescription>Total complaints vs. suggestions received.</CardDescription>
+                    <CardDescription>Total complaints vs. suggestions for the period.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
+                     {officeData.feedbackSummary && officeData.feedbackSummary.some(d => d.value > 0) ? (
                         <MaintenancePieChart data={officeData.feedbackSummary} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">
-                            No feedback data available.
+                            No feedback data for the selected period.
                         </div>
                     )}
                 </CardContent>
