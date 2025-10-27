@@ -19,7 +19,8 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectLabel as SelectGroupLabel,
+  SelectGroup,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -308,18 +309,22 @@ export default function DataEntryForm() {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                             <SelectGroupLabel>--- Historic Dues ---</SelectGroupLabel>
-                             {unpaidMonths.historic.length > 0 ? (
-                                unpaidMonths.historic.map(month => (
+                             <SelectGroup>
+                                <SelectLabel>--- Historic Dues ---</SelectLabel>
+                                {unpaidMonths.historic.length > 0 ? (
+                                    unpaidMonths.historic.map(month => (
+                                        <SelectItem key={month} value={month}>{month}</SelectItem>
+                                    ))
+                                ) : (
+                                    <SelectItem value="no-historic" disabled>No historic dues</SelectItem>
+                                )}
+                             </SelectGroup>
+                            <SelectGroup>
+                                <SelectLabel>--- Future Payments ---</SelectLabel>
+                                {unpaidMonths.future.map(month => (
                                     <SelectItem key={month} value={month}>{month}</SelectItem>
-                                ))
-                             ) : (
-                                <SelectItem value="no-historic" disabled>No historic dues</SelectItem>
-                             )}
-                            <SelectGroupLabel>--- Future Payments ---</SelectGroupLabel>
-                            {unpaidMonths.future.map(month => (
-                                <SelectItem key={month} value={month}>{month}</SelectItem>
-                            ))}
+                                ))}
+                            </SelectGroup>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -481,5 +486,3 @@ export default function DataEntryForm() {
     </Form>
   )
 }
-
-    
