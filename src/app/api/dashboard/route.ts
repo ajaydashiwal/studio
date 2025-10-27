@@ -1,6 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { parse, subMonths, format } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
@@ -57,26 +58,40 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
 };
 
 const getOfficeBearerDashboardData = async (sheets: any) => {
-    // Total Collections
-    const collectionRange = `${COLLECTION_SHEET}!F:F`; // amount
+    const twentyFourMonthsAgo = subMonths(new Date(), 24);
+
+    // Total Collections in the last 24 months
+    const collectionRange = `${COLLECTION_SHEET}!C:F`; // receipt date, ..., amount
     const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: collectionRange });
     const totalCollections = (collectionResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        if (!row || !row[0]) return acc;
-        const amount = parseFloat(row[0]);
-        return acc + (isNaN(amount) ? 0 : amount);
+        if (!row || !row[0] || !row[3]) return acc;
+        try {
+            const receiptDate = parse(row[0], 'dd/MM/yyyy', new Date());
+            if (receiptDate >= twentyFourMonthsAgo) {
+                const amount = parseFloat(row[3]);
+                return acc + (isNaN(amount) ? 0 : amount);
+            }
+        } catch (e) { /* Ignore rows with invalid dates */ }
+        return acc;
     }, 0);
 
-    // Total Expenditure
-    const expenditureRange = `${EXPENDITURE_SHEET}!D:D`; // amount
+    // Total Expenditure in the last 24 months
+    const expenditureRange = `${EXPENDITURE_SHEET}!D:F`; // amount, ..., date
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        if (!row || !row[0]) return acc;
-        const amount = parseFloat(row[0]);
-        return acc + (isNaN(amount) ? 0 : amount);
+        if (!row || !row[0] || !row[2]) return acc;
+         try {
+            const paymentDate = parse(row[2], 'dd/MM/yyyy HH:mm:ss', new Date());
+            if (paymentDate >= twentyFourMonthsAgo) {
+                const amount = parseFloat(row[0]);
+                return acc + (isNaN(amount) ? 0 : amount);
+            }
+        } catch (e) { /* Ignore rows with invalid dates */ }
+        return acc;
     }, 0);
 
-    // Open Feedback Count
-    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!D:G`; // formType, ..., status
+    // Feedback Breakdown
+    const complaintsRange = `${COMPLAINT_TRANS_SHEET}!D:D`; // formType
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = complaintsResponse.data.values || [];
     
@@ -91,8 +106,8 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
 
     return {
        financialSummary: [
-            { name: 'Collections', value: totalCollections, fill: 'hsl(var(--chart-2))' },
-            { name: 'Expenditure', value: totalExpenditure, fill: 'hsl(var(--chart-1))' },
+            { name: 'Collections', value: totalCollections },
+            { name: 'Expenditure', value: totalExpenditure },
        ],
        feedbackSummary: [
            { name: 'Complaints', value: feedbackSummary['Complaint'] || 0, fill: 'hsl(var(--chart-1))' },

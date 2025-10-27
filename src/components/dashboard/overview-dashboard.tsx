@@ -164,14 +164,14 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         <div className="grid gap-6 lg:grid-cols-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>Financial Summary</CardTitle>
+                    <CardTitle>Financial Summary (Last 24 Months)</CardTitle>
                     <CardDescription>
                         Total collections vs. total expenditure.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
-                        <MaintenancePieChart data={officeData.financialSummary} />
+                        <FeedbackBarChart data={officeData.financialSummary} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">
                             No financial data available.
@@ -181,12 +181,12 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Community Feedback Summary</CardTitle>
-                    <CardDescription>An overview of all submitted feedback.</CardDescription>
+                    <CardTitle>Feedback Breakdown</CardTitle>
+                    <CardDescription>Total complaints vs. suggestions received.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
-                        <FeedbackBarChart data={officeData.feedbackSummary} />
+                        <MaintenancePieChart data={officeData.feedbackSummary} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">
                             No feedback data available.
