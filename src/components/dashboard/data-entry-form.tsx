@@ -30,7 +30,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon, Loader2 } from "lucide-react"
-import { format, addMonths, subMonths } from "date-fns"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect, useCallback } from "react"
@@ -38,9 +38,6 @@ import debounce from "lodash.debounce";
 
 const formSchema = z.object({
   flatNo: z.coerce.number().positive({ message: "Flat number is required." }),
-  monthYear: z.string({
-    required_error: "Please select a month and year.",
-  }),
   amount: z.coerce.number().positive({ message: "Please enter a valid amount." }),
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
@@ -51,6 +48,9 @@ const formSchema = z.object({
     required_error: "Please select a mode of payment.",
   }),
   transactionRef: z.string().optional(),
+  // Fields for single month payment
+  monthYear: z.string().optional(),
+  // Field for bulk payment
   bulkPaymentType: z.enum(["historic", "future"]).optional(),
 }).refine(data => {
     if (data.modeOfPayment === 'Transfer') {
@@ -61,6 +61,16 @@ const formSchema = z.object({
     message: "Transaction reference is required for transfers.",
     path: ["transactionRef"],
 }).refine(data => {
+    // If it's a single payment, monthYear is required
+    if (data.amount === 300) {
+        return !!data.monthYear && data.monthYear.length > 0;
+    }
+    return true;
+}, {
+    message: "Please select a month for single payment.",
+    path: ["monthYear"]
+}).refine(data => {
+    // If it's a bulk payment, bulkPaymentType is required
     const isBulk = data.amount > 300 && data.amount % 300 === 0;
     if (isBulk) {
         return !!data.bulkPaymentType;
@@ -89,7 +99,6 @@ export default function DataEntryForm() {
   const { toast } = useToast()
   const monthYearOptions = generateMonthYearOptions();
   
-  const [isDuplicate, setIsDuplicate] = useState(false);
   const [isMember, setIsMember] = useState(true); // Default to true to hide tenant name initially
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -106,9 +115,9 @@ export default function DataEntryForm() {
 
   const watchedModeOfPayment = form.watch("modeOfPayment");
   const watchedFlatNo = form.watch("flatNo");
-  const watchedMonthYear = form.watch("monthYear");
   const watchedAmount = form.watch("amount");
 
+  const isSinglePayment = watchedAmount === 300;
   const isBulkPayment = watchedAmount > 300 && watchedAmount % 300 === 0;
 
   const checkMembership = useCallback(debounce(async (flatNo) => {
@@ -131,97 +140,55 @@ export default function DataEntryForm() {
     }
   }, 300), []);
 
-  const checkDuplicateRecord = useCallback(async (flatNo, monthYear) => {
-    if (!flatNo || !monthYear) {
-      setIsDuplicate(false);
-      return;
-    }
-    try {
-      const response = await fetch(`/api/maintenance/${flatNo}/${encodeURIComponent(monthYear)}`);
-      if (response.ok) {
-        const { isDuplicate } = await response.json();
-        setIsDuplicate(isDuplicate);
-        if (isDuplicate) {
-          toast({
-            variant: "destructive",
-            title: "Duplicate Record Found",
-            description: `A maintenance record for this flat and month already exists.`,
-          });
-        }
-      } else {
-         setIsDuplicate(false); // Reset on error
-      }
-    } catch (error) {
-      console.error("Failed to check for duplicate record:", error);
-      setIsDuplicate(false); // Reset on error
-    }
-  }, [toast]);
-
-
-  useEffect(() => {
-    checkDuplicateRecord(watchedFlatNo, watchedMonthYear);
-  }, [watchedFlatNo, watchedMonthYear, checkDuplicateRecord]);
-
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (isDuplicate) {
-        toast({
-            variant: "destructive",
-            title: "Submission Blocked",
-            description: "Cannot submit a duplicate record. Please correct the flat number or month.",
-        });
-        return;
-    }
-    
     setIsSubmitting(true);
-    const numberOfMonths = isBulkPayment ? values.amount / 300 : 1;
-    const baseDate = new Date(values.monthYear);
     
-    const promises = [];
+    let endpoint = '/api/maintenance';
+    let body = {
+      ...values,
+      receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
+    };
     
-    for (let i = 0; i < numberOfMonths; i++) {
-        let targetMonth;
-        if (isBulkPayment) {
-            const offset = values.bulkPaymentType === 'future' ? i : -i;
-            targetMonth = addMonths(baseDate, offset);
-        } else {
-            targetMonth = baseDate;
-        }
-
-        const formattedMonthYear = format(targetMonth, "MMMM yyyy");
-
-        const formattedValues = {
-          ...values,
-          amount: 300,
-          monthYear: formattedMonthYear,
+    if (isBulkPayment) {
+        endpoint = '/api/maintenance/bulk';
+        // The bulk endpoint only needs a subset of fields
+        body = {
+          flatNo: values.flatNo,
+          amount: values.amount,
           receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
-        };
+          receiptNo: values.receiptNo,
+          tenantName: values.tenantName,
+          modeOfPayment: values.modeOfPayment,
+          transactionRef: values.transactionRef,
+          bulkPaymentType: values.bulkPaymentType,
+        } as any;
+    }
 
-        const promise = fetch('/api/maintenance', {
+    try {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formattedValues),
+            body: JSON.stringify(body),
         });
-        promises.push(promise);
-    }
-    
-    try {
-        const responses = await Promise.all(promises);
-        const hasErrors = responses.some(res => !res.ok);
 
-        if (hasErrors) {
-            const errorResponse = await responses.find(res => !res.ok)?.json();
-            throw new Error(errorResponse?.error || "One or more records failed to save.");
+        const result = await response.json();
+
+        if (response.ok) {
+            toast({
+                title: "Data Submitted",
+                description: result.message || "Maintenance record(s) added successfully.",
+            });
+            form.reset();
+            form.setValue("amount", 300);
+            setIsMember(true);
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Error",
+                description: result.error || "Could not submit maintenance record(s).",
+            });
         }
-        
-        toast({
-            title: "Data Submitted",
-            description: `${numberOfMonths} maintenance record(s) added successfully.`,
-        });
-        form.reset();
-        form.setValue("amount", 300);
-        setIsDuplicate(false);
-        setIsMember(true);
         
     } catch (error) {
         toast({
@@ -261,28 +228,6 @@ export default function DataEntryForm() {
             />
             <FormField
             control={form.control}
-            name="monthYear"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Month & Year</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a month" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {monthYearOptions.map(option => (
-                            <SelectItem key={option} value={option}>{option}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
             name="amount"
             render={({ field }) => (
                 <FormItem>
@@ -297,6 +242,30 @@ export default function DataEntryForm() {
                 </FormItem>
             )}
             />
+            {isSinglePayment && (
+              <FormField
+                control={form.control}
+                name="monthYear"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Month & Year</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a month" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {monthYearOptions.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+              />
+            )}
             <FormField
                 control={form.control}
                 name="receiptDate"
@@ -338,42 +307,7 @@ export default function DataEntryForm() {
                     </FormItem>
                 )}
             />
-            {isBulkPayment && (
-                <FormField
-                    control={form.control}
-                    name="bulkPaymentType"
-                    render={({ field }) => (
-                        <FormItem className="space-y-3 md:col-span-2 bg-muted p-4 rounded-lg border">
-                            <FormLabel>Bulk Payment Direction</FormLabel>
-                            <FormControl>
-                                <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex flex-col space-y-1"
-                                >
-                                <FormItem className="flex items-center space-x-3 space-y-0">
-                                    <FormControl>
-                                    <RadioGroupItem value="historic" />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                    Pay for previous (historic) months
-                                    </FormLabel>
-                                </FormItem>
-                                <FormItem className="flex items-center space-x-3 space-y-0">
-                                    <FormControl>
-                                    <RadioGroupItem value="future" />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                    Pay for upcoming (future) months
-                                    </FormLabel>
-                                </FormItem>
-                                </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                 />
-            )}
+            
             <FormField
             control={form.control}
             name="receiptNo"
@@ -442,7 +376,43 @@ export default function DataEntryForm() {
               />
             )}
         </div>
-        <Button type="submit" disabled={isDuplicate || isSubmitting}>
+         {isBulkPayment && (
+                <FormField
+                    control={form.control}
+                    name="bulkPaymentType"
+                    render={({ field }) => (
+                        <FormItem className="space-y-3 bg-muted p-4 rounded-lg border">
+                            <FormLabel>Bulk Payment Direction</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex flex-col space-y-1"
+                                >
+                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="historic" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                    Pay for previous (historic) due months
+                                    </FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="future" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                    Pay for upcoming (future) advance months
+                                    </FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                 />
+            )}
+        <Button type="submit" disabled={isSubmitting}>
              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Submit
         </Button>
@@ -450,5 +420,3 @@ export default function DataEntryForm() {
     </Form>
   )
 }
-
-    

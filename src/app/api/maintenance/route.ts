@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     
     const { 
         flatNo, 
-        monthYear, 
+        monthYear, // This is required for single entry
         amount, 
         receiptDate, 
         receiptNo, 
