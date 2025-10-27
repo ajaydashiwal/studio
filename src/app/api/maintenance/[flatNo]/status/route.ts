@@ -31,11 +31,12 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     let isMember = false;
     if (rows) {
       // Find if an active member exists (status is blank)
+      // D is flatNo (index 0), G is status (index 3)
       const memberRow = rows.slice(1).find(
         (row) => {
-            const sheetFlatNo = row[0]; // Column D
-            const status = row[3]; // Column G
-            // Use '==' for type-insensitive comparison and check for blank status
+            const sheetFlatNo = row[0]; 
+            const status = row[3];
+            // An active member has a blank/undefined status.
             return sheetFlatNo == flatNo && (status === '' || status === undefined || status === null);
         }
       );
