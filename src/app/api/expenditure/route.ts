@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
-const SHEET_NAME = 'expenditure';
+const SHEET_NAME = 'expTransaction';
 
 export async function POST(request: Request) {
   try {
