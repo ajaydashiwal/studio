@@ -132,23 +132,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 );
             }
             return null;
-        case 'financials':
-             if (isOfficeBearer) {
-                return (
-                    <Card className="shadow-md">
-                        <CardHeader>
-                            <CardTitle>Financial Dashboard</CardTitle>
-                            <CardDescription>
-                                Visualizing income and expenditure.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           <p>Financial charts will be displayed here.</p>
-                        </CardContent>
-                    </Card>
-                );
-            }
-            return null;
         case 'feedback':
             if(isMember) {
                 return (
@@ -215,7 +198,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 <MenubarMenu>
                     <MenubarTrigger>Financials</MenubarTrigger>
                     <MenubarContent>
-                        <MenubarItem onClick={() => setActiveView('financials')}>Dashboard</MenubarItem>
+                        <MenubarItem onClick={() => setActiveView('overview')}>Dashboard</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
                 <MenubarMenu>
