@@ -18,8 +18,8 @@ import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectGroup,
+  SelectItem,
   SelectLabel,
   SelectTrigger,
   SelectValue,
@@ -131,7 +131,6 @@ export default function DataEntryForm() {
   })
 
   const watchedModeOfPayment = form.watch("modeOfPayment");
-  const watchedFlatNo = form.watch("flatNo");
   const watchedAmount = form.watch("amount");
 
   const isSinglePayment = watchedAmount === 300;
@@ -163,11 +162,10 @@ export default function DataEntryForm() {
       return;
     }
     try {
-      const response = await fetch(`/api/users/${flatNo}/status`);
+      const response = await fetch(`/api/maintenance/${flatNo}/status`);
       if (response.ok) {
-        const { membershipStatus } = await response.json();
-        // A member is anyone with 'Active' or 'Inactive' status. 'NotFound' means they are not a member.
-        setIsMember(membershipStatus === 'Active' || membershipStatus === 'Inactive');
+        const { isMember } = await response.json();
+        setIsMember(isMember);
       } else {
         setIsMember(false); // Assume not a member if API fails or returns 404
       }

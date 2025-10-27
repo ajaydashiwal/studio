@@ -3,8 +3,9 @@ import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
-const USERS_SHEET_NAME = 'memberUsers';
-const RANGE = `${USERS_SHEET_NAME}!A:F`; // flatNo is in column A, membershipStatus is in F
+const MASTER_SHEET_NAME = 'masterMembership';
+// Columns: D:flatNo, G:status
+const RANGE = `${MASTER_SHEET_NAME}!D:G`; 
 
 export async function GET(request: Request, { params }: { params: { flatNo: string } }) {
   const { flatNo } = params;
@@ -29,11 +30,16 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const rows = response.data.values;
     let isMember = false;
     if (rows) {
-      // Find if user exists and has 'Active' status (skip header row)
-      const userRow = rows.slice(1).find(
-        (row) => row[0] == flatNo && row[5] === 'Active'
+      // Find if an active member exists (status is blank)
+      const memberRow = rows.slice(1).find(
+        (row) => {
+            const sheetFlatNo = row[0]; // Column D
+            const status = row[3]; // Column G
+            // Use '==' for type-insensitive comparison and check for blank status
+            return sheetFlatNo == flatNo && (status === '' || status === undefined || status === null);
+        }
       );
-      if (userRow) {
+      if (memberRow) {
         isMember = true;
       }
     }
@@ -42,10 +48,10 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     return NextResponse.json({ isMember });
 
   } catch (error: any) {
-    console.error('Error accessing Google Sheets for user status:', error);
+    console.error('Error accessing Google Sheets for member status:', error);
     if (error.code === 'ENOENT') {
         return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
     }
-    return NextResponse.json({ error: 'Internal Server Error while fetching user status.' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error while fetching member status.' }, { status: 500 });
   }
 }
