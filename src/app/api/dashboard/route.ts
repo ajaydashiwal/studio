@@ -75,20 +75,15 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
         return acc;
     }, 0);
 
-    // Total Expenditure in the last 24 months
-    const expenditureRange = `${EXPENDITURE_SHEET}!D:F`; // amount, ..., date
+    // Total Expenditure
+    const expenditureRange = `${EXPENDITURE_SHEET}!D:D`; // amount
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        if (!row || !row[0] || !row[2]) return acc;
-         try {
-            const paymentDate = parse(row[2], 'dd/MM/yyyy HH:mm:ss', new Date());
-            if (paymentDate >= twentyFourMonthsAgo) {
-                const amount = parseFloat(row[0]);
-                return acc + (isNaN(amount) ? 0 : amount);
-            }
-        } catch (e) { /* Ignore rows with invalid dates */ }
-        return acc;
+        if (!row || !row[0]) return acc;
+        const amount = parseFloat(row[0]);
+        return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
+
 
     // Feedback Breakdown
     const complaintsRange = `${COMPLAINT_TRANS_SHEET}!D:D`; // formType
