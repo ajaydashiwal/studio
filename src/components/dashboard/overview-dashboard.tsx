@@ -9,23 +9,25 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import MaintenancePieChart from '@/components/charts/maintenance-pie-chart';
 import FeedbackBarChart from '@/components/charts/feedback-bar-chart';
-import { HandCoins, MessageSquareWarning } from 'lucide-react';
 
 interface OverviewDashboardProps {
   user: Omit<User, 'membershipStatus'>;
 }
 
+interface ChartData {
+  name: string;
+  value: number;
+  fill?: string;
+}
+
 interface MemberData {
-  maintenance: { name: string; value: number; fill: string }[];
-  feedback: { name: string; value: number }[];
+  maintenance: ChartData[];
+  feedback: ChartData[];
 }
 
 interface OfficeBearerData {
-  collections: number;
-  expenditure: number;
-  financialSummary: { name: string; value: number }[];
-  openFeedback: number;
-  feedback: { name: string; value: number }[];
+  financials: ChartData[];
+  feedbackSummary: ChartData[];
 }
 
 type DashboardData = MemberData | OfficeBearerData;
@@ -93,51 +95,39 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   );
 
   const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => (
-    <div className="grid gap-6">
-      <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-2">
-              <CardHeader>
-                  <CardTitle>Financial Summary</CardTitle>
-                  <CardDescription>
-                      Comparison of total collections vs. total expenditure.
-                  </CardDescription>
-              </CardHeader>
-              <CardContent>
-                  {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
-                      <FeedbackBarChart data={officeData.financialSummary} />
-                  ) : (
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
-                          No financial data available.
-                      </div>
-                  )}
-              </CardContent>
-          </Card>
-          <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Open Feedback</CardTitle>
-                  <MessageSquareWarning className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{officeData.openFeedback}</div>
-                  <p className="text-xs text-muted-foreground">New feedback items requiring action.</p>
-              </CardContent>
-          </Card>
-      </div>
+    <div className="grid gap-6 md:grid-cols-2">
       <Card>
-          <CardHeader>
-              <CardTitle>Overall Feedback Status</CardTitle>
-              <CardDescription>Summary of all submitted complaints and suggestions.</CardDescription>
-          </CardHeader>
-          <CardContent>
-              {officeData.feedback && officeData.feedback.length > 0 ? (
-                  <FeedbackBarChart data={officeData.feedback} />
-              ) : (
-                   <div className="flex items-center justify-center h-full text-muted-foreground">
-                      No feedback data available.
-                  </div>
-              )}
-          </CardContent>
-      </Card>
+        <CardHeader>
+            <CardTitle>Financials (Last 24 Months)</CardTitle>
+            <CardDescription>
+                Collections vs. Expenditure overview.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {officeData.financials && officeData.financials.length > 0 ? (
+                <MaintenancePieChart data={officeData.financials} />
+            ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                    No financial data available.
+                </div>
+            )}
+        </CardContent>
+    </Card>
+    <Card>
+        <CardHeader>
+            <CardTitle>Feedback Breakdown</CardTitle>
+            <CardDescription>Total complaints vs. suggestions received.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
+                 <MaintenancePieChart data={officeData.feedbackSummary} />
+            ) : (
+                 <div className="flex items-center justify-center h-full text-muted-foreground">
+                    No feedback data available.
+                </div>
+            )}
+        </CardContent>
+    </Card>
     </div>
   );
   
