@@ -34,7 +34,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback' | 'complaintManagement';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -193,12 +193,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                     <MenubarContent>
                         <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
                         <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
-                    </MenubarContent>
-                </MenubarMenu>
-                <MenubarMenu>
-                    <MenubarTrigger>Financials</MenubarTrigger>
-                    <MenubarContent>
-                        <MenubarItem onClick={() => setActiveView('overview')}>Dashboard</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
                 <MenubarMenu>
