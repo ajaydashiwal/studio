@@ -25,8 +25,8 @@ const getUnpaidMonths = async (sheets: any, flatNo: string) => {
     const now = new Date();
     const historicDue = [];
     
-    // Find historic dues from the last 24 months
-    for (let i = 23; i >= 0; i--) {
+    // Find historic dues from the last 6 months (including current month)
+    for (let i = 5; i >= 0; i--) {
         const monthDate = addMonths(now, -i);
         const monthYear = format(monthDate, 'MMMM yyyy');
         if (!paidMonths.has(monthYear)) {
