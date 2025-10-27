@@ -171,7 +171,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 </CardHeader>
                 <CardContent>
                     {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
-                        <FeedbackBarChart data={officeData.financialSummary} />
+                        <MaintenancePieChart data={officeData.financialSummary} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">
                             No financial data available.
