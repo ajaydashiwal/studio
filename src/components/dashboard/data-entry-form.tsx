@@ -79,6 +79,21 @@ const formSchema = z.object({
 }, {
     message: "Please select payment direction for bulk amount.",
     path: ["bulkPaymentType"]
+}).refine(data => {
+    const isBulk = data.amount > 300 && data.amount % 300 === 0;
+    if (!isBulk) return true; // Only validate for bulk payments
+
+    const numberOfMonths = data.amount / 300;
+    if (data.bulkPaymentType === 'historic' && numberOfMonths > 6) {
+        return false;
+    }
+    if (data.bulkPaymentType === 'future' && numberOfMonths > 12) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Amount exceeds allowed months (max 6 for historic, 12 for future).",
+    path: ["amount"],
 });
 
 
@@ -97,10 +112,10 @@ const generateMonthYearOptions = () => {
 
 export default function DataEntryForm() {
   const { toast } = useToast()
-  const monthYearOptions = generateMonthYearOptions();
   
   const [isMember, setIsMember] = useState(true); // Default to true to hide tenant name initially
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [unpaidMonths, setUnpaidMonths] = useState<{ historic: string[], future: string[] }>({ historic: [], future: [] });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -119,6 +134,26 @@ export default function DataEntryForm() {
 
   const isSinglePayment = watchedAmount === 300;
   const isBulkPayment = watchedAmount > 300 && watchedAmount % 300 === 0;
+
+  const fetchUnpaidMonths = useCallback(debounce(async (flatNo) => {
+    if (!flatNo || flatNo <= 0) {
+      setUnpaidMonths({ historic: [], future: [] });
+      return;
+    }
+    try {
+      const response = await fetch(`/api/maintenance/${flatNo}/unpaid`);
+      if (response.ok) {
+        const data = await response.json();
+        setUnpaidMonths(data);
+      } else {
+        setUnpaidMonths({ historic: [], future: [] });
+      }
+    } catch (error) {
+      console.error("Failed to fetch unpaid months:", error);
+      setUnpaidMonths({ historic: [], future: [] });
+    }
+  }, 300), []);
+
 
   const checkMembership = useCallback(debounce(async (flatNo) => {
     if (!flatNo || flatNo <= 0) {
@@ -234,6 +269,7 @@ export default function DataEntryForm() {
                         onChange={(e) => {
                             field.onChange(e);
                             checkMembership(e.target.value);
+                            fetchUnpaidMonths(e.target.value);
                         }}
                        />
                   </FormControl>
@@ -250,7 +286,7 @@ export default function DataEntryForm() {
                 <FormControl>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="300" {...field} className="pl-7" />
+                        <Input type="number" placeholder="300" {...field} step="300" className="pl-7" />
                     </div>
                 </FormControl>
                 <FormMessage />
@@ -271,8 +307,17 @@ export default function DataEntryForm() {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {monthYearOptions.map(option => (
-                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                             <SelectItem value="" disabled>--- Historic Dues ---</SelectItem>
+                             {unpaidMonths.historic.length > 0 ? (
+                                unpaidMonths.historic.map(month => (
+                                    <SelectItem key={month} value={month}>{month}</SelectItem>
+                                ))
+                             ) : (
+                                <SelectItem value="no-historic" disabled>No historic dues</SelectItem>
+                             )}
+                            <SelectItem value="" disabled>--- Future Payments ---</SelectItem>
+                            {unpaidMonths.future.map(month => (
+                                <SelectItem key={month} value={month}>{month}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
