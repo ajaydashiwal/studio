@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 
 interface OverviewDashboardProps {
@@ -69,19 +71,43 @@ const getStatusBadgeColor = (status: string) => {
     }
 }
 
+const generateMonthYearOptions = () => {
+    const options = [];
+    const now = new Date();
+    // Go back 36 months for the "From" dropdown
+    for (let i = 0; i < 36; i++) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const month = date.toLocaleString('default', { month: 'short' });
+        const year = date.getFullYear();
+        options.push({ value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: `${month} ${year}` });
+    }
+    return options;
+}
+
+const monthYearOptions = generateMonthYearOptions();
+
 export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
+  const [period, setPeriod] = useState<{ from: string; to: string }>({ 
+      from: monthYearOptions[11].value, // Default to 12 months ago
+      to: monthYearOptions[0].value,   // Default to current month
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       
-      const params = new URLSearchParams({ userType: user.userType });
+      const params = new URLSearchParams({ 
+          userType: user.userType,
+          from: period.from,
+          to: period.to,
+      });
+
       if (user.userType === 'Member') {
         params.set('flatNo', user.flatNo);
       }
@@ -121,8 +147,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     };
 
     fetchData();
-    fetchAllComplaints();
-  }, [user]);
+    if (user.userType !== 'Member') {
+      fetchAllComplaints();
+    }
+  }, [user, period]);
 
   const renderMemberDashboard = (memberData: MemberData) => (
     <div className="grid gap-6 md:grid-cols-2">
@@ -164,10 +192,42 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         <div className="grid gap-6 lg:grid-cols-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>Financial Summary (Last 24 Months)</CardTitle>
-                    <CardDescription>
-                        Total collections vs. total expenditure.
-                    </CardDescription>
+                   <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                        <div>
+                            <CardTitle>Financial Summary</CardTitle>
+                            <CardDescription>
+                                Total collections vs. total expenditure.
+                            </CardDescription>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="from-period" className="text-xs">From</Label>
+                                <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {monthYearOptions.map(option => (
+                                            <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <div className="grid gap-1.5">
+                                <Label htmlFor="to-period" className="text-xs">To</Label>
+                                <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {monthYearOptions.slice(0, 24).map(option => (
+                                            <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                   </div>
                 </CardHeader>
                 <CardContent>
                     {officeData.financialSummary && officeData.financialSummary.length > 0 ? (

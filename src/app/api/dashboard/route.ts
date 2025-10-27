@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { parse, subMonths, format } from 'date-fns';
+import { parse, subMonths, format, startOfMonth, endOfMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
@@ -57,17 +57,19 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
     };
 };
 
-const getOfficeBearerDashboardData = async (sheets: any) => {
-    const twentyFourMonthsAgo = subMonths(new Date(), 24);
+const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: string) => {
+    // Determine the date range for collections
+    const toDate = to ? endOfMonth(parse(to, 'yyyy-MM', new Date())) : new Date();
+    const fromDate = from ? startOfMonth(parse(from, 'yyyy-MM', new Date())) : subMonths(new Date(), 12);
 
-    // Total Collections in the last 24 months
+    // Total Collections within the specified period
     const collectionRange = `${COLLECTION_SHEET}!C:F`; // receipt date, ..., amount
     const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: collectionRange });
     const totalCollections = (collectionResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
         if (!row || !row[0] || !row[3]) return acc;
         try {
             const receiptDate = parse(row[0], 'dd/MM/yyyy', new Date());
-            if (receiptDate >= twentyFourMonthsAgo) {
+            if (receiptDate >= fromDate && receiptDate <= toDate) {
                 const amount = parseFloat(row[3]);
                 return acc + (isNaN(amount) ? 0 : amount);
             }
@@ -75,7 +77,7 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
         return acc;
     }, 0);
 
-    // Total Expenditure
+    // Total Expenditure (all time)
     const expenditureRange = `${EXPENDITURE_SHEET}!D:D`; // amount
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
@@ -84,8 +86,7 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
         return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
 
-
-    // Feedback Breakdown
+    // Feedback Breakdown (all time)
     const complaintsRange = `${COMPLAINT_TRANS_SHEET}!D:D`; // formType
     const complaintsResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: complaintsRange });
     const complaintsRows = complaintsResponse.data.values || [];
@@ -115,9 +116,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userType = searchParams.get('userType');
     const flatNo = searchParams.get('flatNo');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
 
-    if (!userType || (userType === 'Member' && !flatNo)) {
-        return NextResponse.json({ error: 'Missing userType or flatNo for Member' }, { status: 400 });
+    if (!userType) {
+        return NextResponse.json({ error: 'Missing userType' }, { status: 400 });
+    }
+    if (userType === 'Member' && !flatNo) {
+        return NextResponse.json({ error: 'Missing flatNo for Member' }, { status: 400 });
     }
 
     try {
@@ -127,7 +133,7 @@ export async function GET(request: Request) {
         if (userType === 'Member') {
             data = await getMemberDashboardData(sheets, flatNo!);
         } else {
-            data = await getOfficeBearerDashboardData(sheets);
+            data = await getOfficeBearerDashboardData(sheets, from || undefined, to || undefined);
         }
 
         return NextResponse.json(data);
