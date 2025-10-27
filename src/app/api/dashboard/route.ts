@@ -56,9 +56,6 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
 };
 
 const getOfficeBearerDashboardData = async (sheets: any) => {
-    const today = startOfToday();
-    const oneYearAgo = subMonths(today, 12);
-
     // Collections
     const collectionRange = `${COLLECTION_SHEET}!C:F`; // receipt date, receipt no, monthpaid, amount
     const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: collectionRange });
@@ -81,12 +78,16 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
     const complaintsRows = (complaintsResponse.data.values || []).slice(1);
     
     const openFeedbackCount = complaintsRows.filter((row: any[]) => {
-        const status = row[0] || 'Open'; // Status is the first column in our range G:G
+        // Add a guard clause to prevent crash on empty rows
+        if (!row || !row[0]) return false;
+        const status = row[0] || 'Open';
         return status === 'Open';
     }).length;
     
     const feedbackSummary = complaintsRows.reduce((acc: any, row: any[]) => {
-        const status = row[0] || 'Open'; // Status is the first column in our range G:G
+        // Add a guard clause to prevent crash on empty rows
+        if (!row || !row[0]) return acc;
+        const status = row[0] || 'Open';
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});

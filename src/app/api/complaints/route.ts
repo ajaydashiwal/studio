@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'complaintTrans';
 // Columns: complaintId, submissionDate, flatNo, formType, issueCategory, description, status, remarks, actionDate
-const RANGE = `${SHEET_NAME}!A:I`;
+const RANGE = `${SHEET_NAME}!A:H`;
 
 export async function GET(request: Request) {
   try {
@@ -31,8 +31,7 @@ export async function GET(request: Request) {
       issueCategory: row[4],
       description: row[5],
       status: row[6] || 'Open',
-      remarks: row[7] || '',
-      actionDate: row[8] || '',
+      remarks: row[7] || '',     
     })).reverse(); // Show most recent first
 
     return NextResponse.json(complaints);
