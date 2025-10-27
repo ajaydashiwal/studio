@@ -71,20 +71,27 @@ const getStatusBadgeColor = (status: string) => {
     }
 }
 
-const generateMonthYearOptions = () => {
+const generateDateOptions = (startMonthsAgo: number, endMonthsFuture: number) => {
     const options = [];
     const now = new Date();
-    // Go back 36 months for the "From" dropdown
-    for (let i = 0; i < 36; i++) {
+    
+    // Generate months from the past up to the future
+    for (let i = startMonthsAgo; i >= -endMonthsFuture; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const month = date.toLocaleString('default', { month: 'short' });
         const year = date.getFullYear();
-        options.push({ value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: `${month} ${year}` });
+        options.push({ 
+            value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, 
+            label: `${month} ${year}` 
+        });
     }
     return options;
-}
+};
 
-const monthYearOptions = generateMonthYearOptions();
+
+const fromDateOptions = generateDateOptions(23, 0); // 24 months including current
+const toDateOptions = generateDateOptions(23, 24); // Past 2 years and future 2 years
+
 
 export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -93,8 +100,8 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   const [period, setPeriod] = useState<{ from: string; to: string }>({ 
-      from: monthYearOptions[11].value, // Default to 12 months ago
-      to: monthYearOptions[0].value,   // Default to current month
+      from: fromDateOptions[11]?.value || fromDateOptions[0]?.value, // Default to 12 months ago
+      to: fromDateOptions[0]?.value,   // Default to current month
   });
 
   useEffect(() => {
@@ -207,7 +214,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {monthYearOptions.map(option => (
+                                        {fromDateOptions.map(option => (
                                             <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -220,7 +227,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {monthYearOptions.slice(0, 24).map(option => (
+                                        {toDateOptions.map(option => (
                                             <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
