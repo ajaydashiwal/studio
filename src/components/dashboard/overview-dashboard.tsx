@@ -9,6 +9,17 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import MaintenancePieChart from '@/components/charts/maintenance-pie-chart';
 import FeedbackBarChart from '@/components/charts/feedback-bar-chart';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 interface OverviewDashboardProps {
   user: Omit<User, 'membershipStatus'>;
@@ -30,12 +41,40 @@ interface OfficeBearerData {
   feedbackSummary: ChartData[];
 }
 
+interface Complaint {
+    id: string;
+    submissionDate: string;
+    formType: string;
+    issueCategory: string;
+    description: string;
+    status: string;
+}
+
 type DashboardData = MemberData | OfficeBearerData;
+
+const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+        case 'Open': return 'destructive';
+        case 'In Progress': return 'secondary';
+        case 'Resolved': return 'default';
+        case 'Closed': return 'outline';
+        default: return 'outline';
+    }
+};
+
+const getStatusBadgeColor = (status: string) => {
+     switch (status) {
+        case 'Resolved': return 'bg-green-600';
+        default: return '';
+    }
+}
 
 export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
+  const [complaintsLoading, setComplaintsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +101,27 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
       }
     };
 
+    const fetchAllComplaints = async () => {
+        if(user.userType === 'Member') {
+            setComplaintsLoading(false);
+            return;
+        };
+
+        setComplaintsLoading(true);
+        try {
+            const response = await fetch('/api/complaints');
+            if (!response.ok) throw new Error("Failed to fetch complaints.");
+            const data = await response.json();
+            setAllComplaints(data);
+        } catch (err) {
+             // setError can be used here if you want to show error for this part too
+        } finally {
+            setComplaintsLoading(false);
+        }
+    };
+
     fetchData();
+    fetchAllComplaints();
   }, [user]);
 
   const renderMemberDashboard = (memberData: MemberData) => (
@@ -88,7 +147,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
         </CardHeader>
         <CardContent>
-          {memberData.feedback && memberData.feedback.length > 0 ? (
+          {(memberData.feedback && memberData.feedback.length > 0) ? (
             <FeedbackBarChart data={memberData.feedback} />
           ) : (
             <div className="flex items-center justify-center h-[250px] text-muted-foreground">
@@ -101,7 +160,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   );
 
   const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2">
         <Card>
             <CardHeader>
                 <CardTitle>Financial Summary</CardTitle>
@@ -121,14 +180,14 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         </Card>
         <Card>
             <CardHeader>
-                <CardTitle>Feedback Breakdown</CardTitle>
-                <CardDescription>Total complaints vs. suggestions received.</CardDescription>
+                <CardTitle>Community Feedback Summary</CardTitle>
+                <CardDescription>An overview of all submitted feedback.</CardDescription>
             </CardHeader>
             <CardContent>
-                {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
-                     <FeedbackBarChart data={officeData.feedbackSummary} />
+                 {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
+                    <FeedbackBarChart data={officeData.feedbackSummary} />
                 ) : (
-                     <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                         No feedback data available.
                     </div>
                 )}

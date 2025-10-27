@@ -14,7 +14,6 @@ import ExpenditureEntryForm from '@/components/dashboard/expenditure-entry-form'
 import ComplaintSuggestionForm from '@/components/dashboard/complaint-suggestion-form';
 import ComplaintManagement from '@/components/dashboard/complaint-management';
 import OverviewDashboard from '@/components/dashboard/overview-dashboard';
-import OverallFeedbackStatus from '@/components/dashboard/overall-feedback-status';
 import {
   Menubar,
   MenubarContent,
@@ -35,7 +34,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback' | 'complaintManagement' | 'overallFeedback';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'financials' | 'feedback' | 'complaintManagement';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -167,11 +166,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 )
             }
             return null;
-        case 'overallFeedback':
-             if (isMember) {
-                return <OverallFeedbackStatus />;
-            }
-            return null;
         case 'complaintManagement':
             if (isOfficeBearer) {
                 return <ComplaintManagement />;
@@ -258,7 +252,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 <MenubarTrigger>Feedback</MenubarTrigger>
                 <MenubarContent>
                     <MenubarItem onClick={() => setActiveView('feedback')}>Complaints & Suggestions</MenubarItem>
-                    <MenubarItem onClick={() => setActiveView('overallFeedback')}>Overall Feedback Status</MenubarItem>
                 </MenubarContent>
             </MenubarMenu>
           )}
