@@ -1,6 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { differenceInCalendarMonths, parse, startOfMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET_NAME = 'monthCollection';
@@ -22,6 +23,20 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
+
+    // Validate month for historic payments
+    const today = startOfMonth(new Date());
+    const selectedMonthDate = startOfMonth(parse(decodedMonthYear, 'MMMM yyyy', new Date()));
+
+    if (selectedMonthDate < today) { // It's a historic month
+        const monthDiff = differenceInCalendarMonths(today, selectedMonthDate);
+        if (monthDiff > 5) { // More than 5 months ago (0-5 is 6 months total)
+            return NextResponse.json({ 
+                error: 'Historic payments are restricted to the last 6 months only.' 
+            }, { status: 400 });
+        }
+    }
+
 
     const [collectionResponse, masterResponse] = await Promise.all([
         sheets.spreadsheets.values.get({

@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format, addMonths } from 'date-fns';
+import { format, addMonths, startOfMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET_NAME = 'monthCollection';
@@ -34,9 +34,9 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const historicMonthsDue = [];
     const futureMonthsAvailable = [];
 
-    // Check last 24 months for historic dues
-    for (let i = 23; i >= 0; i--) {
-      const monthDate = addMonths(now, -i);
+    // Check last 6 months for historic dues
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = addMonths(startOfMonth(now), -i);
       const monthYear = format(monthDate, 'MMMM yyyy');
       if (!paidMonths.has(monthYear)) {
         historicMonthsDue.push(monthYear);
@@ -57,7 +57,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     }
     
     return NextResponse.json({
-        historic: historicMonthsDue.slice(0, 6), // Limit to 6
+        historic: historicMonthsDue, // Full list of up to 6 historic months
         future: futureMonthsAvailable.slice(0, 12),   // Limit to 12
     });
 

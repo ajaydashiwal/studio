@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format, addMonths } from 'date-fns';
+import { format, addMonths, startOfMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET_NAME = 'monthCollection';
@@ -26,8 +26,9 @@ const getUnpaidMonths = async (sheets: any, flatNo: string) => {
     const historicDue = [];
     
     // Find historic dues from the last 6 months (including current month)
+    // Loop from 5 down to 0 to cover the last 6 calendar months relative to today.
     for (let i = 5; i >= 0; i--) {
-        const monthDate = addMonths(now, -i);
+        const monthDate = addMonths(startOfMonth(now), -i);
         const monthYear = format(monthDate, 'MMMM yyyy');
         if (!paidMonths.has(monthYear)) {
             historicDue.push(monthYear);
