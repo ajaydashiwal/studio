@@ -27,9 +27,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+import { CalendarIcon, Loader2 } from "lucide-react"
+import { format, addMonths, subMonths } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect, useCallback } from "react"
@@ -50,6 +51,7 @@ const formSchema = z.object({
     required_error: "Please select a mode of payment.",
   }),
   transactionRef: z.string().optional(),
+  bulkPaymentType: z.enum(["historic", "future"]).optional(),
 }).refine(data => {
     if (data.modeOfPayment === 'Transfer') {
         return !!data.transactionRef && data.transactionRef.length > 0;
@@ -58,6 +60,15 @@ const formSchema = z.object({
 }, {
     message: "Transaction reference is required for transfers.",
     path: ["transactionRef"],
+}).refine(data => {
+    const isBulk = data.amount > 300 && data.amount % 300 === 0;
+    if (isBulk) {
+        return !!data.bulkPaymentType;
+    }
+    return true;
+}, {
+    message: "Please select payment direction for bulk amount.",
+    path: ["bulkPaymentType"]
 });
 
 
@@ -80,6 +91,7 @@ export default function DataEntryForm() {
   
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [isMember, setIsMember] = useState(true); // Default to true to hide tenant name initially
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,6 +107,9 @@ export default function DataEntryForm() {
   const watchedModeOfPayment = form.watch("modeOfPayment");
   const watchedFlatNo = form.watch("flatNo");
   const watchedMonthYear = form.watch("monthYear");
+  const watchedAmount = form.watch("amount");
+
+  const isBulkPayment = watchedAmount > 300 && watchedAmount % 300 === 0;
 
   const checkMembership = useCallback(debounce(async (flatNo) => {
     if (!flatNo || flatNo <= 0) {
@@ -158,41 +173,64 @@ export default function DataEntryForm() {
         return;
     }
     
-    const formattedValues = {
-      ...values,
-      receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
-    };
+    setIsSubmitting(true);
+    const numberOfMonths = isBulkPayment ? values.amount / 300 : 1;
+    const baseDate = new Date(values.monthYear);
     
-    try {
-        const response = await fetch('/api/maintenance', {
+    const promises = [];
+    
+    for (let i = 0; i < numberOfMonths; i++) {
+        let targetMonth;
+        if (isBulkPayment) {
+            const offset = values.bulkPaymentType === 'future' ? i : -i;
+            targetMonth = addMonths(baseDate, offset);
+        } else {
+            targetMonth = baseDate;
+        }
+
+        const formattedMonthYear = format(targetMonth, "MMMM yyyy");
+
+        const formattedValues = {
+          ...values,
+          amount: 300,
+          monthYear: formattedMonthYear,
+          receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
+        };
+
+        const promise = fetch('/api/maintenance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formattedValues),
         });
+        promises.push(promise);
+    }
+    
+    try {
+        const responses = await Promise.all(promises);
+        const hasErrors = responses.some(res => !res.ok);
 
-        if (response.ok) {
-            toast({
-                title: "Data Submitted",
-                description: "Maintenance record added successfully.",
-            });
-            form.reset();
-            form.setValue("amount", 300);
-            setIsDuplicate(false);
-            setIsMember(true);
-        } else {
-            const { error } = await response.json();
-            toast({
-                variant: "destructive",
-                title: "Submission Failed",
-                description: error || "Could not save the record.",
-            });
+        if (hasErrors) {
+            const errorResponse = await responses.find(res => !res.ok)?.json();
+            throw new Error(errorResponse?.error || "One or more records failed to save.");
         }
+        
+        toast({
+            title: "Data Submitted",
+            description: `${numberOfMonths} maintenance record(s) added successfully.`,
+        });
+        form.reset();
+        form.setValue("amount", 300);
+        setIsDuplicate(false);
+        setIsMember(true);
+        
     } catch (error) {
         toast({
             variant: "destructive",
             title: "Error",
-            description: "Could not connect to the server.",
+            description: error instanceof Error ? error.message : "Could not connect to the server.",
         });
+    } finally {
+        setIsSubmitting(false);
     }
   }
 
@@ -252,7 +290,7 @@ export default function DataEntryForm() {
                 <FormControl>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="300" {...field} className="pl-7" readOnly />
+                        <Input type="number" placeholder="300" {...field} className="pl-7" />
                     </div>
                 </FormControl>
                 <FormMessage />
@@ -300,6 +338,42 @@ export default function DataEntryForm() {
                     </FormItem>
                 )}
             />
+            {isBulkPayment && (
+                <FormField
+                    control={form.control}
+                    name="bulkPaymentType"
+                    render={({ field }) => (
+                        <FormItem className="space-y-3 md:col-span-2 bg-muted p-4 rounded-lg border">
+                            <FormLabel>Bulk Payment Direction</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex flex-col space-y-1"
+                                >
+                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="historic" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                    Pay for previous (historic) months
+                                    </FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="future" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                    Pay for upcoming (future) months
+                                    </FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                 />
+            )}
             <FormField
             control={form.control}
             name="receiptNo"
@@ -368,8 +442,13 @@ export default function DataEntryForm() {
               />
             )}
         </div>
-        <Button type="submit" disabled={isDuplicate}>Submit</Button>
+        <Button type="submit" disabled={isDuplicate || isSubmitting}>
+             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Submit
+        </Button>
       </form>
     </Form>
   )
 }
+
+    
