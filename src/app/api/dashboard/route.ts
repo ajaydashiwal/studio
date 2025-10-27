@@ -91,8 +91,8 @@ const getOfficeBearerDashboardData = async (sheets: any) => {
 
     return {
        financialSummary: [
-            { name: 'Collections', value: totalCollections },
-            { name: 'Expenditure', value: totalExpenditure },
+            { name: 'Collections', value: totalCollections, fill: 'hsl(var(--chart-2))' },
+            { name: 'Expenditure', value: totalExpenditure, fill: 'hsl(var(--chart-1))' },
        ],
        feedbackSummary: [
            { name: 'Complaints', value: feedbackSummary['Complaint'] || 0, fill: 'hsl(var(--chart-1))' },

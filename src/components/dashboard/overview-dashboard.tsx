@@ -131,7 +131,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
           <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent>
            {memberData.maintenance && memberData.maintenance.length > 0 ? (
             <MaintenancePieChart data={memberData.maintenance} />
           ) : (
@@ -146,7 +146,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
           <CardTitle>My Feedback Status</CardTitle>
           <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent>
           {(memberData.feedback && memberData.feedback.length > 0) ? (
             <FeedbackBarChart data={memberData.feedback} />
           ) : (
@@ -169,9 +169,9 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                         Total collections vs. total expenditure.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px]">
+                <CardContent>
                     {officeData.financialSummary && officeData.financialSummary.length > 0 ? (
-                        <FeedbackBarChart data={officeData.financialSummary} />
+                        <MaintenancePieChart data={officeData.financialSummary} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-muted-foreground">
                             No financial data available.
@@ -184,7 +184,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                     <CardTitle>Community Feedback Summary</CardTitle>
                     <CardDescription>An overview of all submitted feedback.</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px]">
+                <CardContent>
                      {officeData.feedbackSummary && officeData.feedbackSummary.length > 0 ? (
                         <FeedbackBarChart data={officeData.feedbackSummary} />
                     ) : (
