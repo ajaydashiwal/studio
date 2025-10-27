@@ -33,7 +33,9 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    const expenditureId = format(new Date(), "yyyyMMddHHmm");
+    const now = new Date();
+    const expenditureId = format(now, "yyyyMMddHHmm");
+    const submissionTimestamp = format(now, "dd/MM/yyyy HH:mm:ss");
     
     let transactionDetails = '';
     if (modeOfPayment === 'Transfer') {
@@ -41,17 +43,18 @@ export async function POST(request: Request) {
     } else if (modeOfPayment === 'Cheque') {
         transactionDetails = `Cheque No: ${chequeNo}, Date: ${chequeDate}`;
     } else {
-        transactionDetails = 'Cash';
+        transactionDetails = 'NA';
     }
     
-    // Columns: expenditureId, expenditureType, description, amount, transactionDetails, date
+    // Columns: expenditureId, expenditureType, description, amount, transactionDetails, date, submissionTimestamp
     const newRow = [
       expenditureId,
       expenditureType,
       description,
       amount,
       transactionDetails,
-      paymentDate
+      paymentDate,
+      submissionTimestamp
     ];
 
     await sheets.spreadsheets.values.append({
