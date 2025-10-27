@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { parse, subMonths, format, startOfMonth, endOfMonth } from 'date-fns';
+import { parse, subMonths, format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
@@ -61,29 +61,40 @@ const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: str
     // Determine the date range, defaulting to the last 12 months if not provided.
     const toDate = to ? endOfMonth(parse(to, 'yyyy-MM', new Date())) : new Date();
     const fromDate = from ? startOfMonth(parse(from, 'yyyy-MM', new Date())) : subMonths(toDate, 11);
+    const dateInterval = { start: fromDate, end: toDate };
 
-    // Total Collections within the specified period
-    const collectionRange = `${COLLECTION_SHEET}!C:F`; // receipt date, ..., amount
+    // Total Collections within the specified period from monthCollection sheet
+    // Columns: E (monthpaid), F (amount paid)
+    const collectionRange = `${COLLECTION_SHEET}!E:F`;
     const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: collectionRange });
     const totalCollections = (collectionResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        if (!row || !row[0] || !row[3]) return acc;
+        if (!row || !row[0] || !row[1]) return acc;
         try {
-            const receiptDate = parse(row[0], 'dd/MM/yyyy', new Date());
-            if (receiptDate >= fromDate && receiptDate <= toDate) {
-                const amount = parseFloat(row[3]);
+            // row[0] is monthpaid (e.g., "June 2024")
+            const monthDate = startOfMonth(parse(row[0], 'MMMM yyyy', new Date()));
+            if (isWithinInterval(monthDate, dateInterval)) {
+                const amount = parseFloat(row[1]); // row[1] is amount paid
                 return acc + (isNaN(amount) ? 0 : amount);
             }
         } catch (e) { /* Ignore rows with invalid dates */ }
         return acc;
     }, 0);
 
-    // Total Expenditure (all time - expenditure is not date-filtered for this dashboard view)
-    const expenditureRange = `${EXPENDITURE_SHEET}!D:D`; // amount
+    // Total Expenditure within the specified period from expTransaction sheet
+    // Columns: D (amount), F (submissionTimestamp)
+    const expenditureRange = `${EXPENDITURE_SHEET}!D:F`;
     const expenditureResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
     const totalExpenditure = (expenditureResponse.data.values || []).slice(1).reduce((acc: number, row: any[]) => {
-        if (!row || !row[0]) return acc;
-        const amount = parseFloat(row[0]);
-        return acc + (isNaN(amount) ? 0 : amount);
+        if (!row || !row[0] || !row[2]) return acc; // amount is D (index 0), submissionTimestamp is F (index 2)
+        try {
+            // row[2] is submissionTimestamp (e.g., "dd/MM/yyyy HH:mm:ss")
+            const expenditureDate = parse(row[2], 'dd/MM/yyyy HH:mm:ss', new Date());
+             if (isWithinInterval(expenditureDate, dateInterval)) {
+                const amount = parseFloat(row[0]); // row[0] is amount
+                return acc + (isNaN(amount) ? 0 : amount);
+            }
+        } catch (e) { /* Ignore rows with invalid dates */ }
+        return acc;
     }, 0);
 
     // Feedback Breakdown within the specified period
@@ -96,7 +107,7 @@ const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: str
         try {
              // Date format is "dd/MM/yyyy HH:mm:ss"
             const submissionDate = parse(row[0], 'dd/MM/yyyy HH:mm:ss', new Date());
-            if (submissionDate >= fromDate && submissionDate <= toDate) {
+            if (isWithinInterval(submissionDate, dateInterval)) {
                 const formType = row[2]; // 'Complaint' or 'Suggestion'
                 if (formType === 'Complaint' || formType === 'Suggestion') {
                     acc[formType] = (acc[formType] || 0) + 1;
