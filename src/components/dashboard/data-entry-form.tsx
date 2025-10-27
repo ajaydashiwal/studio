@@ -143,6 +143,21 @@ export default function DataEntryForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+
+    if (isSinglePayment && values.monthYear) {
+      // Pre-flight validation for single historic payments
+      const validationResponse = await fetch(`/api/maintenance/${values.flatNo}/${encodeURIComponent(values.monthYear)}`);
+      if (!validationResponse.ok) {
+        const errorResult = await validationResponse.json();
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: errorResult.error || "This payment cannot be processed.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+    }
     
     let endpoint = '/api/maintenance';
     let body = {
