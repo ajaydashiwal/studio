@@ -19,6 +19,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectLabel as SelectGroupLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -81,7 +82,7 @@ const formSchema = z.object({
     path: ["bulkPaymentType"]
 }).refine(data => {
     const isBulk = data.amount > 300 && data.amount % 300 === 0;
-    if (!isBulk) return true; // Only validate for bulk payments
+    if (!isBulk) return true;
 
     const numberOfMonths = data.amount / 300;
     if (data.bulkPaymentType === 'historic' && numberOfMonths > 6) {
@@ -307,7 +308,7 @@ export default function DataEntryForm() {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                             <SelectItem value="" disabled>--- Historic Dues ---</SelectItem>
+                             <SelectGroupLabel>--- Historic Dues ---</SelectGroupLabel>
                              {unpaidMonths.historic.length > 0 ? (
                                 unpaidMonths.historic.map(month => (
                                     <SelectItem key={month} value={month}>{month}</SelectItem>
@@ -315,7 +316,7 @@ export default function DataEntryForm() {
                              ) : (
                                 <SelectItem value="no-historic" disabled>No historic dues</SelectItem>
                              )}
-                            <SelectItem value="" disabled>--- Future Payments ---</SelectItem>
+                            <SelectGroupLabel>--- Future Payments ---</SelectGroupLabel>
                             {unpaidMonths.future.map(month => (
                                 <SelectItem key={month} value={month}>{month}</SelectItem>
                             ))}
@@ -480,3 +481,5 @@ export default function DataEntryForm() {
     </Form>
   )
 }
+
+    
