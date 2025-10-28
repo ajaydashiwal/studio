@@ -68,7 +68,7 @@ export async function GET(request: Request) {
             const months = Object.keys(monthlyData[type]).map(month => ({
                 month,
                 amount: monthlyData[type][month]
-            })).sort((a,b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+            })).sort((a,b) => parse(a.month, 'MMM yyyy', new Date()).getTime() - parse(b.month, 'MMM yyyy', new Date()).getTime());
 
             const total = months.reduce((acc, item) => acc + item.amount, 0);
 

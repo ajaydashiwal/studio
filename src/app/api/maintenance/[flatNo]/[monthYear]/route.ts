@@ -27,10 +27,20 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
     const sheets = google.sheets({ version: 'v4', auth });
 
+    // Try parsing with short month format first, then long format
+    let selectedMonthDate;
+    try {
+        selectedMonthDate = startOfMonth(parse(decodedMonthYear, 'MMM yyyy', new Date()));
+    } catch (e) {
+        selectedMonthDate = startOfMonth(parse(decodedMonthYear, 'MMMM yyyy', new Date()));
+    }
+
+    if (isNaN(selectedMonthDate.getTime())) {
+        return NextResponse.json({ error: 'Invalid month/year format.' }, { status: 400 });
+    }
+
     // Validate month for historic payments
     const today = startOfMonth(getIstDate());
-    const selectedMonthDate = startOfMonth(parse(decodedMonthYear, decodedMonthYear.length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date()));
-
     if (selectedMonthDate < today) { // It's a historic month
         const monthDiff = differenceInCalendarMonths(today, selectedMonthDate);
         if (monthDiff > 5) { // More than 5 months ago (0-5 is 6 months total)
@@ -58,6 +68,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
       (row) => {
           if (row[0] == flatNo && row[4]) {
               try {
+                  // Normalize both sheet data and input to 'MMM yyyy' for comparison
                   const sheetMonthDate = parse(row[4], row[4].length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date());
                   const formattedSheetMonth = format(sheetMonthDate, 'MMM yyyy');
                   const formattedDecodedMonth = format(selectedMonthDate, 'MMM yyyy');

@@ -42,7 +42,16 @@ const getMemberSummary = async (sheets: any, periodMonths: string[], allPayments
         const flatNo = String(member[0]).trim();
         const ownerName = member[1] || "NOT KNOWN";
 
-        const paidMonthsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
+        const paidMonthsInPeriod = allPayments.filter(p => {
+             if (String(p[0]).trim() !== flatNo) return false;
+             try {
+                // Normalize sheet month to full name for comparison
+                const sheetMonth = format(parse(p[4], p[4].length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date()), 'MMMM yyyy');
+                return periodMonths.includes(sheetMonth);
+             } catch {
+                 return false;
+             }
+        });
 
         const totalPaid = paidMonthsInPeriod.reduce((acc, p) => {
             const amount = parseFloat(p[5]);
@@ -95,7 +104,16 @@ const getNonMemberSummary = async (sheets: any, periodMonths: string[], allPayme
             continue; // Skip members with blank status
         }
 
-        const paymentsInPeriod = allPayments.filter(p => String(p[0]).trim() === flatNo && periodMonths.includes(p[4]));
+        const paymentsInPeriod = allPayments.filter(p => {
+             if (String(p[0]).trim() !== flatNo) return false;
+             try {
+                // Normalize sheet month to full name for comparison
+                const sheetMonth = format(parse(p[4], p[4].length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date()), 'MMMM yyyy');
+                return periodMonths.includes(sheetMonth);
+             } catch {
+                 return false;
+             }
+        });
         
         const ownerName = paymentTenantMap.get(flatNo) || "NOT KNOWN";
 
