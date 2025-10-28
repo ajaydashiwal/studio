@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { subMonths, addMonths, format } from 'date-fns';
+import { subMonths, addMonths, format, differenceInMonths, startOfMonth } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 
@@ -75,26 +75,20 @@ const getStatusBadgeColor = (status: string) => {
 
 const generateDateOptions = () => {
     const options = [];
-    const now = toZonedTime(new Date(), 'Asia/Kolkata');
-    
-    // Past 24 months
-    for (let i = 23; i >= 0; i--) {
+    const now = startOfMonth(toZonedTime(new Date(), 'Asia/Kolkata'));
+    const startDate = new Date(2015, 9, 1); // October 2015
+
+    const totalMonths = differenceInMonths(now, startDate);
+
+    for (let i = 0; i <= totalMonths; i++) {
         const date = subMonths(now, i);
-        options.push({ 
-            value: format(date, 'yyyy-MM'), 
+        options.push({
+            value: format(date, 'yyyy-MM'),
             label: format(date, 'MMM yyyy')
         });
     }
 
-    // Future 24 months
-     for (let i = 1; i <= 24; i++) {
-        const date = addMonths(now, i);
-        options.push({ 
-            value: format(date, 'yyyy-MM'), 
-            label: format(date, 'MMM yyyy')
-        });
-    }
-    return options;
+    return options.reverse(); // oldest to newest
 };
 
 const dateOptions = generateDateOptions();
@@ -225,7 +219,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {dateOptions.map(option => (
-                                            <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                            <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -238,7 +232,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {dateOptions.map(option => (
-                                            <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                            <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -278,45 +272,43 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="rounded-md border">
-                    <ScrollArea className="h-96 w-full">
-                        <Table className="min-w-full">
-                            <TableHeader className="sticky top-0 bg-secondary z-10">
-                                <TableRow>
-                                    <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Date</TableHead>
-                                    <TableHead className="min-w-[150px]">Type/Category</TableHead>
-                                    <TableHead className="min-w-[300px]">Description</TableHead>
-                                    <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                <ScrollArea className="h-96 w-full">
+                    <Table className="min-w-full">
+                        <TableHeader className="sticky top-0 bg-secondary z-20">
+                            <TableRow>
+                                <TableHead className="sticky left-0 bg-secondary z-30 min-w-[150px]">Date</TableHead>
+                                <TableHead className="min-w-[150px]">Type/Category</TableHead>
+                                <TableHead className="min-w-[300px]">Description</TableHead>
+                                <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {complaintsLoading ? (
+                                Array.from({ length: 5 }).map((_, index) => (
+                                <TableRow key={`skeleton-${index}`}>
+                                    <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                    <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {complaintsLoading ? (
-                                    Array.from({ length: 5 }).map((_, index) => (
-                                    <TableRow key={`skeleton-${index}`}>
-                                        <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                                        <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                ))
+                            ) : allComplaints.length === 0 ? (
+                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
+                            ) : (
+                                allComplaints.slice(0, 20).map((item) => ( // Show recent 20
+                                    <TableRow key={item.id}>
+                                        <TableCell className="text-xs sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
+                                        <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
+                                        <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                        </TableCell>
                                     </TableRow>
-                                    ))
-                                ) : allComplaints.length === 0 ? (
-                                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
-                                ) : (
-                                    allComplaints.slice(0, 20).map((item) => ( // Show recent 20
-                                        <TableRow key={item.id}>
-                                            <TableCell className="text-xs sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
-                                            <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
-                                            <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </ScrollArea>
-                </div>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
             </CardContent>
         </Card>
     </div>

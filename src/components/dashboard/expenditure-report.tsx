@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { format, subMonths } from 'date-fns';
+import { format, subMonths, startOfMonth, differenceInMonths } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import { Terminal } from "lucide-react"
 
@@ -39,16 +39,17 @@ interface ReportSection {
 
 const generateMonthYearOptions = () => {
     const options = [];
-    const now = new Date();
-    // Go back 36 months for the dropdowns
-    for (let i = 0; i < 36; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const month = date.toLocaleString('default', { month: 'short' });
-        const year = date.getFullYear();
-        options.push({ value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: `${month} ${year}` });
+    const now = startOfMonth(new Date());
+    const startDate = new Date(2015, 9, 1); // October 2015
+
+    const totalMonths = differenceInMonths(now, startDate);
+
+    for (let i = 0; i <= totalMonths; i++) {
+        const date = subMonths(now, i);
+        options.push({ value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: format(date, 'MMM yyyy') });
     }
-    return options;
-}
+    return options.reverse(); // Oldest to newest
+};
 
 const monthYearOptions = generateMonthYearOptions();
 
@@ -119,7 +120,7 @@ export default function ExpenditureReport() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {monthYearOptions.map(option => (
-                                        <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -132,7 +133,7 @@ export default function ExpenditureReport() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {monthYearOptions.map(option => (
-                                        <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

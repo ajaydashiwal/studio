@@ -30,6 +30,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog"
 import DataTable from "./data-table"
+import { format, subMonths, startOfMonth, differenceInMonths } from 'date-fns';
   
 interface SummaryData {
     flatNo: string;
@@ -44,15 +45,16 @@ interface SummaryTableProps {
   
 const generateMonthYearOptions = () => {
     const options = [];
-    const now = new Date();
-    // Go back 36 months for the "From" dropdown
-    for (let i = 0; i < 36; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const month = date.toLocaleString('default', { month: 'short' });
-        const year = date.getFullYear();
-        options.push({ value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: `${month} ${year}` });
+    const now = startOfMonth(new Date());
+    const startDate = new Date(2015, 9, 1); // October 2015
+
+    const totalMonths = differenceInMonths(now, startDate);
+
+    for (let i = 0; i <= totalMonths; i++) {
+        const date = subMonths(now, i);
+        options.push({ value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: format(date, 'MMM yyyy') });
     }
-    return options;
+    return options.reverse(); // Oldest to newest
 }
 
 const monthYearOptions = generateMonthYearOptions();
@@ -62,8 +64,8 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [period, setPeriod] = useState<{ from: string; to: string }>({ 
-        from: monthYearOptions[11].value, // Default to 12 months ago
-        to: monthYearOptions[0].value,   // Default to current month
+        from: format(subMonths(new Date(), 11), 'yyyy-MM'), // Default to 12 months ago
+        to: format(new Date(), 'yyyy-MM'),   // Default to current month
     });
     const [selectedFlat, setSelectedFlat] = useState<{flatNo: string, ownerName: string} | null>(null);
     const [flatNoFilter, setFlatNoFilter] = useState('');
@@ -148,7 +150,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {monthYearOptions.map(option => (
-                                            <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                            <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -160,8 +162,8 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {monthYearOptions.slice(0, 12).map(option => ( // Only show last 12 months for "To"
-                                            <SelectItem key={`to-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                        {monthYearOptions.map(option => (
+                                            <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -170,50 +172,48 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
-                        <ScrollArea className="h-[60vh] w-full">
-                            <Table className="min-w-full">
-                                <TableHeader className="sticky top-0 bg-secondary z-10">
-                                    <TableRow>
-                                        <TableHead className="sticky left-0 bg-secondary z-20 min-w-[120px]">Flat No</TableHead>
-                                        <TableHead className="min-w-[200px]">Owner/Tenant Name</TableHead>
-                                        <TableHead className="text-right min-w-[120px]">Total Paid</TableHead>
-                                        <TableHead className="text-right min-w-[120px]">Total Due</TableHead>
+                    <ScrollArea className="h-[60vh] w-full">
+                        <Table className="min-w-full">
+                            <TableHeader className="sticky top-0 bg-secondary z-20">
+                                <TableRow>
+                                    <TableHead className="sticky left-0 bg-secondary z-30 min-w-[120px]">Flat No</TableHead>
+                                    <TableHead className="min-w-[200px]">Owner/Tenant Name</TableHead>
+                                    <TableHead className="text-right min-w-[120px]">Total Paid</TableHead>
+                                    <TableHead className="text-right min-w-[120px]">Total Due</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {loading ? (
+                                renderSkeletons()
+                            ) : error ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center text-destructive">
+                                        {error}
+                                    </TableCell>
+                                </TableRow>
+                            ) : filteredData.length === 0 ? (
+                                <TableRow>
+                                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                        {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                filteredData.map((item) => (
+                                    <TableRow 
+                                        key={item.flatNo} 
+                                        className="cursor-pointer" 
+                                        onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
+                                    >
+                                        <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
+                                        <TableCell>{item.ownerName}</TableCell>
+                                        <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
+                                        <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {loading ? (
-                                    renderSkeletons()
-                                ) : error ? (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-destructive">
-                                            {error}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filteredData.length === 0 ? (
-                                    <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                                            {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    filteredData.map((item) => (
-                                        <TableRow 
-                                            key={item.flatNo} 
-                                            className="cursor-pointer" 
-                                            onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
-                                        >
-                                            <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
-                                            <TableCell>{item.ownerName}</TableCell>
-                                            <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
-                                            <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
-                                        </TableRow>
-                                    ))
-                                )}
-                                </TableBody>
-                            </Table>
-                        </ScrollArea>
-                    </div>
+                                ))
+                            )}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
                 </CardContent>
             </Card>
 
