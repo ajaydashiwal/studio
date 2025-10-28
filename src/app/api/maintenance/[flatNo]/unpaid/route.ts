@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format, addMonths, startOfMonth } from 'date-fns';
+import { format, addMonths, startOfMonth, parse } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
@@ -31,7 +31,14 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
     const collectionRows = (collectionResponse.data.values || []).slice(1);
     const userPayments = collectionRows.filter(row => row[0] == flatNo);
-    const paidMonths = new Set(userPayments.map(row => row[4]));
+    const paidMonths = new Set(userPayments.map(row => {
+        try {
+            const sheetMonthDate = parse(row[4], row[4].length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date());
+            return format(sheetMonthDate, 'MMM yyyy');
+        } catch {
+            return null;
+        }
+    }).filter(Boolean));
 
     const now = getIstDate();
     const historicMonthsDue = [];
@@ -40,20 +47,20 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     // Check last 6 months for historic dues
     for (let i = 5; i >= 0; i--) {
       const monthDate = addMonths(startOfMonth(now), -i);
-      const monthYear = format(monthDate, 'MMMM yyyy');
+      const monthYear = format(monthDate, 'MMM yyyy');
       if (!paidMonths.has(monthYear)) {
         historicMonthsDue.push(monthYear);
       }
     }
 
     // Find the latest paid month to calculate future months from
-    const paidMonthDates = Array.from(paidMonths).map(m => new Date(m));
+    const paidMonthDates = Array.from(paidMonths).map(m => m ? parse(m, 'MMM yyyy', new Date()) : new Date(0));
     const latestPaidDate = paidMonthDates.length > 0 ? new Date(Math.max.apply(null, paidMonthDates.map(d => d.getTime()))) : now;
     
     // Generate next 12 available future months
     for (let i = 1; i <= 12; i++) {
         const monthDate = addMonths(latestPaidDate, i);
-        const monthYear = format(monthDate, 'MMMM yyyy');
+        const monthYear = format(monthDate, 'MMM yyyy');
         if (!paidMonths.has(monthYear)) {
             futureMonthsAvailable.push(monthYear);
         }

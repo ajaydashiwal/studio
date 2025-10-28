@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { differenceInCalendarMonths, parse, startOfMonth } from 'date-fns';
+import { differenceInCalendarMonths, parse, startOfMonth, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
@@ -29,7 +29,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
     // Validate month for historic payments
     const today = startOfMonth(getIstDate());
-    const selectedMonthDate = startOfMonth(parse(decodedMonthYear, 'MMMM yyyy', new Date()));
+    const selectedMonthDate = startOfMonth(parse(decodedMonthYear, decodedMonthYear.length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date()));
 
     if (selectedMonthDate < today) { // It's a historic month
         const monthDiff = differenceInCalendarMonths(today, selectedMonthDate);
@@ -55,7 +55,19 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     // Check for duplicate in monthCollection
     const collectionRows = collectionResponse.data.values || [];
     const isDuplicate = collectionRows.slice(1).some(
-      (row) => row[0] == flatNo && row[4] === decodedMonthYear
+      (row) => {
+          if (row[0] == flatNo && row[4]) {
+              try {
+                  const sheetMonthDate = parse(row[4], row[4].length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date());
+                  const formattedSheetMonth = format(sheetMonthDate, 'MMM yyyy');
+                  const formattedDecodedMonth = format(selectedMonthDate, 'MMM yyyy');
+                  return formattedSheetMonth === formattedDecodedMonth;
+              } catch {
+                  return false; // ignore malformed dates
+              }
+          }
+          return false;
+      }
     );
 
     // Check if flat exists in masterMembership
