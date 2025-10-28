@@ -157,11 +157,6 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     };
 
     const fetchAllComplaints = async () => {
-        if(user.userType === 'Member') {
-            setComplaintsLoading(false);
-            return;
-        };
-
         setComplaintsLoading(true);
         try {
             const response = await fetch('/api/complaints');
@@ -176,9 +171,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     };
 
     fetchData();
-    if (user.userType !== 'Member') {
-      fetchAllComplaints();
-    }
+    fetchAllComplaints();
   }, [user, period]);
 
   const renderMemberDashboard = (memberData: MemberData) => (
@@ -217,124 +210,122 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   );
 
   const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => (
-    <div className="space-y-6">
-        <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-                <CardHeader>
-                   <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-                        <div>
-                            <CardTitle>Financial Summary</CardTitle>
-                            <CardDescription>
-                                Collections vs. total expenditure for the period.
-                            </CardDescription>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <div className="grid gap-1.5">
-                                <Label htmlFor="from-period" className="text-xs">From</Label>
-                                <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
-                                        <SelectValue placeholder="Select Period" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {fromDateOptions.map(option => (
-                                            <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                             <div className="grid gap-1.5">
-                                <Label htmlFor="to-period" className="text-xs">To</Label>
-                                <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
-                                        <SelectValue placeholder="Select Period" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {toDateOptions.map(option => (
-                                            <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                   </div>
-                </CardHeader>
-                <CardContent>
-                    {officeData.financialSummary && officeData.financialSummary.some(d => d.value > 0) ? (
-                        <MaintenancePieChart data={officeData.financialSummary} />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
-                            No financial data for the selected period.
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Feedback Breakdown</CardTitle>
-                    <CardDescription>Total complaints vs. suggestions for the period.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     {officeData.feedbackSummary && officeData.feedbackSummary.some(d => d.value > 0) ? (
-                        <MaintenancePieChart data={officeData.feedbackSummary} />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
-                            No feedback data for the selected period.
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+    <div className="grid gap-6 lg:grid-cols-2">
         <Card>
             <CardHeader>
-                <CardTitle>Community Feedback Status</CardTitle>
-                <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
+               <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                    <div>
+                        <CardTitle>Financial Summary</CardTitle>
+                        <CardDescription>
+                            Collections vs. total expenditure for the period.
+                        </CardDescription>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="grid gap-1.5">
+                            <Label htmlFor="from-period" className="text-xs">From</Label>
+                            <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
+                                    <SelectValue placeholder="Select Period" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fromDateOptions.map(option => (
+                                        <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="grid gap-1.5">
+                            <Label htmlFor="to-period" className="text-xs">To</Label>
+                            <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
+                                    <SelectValue placeholder="Select Period" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {toDateOptions.map(option => (
+                                        <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+               </div>
             </CardHeader>
             <CardContent>
-                <div className="h-96 w-full overflow-auto">
-                    <Table className="min-w-full">
-                        <TableHeader className="sticky top-0 bg-secondary z-20">
-                            <TableRow>
-                                <TableHead className="sticky left-0 bg-secondary z-30 min-w-[150px]">Date</TableHead>
-                                <TableHead className="min-w-[150px]">Type/Category</TableHead>
-                                <TableHead className="min-w-[300px]">Description</TableHead>
-                                <TableHead className="text-center min-w-[120px]">Status</TableHead>
-                                <TableHead className="min-w-[150px]">Pending Since</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {complaintsLoading ? (
-                                Array.from({ length: 5 }).map((_, index) => (
-                                <TableRow key={`skeleton-${index}`}>
-                                    <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                                    <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                </TableRow>
-                                ))
-                            ) : allComplaints.length === 0 ? (
-                                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
-                            ) : (
-                                allComplaints.slice(0, 20).map((item) => ( // Show recent 20
-                                    <TableRow key={item.id}>
-                                        <TableCell className="text-xs sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
-                                        <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
-                                        <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
-                                        <TableCell className="text-center">
-                                            <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                {officeData.financialSummary && officeData.financialSummary.some(d => d.value > 0) ? (
+                    <MaintenancePieChart data={officeData.financialSummary} />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                        No financial data for the selected period.
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Feedback Breakdown</CardTitle>
+                <CardDescription>Total complaints vs. suggestions for the period.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 {officeData.feedbackSummary && officeData.feedbackSummary.some(d => d.value > 0) ? (
+                    <MaintenancePieChart data={officeData.feedbackSummary} />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                        No feedback data for the selected period.
+                    </div>
+                )}
             </CardContent>
         </Card>
     </div>
+  );
+
+  const renderCommunityFeedback = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Community Feedback Status</CardTitle>
+            <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="h-96 w-full overflow-auto">
+                <Table className="min-w-full">
+                    <TableHeader className="sticky top-0 bg-secondary z-20">
+                        <TableRow>
+                            <TableHead className="sticky left-0 bg-secondary z-30 min-w-[150px]">Type/Category</TableHead>
+                            <TableHead className="min-w-[300px]">Description</TableHead>
+                            <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                            <TableHead className="min-w-[150px]">Pending Since</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {complaintsLoading ? (
+                            Array.from({ length: 5 }).map((_, index) => (
+                            <TableRow key={`skeleton-${index}`}>
+                                <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-32" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            </TableRow>
+                            ))
+                        ) : allComplaints.length === 0 ? (
+                            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
+                        ) : (
+                            allComplaints.slice(0, 20).map((item) => ( // Show recent 20
+                                <TableRow key={item.id}>
+                                    <TableCell className="font-medium sticky left-0 bg-background z-10">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
+                                    <TableCell className="text-sm whitespace-normal">{item.description}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </CardContent>
+    </Card>
   );
   
   if (loading) {
@@ -372,6 +363,9 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             ? renderMemberDashboard(data as MemberData)
             : renderOfficeBearerDashboard(data as OfficeBearerData)
         }
+        <div className="mt-6">
+            {renderCommunityFeedback()}
+        </div>
     </div>
   );
 }
