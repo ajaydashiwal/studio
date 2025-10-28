@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import {
@@ -153,8 +154,8 @@ export default function ExpenditureReport() {
                 </div>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-[65vh] rounded-md border">
-                    <Table>
+                <ScrollArea className="h-[65vh] rounded-md border w-full">
+                    <Table className="min-w-full">
                         <TableHeader className="sticky top-0 bg-secondary z-10">
                             <TableRow>
                                 <TableHead className="w-[200px] min-w-[200px] sticky left-0 bg-secondary z-20">Expenditure Type</TableHead>
