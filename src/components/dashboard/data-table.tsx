@@ -55,7 +55,7 @@ export default function DataTable({ flatNo }: DataTableProps) {
     const renderSkeletons = () => (
         Array.from({ length: 12 }).map((_, index) => (
             <TableRow key={`skeleton-${index}`}>
-                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell className="text-right"><Skeleton className="h-4 w-16" /></TableCell>
@@ -71,51 +71,53 @@ export default function DataTable({ flatNo }: DataTableProps) {
           <CardDescription>Showing payment history.</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
-            <ScrollArea className="h-96 rounded-md border w-full">
-                <Table className="min-w-full">
-                    <TableHeader className="sticky top-0 bg-secondary z-10">
-                    <TableRow>
-                        <TableHead className="w-[150px] px-2 text-xs md:px-4 md:text-sm sticky left-0 bg-secondary z-20">Month</TableHead>
-                        <TableHead className="px-2 text-xs md:px-4 md:text-sm">Receipt No</TableHead>
-                        <TableHead className="px-2 text-xs md:px-4 md:text-sm">Receipt Date</TableHead>
-                        <TableHead className="px-2 text-right text-xs md:px-4 md:text-sm">Amount</TableHead>
-                        <TableHead className="w-[120px] px-2 text-center text-xs md:px-4 md:text-sm">Status</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {loading ? (
-                        renderSkeletons()
-                    ) : error ? (
-                        <TableRow>
-                            <TableCell colSpan={5} className="text-center text-destructive">
-                                {error}
-                            </TableCell>
-                        </TableRow>
-                    ) : data.length === 0 ? (
-                        <TableRow>
-                           <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                No maintenance records found.
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        data.map((item) => (
-                            <TableRow key={item.id} className="text-xs md:text-sm">
-                            <TableCell className="font-medium px-2 md:px-4 sticky left-0 bg-background z-10">{item.month}</TableCell>
-                            <TableCell className="px-2 md:px-4">{item.receiptNo}</TableCell>
-                            <TableCell className="px-2 md:px-4">{item.receiptDate}</TableCell>
-                            <TableCell className="text-right px-2 md:px-4">₹{item.amount}</TableCell>                        
-                            <TableCell className="text-center px-2 md:px-4">
-                                <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
-                                className={item.status === 'Paid' ? 'bg-green-600' : ''}>
-                                    {item.status}
-                                </Badge>
-                            </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                    </TableBody>
-                </Table>
-            </ScrollArea>
+            <div className="rounded-md border">
+              <ScrollArea className="h-96 w-full">
+                  <Table>
+                      <TableHeader className="sticky top-0 bg-secondary z-10">
+                      <TableRow>
+                          <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Month</TableHead>
+                          <TableHead className="min-w-[120px]">Receipt No</TableHead>
+                          <TableHead className="min-w-[120px]">Receipt Date</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Amount</TableHead>
+                          <TableHead className="text-center min-w-[100px]">Status</TableHead>
+                      </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                      {loading ? (
+                          renderSkeletons()
+                      ) : error ? (
+                          <TableRow>
+                              <TableCell colSpan={5} className="text-center text-destructive">
+                                  {error}
+                              </TableCell>
+                          </TableRow>
+                      ) : data.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground">
+                                  No maintenance records found.
+                              </TableCell>
+                          </TableRow>
+                      ) : (
+                          data.map((item) => (
+                              <TableRow key={item.id} className="text-xs md:text-sm">
+                              <TableCell className="font-medium sticky left-0 bg-background z-10">{item.month}</TableCell>
+                              <TableCell>{item.receiptNo}</TableCell>
+                              <TableCell>{item.receiptDate}</TableCell>
+                              <TableCell className="text-right">₹{item.amount}</TableCell>                        
+                              <TableCell className="text-center">
+                                  <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
+                                  className={item.status === 'Paid' ? 'bg-green-600' : ''}>
+                                      {item.status}
+                                  </Badge>
+                              </TableCell>
+                              </TableRow>
+                          ))
+                      )}
+                      </TableBody>
+                  </Table>
+              </ScrollArea>
+            </div>
         </CardContent>
       </Card>
     )

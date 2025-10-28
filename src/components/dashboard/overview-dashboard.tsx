@@ -224,7 +224,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {dateOptions.slice(0, 24).map(option => (
+                                        {dateOptions.map(option => (
                                             <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -278,43 +278,45 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-96 rounded-md border w-full">
-                    <Table className="min-w-full">
-                        <TableHeader className="sticky top-0 bg-secondary z-10">
-                            <TableRow>
-                                <TableHead className="sticky left-0 bg-secondary z-20">Date</TableHead>
-                                <TableHead>Type/Category</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-center">Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {complaintsLoading ? (
-                                Array.from({ length: 5 }).map((_, index) => (
-                                <TableRow key={`skeleton-${index}`}>
-                                    <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                                    <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                <div className="rounded-md border">
+                    <ScrollArea className="h-96 w-full">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-secondary z-10">
+                                <TableRow>
+                                    <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Date</TableHead>
+                                    <TableHead className="min-w-[150px]">Type/Category</TableHead>
+                                    <TableHead className="min-w-[300px]">Description</TableHead>
+                                    <TableHead className="text-center min-w-[120px]">Status</TableHead>
                                 </TableRow>
-                                ))
-                            ) : allComplaints.length === 0 ? (
-                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
-                            ) : (
-                                allComplaints.slice(0, 20).map((item) => ( // Show recent 20
-                                    <TableRow key={item.id}>
-                                        <TableCell className="text-xs sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
-                                        <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
-                                        <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
-                                        <TableCell className="text-center">
-                                            <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
-                                        </TableCell>
+                            </TableHeader>
+                            <TableBody>
+                                {complaintsLoading ? (
+                                    Array.from({ length: 5 }).map((_, index) => (
+                                    <TableRow key={`skeleton-${index}`}>
+                                        <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                        <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </ScrollArea>
+                                    ))
+                                ) : allComplaints.length === 0 ? (
+                                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
+                                ) : (
+                                    allComplaints.slice(0, 20).map((item) => ( // Show recent 20
+                                        <TableRow key={item.id}>
+                                            <TableCell className="text-xs sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
+                                            <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
+                                            <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                </div>
             </CardContent>
         </Card>
     </div>

@@ -18,7 +18,6 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface Complaint {
     id: string; // Now complaintId
@@ -138,7 +138,7 @@ export default function ComplaintManagement() {
     const renderSkeletons = () => (
         Array.from({ length: 10 }).map((_, index) => (
             <TableRow key={`skeleton-${index}`}>
-                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
@@ -156,42 +156,44 @@ export default function ComplaintManagement() {
                     <CardDescription>View and update the status of all submitted feedback.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-[65vh] rounded-md border w-full">
-                        <Table className="min-w-full">
-                            <TableHeader className="sticky top-0 bg-secondary z-10">
-                                <TableRow>
-                                    <TableHead className="sticky left-0 bg-secondary z-20">Date</TableHead>
-                                    <TableHead>Flat</TableHead>
-                                    <TableHead>Category/Type</TableHead>
-                                    <TableHead>Complaint ID</TableHead>
-                                    <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-center">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? renderSkeletons() : error ? (
-                                    <TableRow><TableCell colSpan={6} className="text-center text-destructive">{error}</TableCell></TableRow>
-                                ) : complaints.length === 0 ? (
-                                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No complaints or suggestions found.</TableCell></TableRow>
-                                ) : (
-                                    complaints.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
-                                            <TableCell>{item.flatNo}</TableCell>
-                                            <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
-                                            <TableCell>{item.id}</TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)}>Update</Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </ScrollArea>
+                    <div className="rounded-md border">
+                        <ScrollArea className="h-[65vh] w-full">
+                            <Table className="min-w-full">
+                                <TableHeader className="sticky top-0 bg-secondary z-10">
+                                    <TableRow>
+                                        <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Date</TableHead>
+                                        <TableHead className="min-w-[80px]">Flat</TableHead>
+                                        <TableHead className="min-w-[150px]">Category/Type</TableHead>
+                                        <TableHead className="min-w-[150px]">Complaint ID</TableHead>
+                                        <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                                        <TableHead className="text-center min-w-[100px]">Action</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? renderSkeletons() : error ? (
+                                        <TableRow><TableCell colSpan={6} className="text-center text-destructive">{error}</TableCell></TableRow>
+                                    ) : complaints.length === 0 ? (
+                                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No complaints or suggestions found.</TableCell></TableRow>
+                                    ) : (
+                                        complaints.map((item) => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
+                                                <TableCell>{item.flatNo}</TableCell>
+                                                <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
+                                                <TableCell>{item.id}</TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)}>Update</Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </ScrollArea>
+                    </div>
                 </CardContent>
             </Card>
 
