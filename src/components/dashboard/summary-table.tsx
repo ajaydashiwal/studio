@@ -30,7 +30,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog"
 import DataTable from "./data-table"
-import { format, subMonths, startOfMonth, differenceInMonths } from 'date-fns';
+import { format, subMonths, addMonths, startOfMonth, differenceInMonths } from 'date-fns';
   
 interface SummaryData {
     flatNo: string;
@@ -46,15 +46,20 @@ interface SummaryTableProps {
 const generateMonthYearOptions = () => {
     const options = [];
     const now = startOfMonth(new Date());
+    const futureLimit = addMonths(now, 12);
     const startDate = new Date(2015, 9, 1); // October 2015
 
-    const totalMonths = differenceInMonths(now, startDate);
+    let currentDate = startDate;
 
-    for (let i = 0; i <= totalMonths; i++) {
-        const date = subMonths(now, i);
-        options.push({ value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: format(date, 'MMM yyyy') });
+    while (currentDate <= futureLimit) {
+        options.push({
+            value: format(currentDate, 'yyyy-MM'),
+            label: format(currentDate, 'MMM yyyy')
+        });
+        currentDate = addMonths(currentDate, 1);
     }
-    return options.reverse(); // Oldest to newest
+    
+    return options.reverse(); // Newest to oldest
 }
 
 const monthYearOptions = generateMonthYearOptions();

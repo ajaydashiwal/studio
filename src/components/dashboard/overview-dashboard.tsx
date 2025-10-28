@@ -76,19 +76,20 @@ const getStatusBadgeColor = (status: string) => {
 const generateDateOptions = () => {
     const options = [];
     const now = startOfMonth(toZonedTime(new Date(), 'Asia/Kolkata'));
+    const futureLimit = addMonths(now, 12);
     const startDate = new Date(2015, 9, 1); // October 2015
 
-    const totalMonths = differenceInMonths(now, startDate);
+    let currentDate = startDate;
 
-    for (let i = 0; i <= totalMonths; i++) {
-        const date = subMonths(now, i);
+    while (currentDate <= futureLimit) {
         options.push({
-            value: format(date, 'yyyy-MM'),
-            label: format(date, 'MMM yyyy')
+            value: format(currentDate, 'yyyy-MM'),
+            label: format(currentDate, 'MMM yyyy')
         });
+        currentDate = addMonths(currentDate, 1);
     }
 
-    return options.reverse(); // oldest to newest
+    return options.reverse(); // Newest to oldest for display
 };
 
 const dateOptions = generateDateOptions();
