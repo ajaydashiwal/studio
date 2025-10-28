@@ -21,13 +21,20 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 import { format, subMonths } from 'date-fns';
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
+import { Terminal } from "lucide-react"
 
-interface ReportData {
-    report: { [type: string]: { [month: string]: number } };
-    months: string[];
-    types: string[];
+interface MonthData {
+    month: string;
+    amount: number;
+}
+
+interface ReportSection {
+    type: string;
+    months: MonthData[];
+    total: number;
 }
 
 const generateMonthYearOptions = () => {
@@ -46,7 +53,7 @@ const generateMonthYearOptions = () => {
 const monthYearOptions = generateMonthYearOptions();
 
 export default function ExpenditureReport() {
-    const [data, setData] = useState<ReportData | null>(null);
+    const [data, setData] = useState<ReportSection[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [period, setPeriod] = useState<{ from: string; to: string }>({
@@ -58,6 +65,7 @@ export default function ExpenditureReport() {
         const fetchData = async () => {
             setLoading(true);
             setError(null);
+            setData(null);
             const { from, to } = period;
 
             try {
@@ -66,7 +74,7 @@ export default function ExpenditureReport() {
                     const errorData = await response.json();
                     throw new Error(errorData.error || "Failed to fetch expenditure report");
                 }
-                const result: ReportData = await response.json();
+                const result: ReportSection[] = await response.json();
                 setData(result);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "An unknown error occurred");
@@ -77,41 +85,21 @@ export default function ExpenditureReport() {
         fetchData();
     }, [period]);
     
-    const calculateColumnTotals = () => {
-        if (!data) return {};
-        const totals: { [month: string]: number } = {};
-        for (const month of data.months) {
-            totals[month] = 0;
-            for (const type of data.types) {
-                totals[month] += data.report[type]?.[month] || 0;
-            }
-        }
-        return totals;
-    };
-
-    const calculateRowTotals = () => {
-        if (!data) return {};
-        const totals: { [type: string]: number } = {};
-        for (const type of data.types) {
-            totals[type] = Object.values(data.report[type] || {}).reduce((acc, val) => acc + val, 0);
-        }
-        return totals;
-    };
+    const grandTotal = data ? data.reduce((acc, section) => acc + section.total, 0) : 0;
     
-    const columnTotals = calculateColumnTotals();
-    const rowTotals = calculateRowTotals();
-    const grandTotal = Object.values(columnTotals).reduce((acc, val) => acc + val, 0);
-
     const renderSkeletons = () => (
-        Array.from({ length: 8 }).map((_, rowIndex) => (
-            <TableRow key={`skeleton-row-${rowIndex}`}>
-                <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-32" /></TableCell>
-                {Array.from({ length: 6 }).map((_, colIndex) => (
-                    <TableCell key={`skeleton-cell-${colIndex}`} className="text-right"><Skeleton className="h-4 w-20" /></TableCell>
-                ))}
-                <TableCell className="text-right font-bold sticky right-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
-            </TableRow>
-        ))
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={`skeleton-${index}`}>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-24 w-full" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
     );
 
     return (
@@ -153,63 +141,72 @@ export default function ExpenditureReport() {
                 </div>
             </CardHeader>
             <CardContent>
-                 <div className="rounded-md border">
-                    <ScrollArea className="h-[65vh] w-full">
-                        <Table className="min-w-full">
-                            <TableHeader className="sticky top-0 bg-secondary z-20">
-                                <TableRow>
-                                    <TableHead className="sticky left-0 bg-secondary z-30 min-w-[200px]">Expenditure Type</TableHead>
-                                    {data?.months.map(month => (
-                                        <TableHead key={month} className="text-right min-w-[120px]">{month}</TableHead>
-                                    ))}
-                                    <TableHead className="text-right min-w-[120px] sticky right-0 bg-secondary z-30">Total</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    renderSkeletons()
-                                ) : error ? (
-                                    <TableRow>
-                                        <TableCell colSpan={(data?.months.length || 0) + 2} className="text-center text-destructive">{error}</TableCell>
-                                    </TableRow>
-                                ) : !data || data.types.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={(data?.months.length || 0) + 2} className="text-center text-muted-foreground">No expenditure data found for the selected period.</TableCell>
-                                    </TableRow>
-                                ) : (
-                                    data.types.map(type => (
-                                        <TableRow key={type}>
-                                            <TableCell className="font-medium sticky left-0 bg-background z-10">{type}</TableCell>
-                                            {data.months.map(month => (
-                                                <TableCell key={`${type}-${month}`} className="text-right">
-                                                    {data.report[type]?.[month]?.toLocaleString() || '-'}
-                                                </TableCell>
-                                            ))}
-                                            <TableCell className="text-right font-bold sticky right-0 bg-background z-10">
-                                                {rowTotals[type]?.toLocaleString() || '0'}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                            {!loading && !error && data && data.types.length > 0 && (
-                                <TableFooter className="sticky bottom-0 bg-secondary z-20">
-                                    <TableRow>
-                                        <TableCell className="font-bold sticky left-0 bg-secondary z-30">Monthly Total</TableCell>
-                                        {data.months.map(month => (
-                                            <TableCell key={`total-${month}`} className="text-right font-bold">
-                                                {columnTotals[month]?.toLocaleString() || '0'}
-                                            </TableCell>
-                                        ))}
-                                        <TableCell className="text-right font-bold text-lg sticky right-0 bg-secondary z-30">
-                                            {grandTotal.toLocaleString()}
-                                        </TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            )}
-                        </Table>
-                    </ScrollArea>
-                 </div>
+                 <ScrollArea className="h-[65vh] w-full p-1">
+                    {loading ? (
+                        renderSkeletons()
+                    ) : error ? (
+                        <Alert variant="destructive">
+                            <Terminal className="h-4 w-4" />
+                            <AlertTitle>Error</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    ) : !data || data.length === 0 ? (
+                         <div className="flex items-center justify-center h-full text-muted-foreground">
+                            No expenditure data found for the selected period.
+                        </div>
+                    ) : (
+                        <>
+                            <div className="mb-6">
+                                <Card>
+                                    <CardHeader className="p-4">
+                                        <CardTitle className="text-xl">Grand Total</CardTitle>
+                                        <CardDescription>Total expenditure for the selected period.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <p className="text-3xl font-bold">₹{grandTotal.toLocaleString()}</p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {data.map(section => (
+                                    <Card key={section.type}>
+                                        <CardHeader>
+                                            <CardTitle>{section.type}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Month</TableHead>
+                                                        <TableHead className="text-right">Amount</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {section.months.map(item => (
+                                                        <TableRow key={item.month}>
+                                                            <TableCell>{item.month}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                {item.amount.toLocaleString()}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                                <TableFooter>
+                                                    <TableRow>
+                                                        <TableCell className="font-bold">Total</TableCell>
+                                                        <TableCell className="text-right font-bold">
+                                                            {section.total.toLocaleString()}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </TableFooter>
+                                            </Table>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </ScrollArea>
             </CardContent>
         </Card>
     )

@@ -4,7 +4,6 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { parse, format, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const EXPENDITURE_SHEET = 'expTransaction';
@@ -38,9 +37,8 @@ export async function GET(request: Request) {
 
         const rows = response.data.values?.slice(1) || [];
 
-        const reportData: { [type: string]: { [month: string]: number } } = {};
-        const expenditureTypes = new Set<string>();
-
+        const monthlyData: { [type: string]: { [month: string]: number } } = {};
+        
         for (const row of rows) {
             const expenditureType = row[1];
             const amountStr = row[3];
@@ -56,24 +54,33 @@ export async function GET(request: Request) {
 
                     const monthYear = format(expenditureDate, 'MMM yyyy');
 
-                    if (!reportData[expenditureType]) {
-                        reportData[expenditureType] = {};
+                    if (!monthlyData[expenditureType]) {
+                        monthlyData[expenditureType] = {};
                     }
-                    reportData[expenditureType][monthYear] = (reportData[expenditureType][monthYear] || 0) + amount;
-                    expenditureTypes.add(expenditureType);
+                    monthlyData[expenditureType][monthYear] = (monthlyData[expenditureType][monthYear] || 0) + amount;
                 }
             } catch (e) {
                 // Ignore rows with invalid dates
             }
         }
         
-        const monthsInPeriod = eachMonthOfInterval(dateInterval).map(d => format(d, 'MMM yyyy'));
+        const reportData = Object.keys(monthlyData).map(type => {
+            const months = Object.keys(monthlyData[type]).map(month => ({
+                month,
+                amount: monthlyData[type][month]
+            })).sort((a,b) => new Date(a.month).getTime() - new Date(b.month).getTime());
 
-        return NextResponse.json({
-            report: reportData,
-            months: monthsInPeriod,
-            types: Array.from(expenditureTypes).sort(),
-        });
+            const total = months.reduce((acc, item) => acc + item.amount, 0);
+
+            return {
+                type,
+                months,
+                total
+            };
+        }).sort((a, b) => a.type.localeCompare(b.type));
+
+
+        return NextResponse.json(reportData);
 
     } catch (error: any) {
         console.error('Error accessing Google Sheets for expenditure report:', error);
