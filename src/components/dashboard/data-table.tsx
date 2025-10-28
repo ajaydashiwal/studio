@@ -73,7 +73,7 @@ export default function DataTable({ flatNo }: DataTableProps) {
         <CardContent className="flex-grow">
             <div className="rounded-md border">
               <ScrollArea className="h-96 w-full">
-                  <Table>
+                  <Table className="min-w-full">
                       <TableHeader className="sticky top-0 bg-secondary z-10">
                       <TableRow>
                           <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Month</TableHead>

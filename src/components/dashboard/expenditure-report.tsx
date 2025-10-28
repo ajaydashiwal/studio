@@ -155,7 +155,7 @@ export default function ExpenditureReport() {
             <CardContent>
                  <div className="rounded-md border">
                     <ScrollArea className="h-[65vh] w-full">
-                        <Table>
+                        <Table className="min-w-full">
                             <TableHeader className="sticky top-0 bg-secondary z-20">
                                 <TableRow>
                                     <TableHead className="sticky left-0 bg-secondary z-30 min-w-[200px]">Expenditure Type</TableHead>

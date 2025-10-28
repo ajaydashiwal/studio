@@ -172,7 +172,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                 <CardContent>
                     <div className="rounded-md border">
                         <ScrollArea className="h-[60vh] w-full">
-                            <Table>
+                            <Table className="min-w-full">
                                 <TableHeader className="sticky top-0 bg-secondary z-10">
                                     <TableRow>
                                         <TableHead className="sticky left-0 bg-secondary z-20 min-w-[120px]">Flat No</TableHead>
