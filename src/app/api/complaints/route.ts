@@ -2,11 +2,14 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'complaintTrans';
 // Columns: complaintId, submissionDate, flatNo, formType, issueCategory, description, status, remarks, actionDate
-const RANGE = `${SHEET_NAME}!A:H`;
+const RANGE = `${SHEET_NAME}!A:I`;
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 export async function GET(request: Request) {
   try {
@@ -72,9 +75,9 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    const now = new Date();
-    const complaintId = format(now, "yyyyMMddHHmmss");
-    const submissionDate = format(now, "dd/MM/yyyy HH:mm:ss");
+    const nowInIst = getIstDate();
+    const complaintId = format(nowInIst, "yyyyMMddHHmmss");
+    const submissionDate = format(nowInIst, "dd/MM/yyyy HH:mm:ss");
 
     // Columns: complaintId, submissionDate, flatNo, formType, issueCategory, description, status
     const newRow = [
@@ -135,10 +138,10 @@ export async function PUT(request: Request) {
             return NextResponse.json({ error: 'Complaint record not found.' }, { status: 404 });
         }
 
-        const actionDate = format(new Date(), "dd/MM/yyyy HH:mm:ss");
+        const actionDate = format(getIstDate(), "dd/MM/yyyy HH:mm:ss");
 
-        // Columns G (Status), H (Remarks)
-        const updateRange = `${SHEET_NAME}!G${rowIndex}:H${rowIndex}`;
+        // Columns G (Status), H (Remarks), I (ActionDate)
+        const updateRange = `${SHEET_NAME}!G${rowIndex}:I${rowIndex}`;
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,

@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { subMonths, addMonths, format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 
 interface OverviewDashboardProps {
@@ -73,27 +75,23 @@ const getStatusBadgeColor = (status: string) => {
 
 const generateDateOptions = () => {
     const options = [];
-    const now = new Date();
+    const now = toZonedTime(new Date(), 'Asia/Kolkata');
     
     // Past 24 months
     for (let i = 23; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const month = date.toLocaleString('default', { month: 'short' });
-        const year = date.getFullYear();
+        const date = subMonths(now, i);
         options.push({ 
-            value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, 
-            label: `${month} ${year}` 
+            value: format(date, 'yyyy-MM'), 
+            label: format(date, 'MMM yyyy')
         });
     }
 
     // Future 24 months
      for (let i = 1; i <= 24; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        const month = date.toLocaleString('default', { month: 'short' });
-        const year = date.getFullYear();
+        const date = addMonths(now, i);
         options.push({ 
-            value: `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`, 
-            label: `${month} ${year}` 
+            value: format(date, 'yyyy-MM'), 
+            label: format(date, 'MMM yyyy')
         });
     }
     return options;
@@ -108,13 +106,12 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   
-  const now = new Date();
-  const defaultFrom = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-  const defaultTo = new Date(now.getFullYear(), now.getMonth(), 1);
-
+  const now = toZonedTime(new Date(), 'Asia/Kolkata');
+  const defaultFrom = subMonths(now, 11);
+  
   const [period, setPeriod] = useState<{ from: string; to: string }>({ 
-      from: `${defaultFrom.getFullYear()}-${String(defaultFrom.getMonth() + 1).padStart(2, '0')}`,
-      to: `${defaultTo.getFullYear()}-${String(defaultTo.getMonth() + 1).padStart(2, '0')}`,
+      from: format(defaultFrom, 'yyyy-MM'),
+      to: format(now, 'yyyy-MM'),
   });
 
   useEffect(() => {

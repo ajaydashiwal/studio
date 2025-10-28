@@ -2,9 +2,12 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { format, addMonths, startOfMonth } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET_NAME = 'monthCollection';
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 const getAuth = () => new google.auth.GoogleAuth({
   keyFile: 'google-credentials.json',
@@ -22,7 +25,7 @@ const getUnpaidMonths = async (sheets: any, flatNo: string) => {
     const rows = (response.data.values || []).slice(1);
     const paidMonths = new Set(rows.filter(row => row[0] == flatNo).map(row => row[4]));
     
-    const now = new Date();
+    const now = getIstDate();
     const historicDue = [];
     
     // Find historic dues from the last 6 months (including current month)

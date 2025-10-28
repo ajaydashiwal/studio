@@ -2,9 +2,12 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'expTransaction';
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 export async function POST(request: Request) {
   try {
@@ -33,9 +36,9 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    const now = new Date();
-    const expenditureId = format(now, "yyyyMMddHHmm");
-    const submissionTimestamp = format(now, "dd/MM/yyyy HH:mm:ss");
+    const nowInIst = getIstDate();
+    const expenditureId = format(nowInIst, "yyyyMMddHHmm");
+    const submissionTimestamp = format(nowInIst, "dd/MM/yyyy HH:mm:ss");
     
     let transactionDetails = '';
     if (modeOfPayment === 'Transfer') {
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
     } else if (modeOfPayment === 'Cheque') {
         transactionDetails = `Cheque No: ${chequeNo}, Date: ${chequeDate}`;
     } else {
-        transactionDetails = 'NA';
+        transactionDetails = 'Cash';
     }
     
     // Columns: expenditureId, expenditureType, description, amount, transactionDetails, date, submissionTimestamp

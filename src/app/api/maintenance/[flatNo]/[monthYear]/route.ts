@@ -2,10 +2,13 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { differenceInCalendarMonths, parse, startOfMonth } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET_NAME = 'monthCollection';
 const MASTER_SHEET_NAME = 'masterMembership';
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 export async function GET(request: Request, { params }: { params: { flatNo: string, monthYear: string } }) {
   const { flatNo, monthYear } = params;
@@ -25,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const sheets = google.sheets({ version: 'v4', auth });
 
     // Validate month for historic payments
-    const today = startOfMonth(new Date());
+    const today = startOfMonth(getIstDate());
     const selectedMonthDate = startOfMonth(parse(decodedMonthYear, 'MMMM yyyy', new Date()));
 
     if (selectedMonthDate < today) { // It's a historic month

@@ -1,20 +1,24 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { subMonths, format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'monthCollection';
 const RANGE = `${SHEET_NAME}!A:F`; // Flat No, tenant name, receipt date, receipt no, monthpaid, amount
 
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
+
 // This function generates a list of months for checking against
 const getMonthRange = (paidMonths: string[]) => {
     const months = new Set<string>();
-    const now = new Date();
+    const now = getIstDate();
 
     // Add the last 24 months from today
     for (let i = 23; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+        const d = subMonths(now, i);
+        months.add(format(d, 'MMMM yyyy'));
     }
 
     // Add any future paid months that are outside the 24-month window

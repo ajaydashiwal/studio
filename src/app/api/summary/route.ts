@@ -2,6 +2,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { parse, format, differenceInCalendarMonths } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const MASTER_MEMBERSHIP_SHEET_NAME = 'masterMembership';
@@ -12,6 +13,8 @@ const DEFAULT_MAINTENANCE_FEE = 300;
 const MASTER_RANGE = `${MASTER_MEMBERSHIP_SHEET_NAME}!D:G`;
 // Columns in monthCollection: A:Flatno, B:tenantName, E:monthpaid, F:amount paid
 const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:F`;
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 const getMonthsInRange = (from: string, to: string): string[] => {
     const fromDate = parse(from, 'yyyy-MM', new Date());

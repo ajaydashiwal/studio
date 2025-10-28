@@ -2,10 +2,13 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { format, addMonths, startOfMonth } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET_NAME = 'monthCollection';
 const COLLECTION_RANGE = `${COLLECTION_SHEET_NAME}!A:E`; // Flatno, ..., monthpaid
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 export async function GET(request: Request, { params }: { params: { flatNo: string } }) {
   const { flatNo } = params;
@@ -30,7 +33,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const userPayments = collectionRows.filter(row => row[0] == flatNo);
     const paidMonths = new Set(userPayments.map(row => row[4]));
 
-    const now = new Date();
+    const now = getIstDate();
     const historicMonthsDue = [];
     const futureMonthsAvailable = [];
 

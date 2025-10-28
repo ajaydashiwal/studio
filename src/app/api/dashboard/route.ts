@@ -2,11 +2,14 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { parse, subMonths, format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
 const EXPENDITURE_SHEET = 'expTransaction';
 const COMPLAINT_TRANS_SHEET = 'complaintTrans';
+
+const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
 const getAuth = () => new google.auth.GoogleAuth({
     keyFile: 'google-credentials.json',
@@ -25,11 +28,11 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
     const userRows = (collectionResponse.data.values || []).slice(1).filter((row: any[]) => row && row[0] == flatNo);
     const paidMonths = userRows.map((row: any[]) => row[4]);
 
-    const now = new Date();
+    const now = getIstDate();
     let paidCount = 0;
     for (let i = 0; i < 24; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthToCheck = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const d = subMonths(now, i);
+        const monthToCheck = format(d, 'MMMM yyyy');
         if (paidMonths.includes(monthToCheck)) {
             paidCount++;
         }
@@ -59,7 +62,7 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
 
 const getOfficeBearerDashboardData = async (sheets: any, from?: string, to?: string) => {
     // Determine the date range, defaulting to the last 12 months if not provided.
-    const toDate = to ? endOfMonth(parse(to, 'yyyy-MM', new Date())) : new Date();
+    const toDate = to ? endOfMonth(parse(to, 'yyyy-MM', new Date())) : getIstDate();
     const fromDate = from ? startOfMonth(parse(from, 'yyyy-MM', new Date())) : subMonths(toDate, 11);
     const dateInterval = { start: fromDate, end: toDate };
 
