@@ -73,14 +73,27 @@ const getStatusBadgeColor = (status: string) => {
     }
 }
 
-const generateDateOptions = () => {
+const now = startOfMonth(new Date());
+
+const fromDateOptions = (() => {
     const options = [];
-    const now = startOfMonth(toZonedTime(new Date(), 'Asia/Kolkata'));
-    const futureLimit = addMonths(now, 12);
     const startDate = new Date(2015, 9, 1); // October 2015
-
     let currentDate = startDate;
+    while (currentDate <= now) {
+        options.push({
+            value: format(currentDate, 'yyyy-MM'),
+            label: format(currentDate, 'MMM yyyy')
+        });
+        currentDate = addMonths(currentDate, 1);
+    }
+    return options.reverse();
+})();
 
+const toDateOptions = (() => {
+    const options = [];
+    const startDate = new Date(2015, 9, 1); // October 2015
+    const futureLimit = addMonths(now, 12);
+    let currentDate = startDate;
     while (currentDate <= futureLimit) {
         options.push({
             value: format(currentDate, 'yyyy-MM'),
@@ -88,11 +101,9 @@ const generateDateOptions = () => {
         });
         currentDate = addMonths(currentDate, 1);
     }
+    return options.reverse();
+})();
 
-    return options.reverse(); // Newest to oldest for display
-};
-
-const dateOptions = generateDateOptions();
 
 export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -101,7 +112,6 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   
-  const now = toZonedTime(new Date(), 'Asia/Kolkata');
   const defaultFrom = subMonths(now, 11);
   
   const [period, setPeriod] = useState<{ from: string; to: string }>({ 
@@ -219,7 +229,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {dateOptions.map(option => (
+                                        {fromDateOptions.map(option => (
                                             <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -232,7 +242,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {dateOptions.map(option => (
+                                        {toDateOptions.map(option => (
                                             <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -353,3 +363,5 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     </div>
   );
 }
+
+    

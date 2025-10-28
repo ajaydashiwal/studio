@@ -42,15 +42,28 @@ interface SummaryData {
 interface SummaryTableProps {
     summaryType: 'member' | 'non-member';
 }
-  
-const generateMonthYearOptions = () => {
+
+const now = startOfMonth(new Date());
+
+const fromDateOptions = (() => {
     const options = [];
-    const now = startOfMonth(new Date());
-    const futureLimit = addMonths(now, 12);
     const startDate = new Date(2015, 9, 1); // October 2015
-
     let currentDate = startDate;
+    while (currentDate <= now) {
+        options.push({
+            value: format(currentDate, 'yyyy-MM'),
+            label: format(currentDate, 'MMM yyyy')
+        });
+        currentDate = addMonths(currentDate, 1);
+    }
+    return options.reverse();
+})();
 
+const toDateOptions = (() => {
+    const options = [];
+    const startDate = new Date(2015, 9, 1); // October 2015
+    const futureLimit = addMonths(now, 12);
+    let currentDate = startDate;
     while (currentDate <= futureLimit) {
         options.push({
             value: format(currentDate, 'yyyy-MM'),
@@ -58,11 +71,8 @@ const generateMonthYearOptions = () => {
         });
         currentDate = addMonths(currentDate, 1);
     }
-    
-    return options.reverse(); // Newest to oldest
-}
-
-const monthYearOptions = generateMonthYearOptions();
+    return options.reverse();
+})();
   
 export default function SummaryTable({ summaryType }: SummaryTableProps) {
     const [summaryData, setSummaryData] = useState<SummaryData[]>([]);
@@ -154,7 +164,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {monthYearOptions.map(option => (
+                                        {fromDateOptions.map(option => (
                                             <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -167,7 +177,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {monthYearOptions.map(option => (
+                                        {toDateOptions.map(option => (
                                             <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -238,3 +248,5 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
         </>
     )
 }
+
+    
