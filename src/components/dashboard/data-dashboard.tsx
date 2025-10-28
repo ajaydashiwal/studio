@@ -14,6 +14,7 @@ import ExpenditureEntryForm from '@/components/dashboard/expenditure-entry-form'
 import ComplaintSuggestionForm from '@/components/dashboard/complaint-suggestion-form';
 import ComplaintManagement from '@/components/dashboard/complaint-management';
 import OverviewDashboard from '@/components/dashboard/overview-dashboard';
+import ExpenditureReport from '@/components/dashboard/expenditure-report';
 import {
   Menubar,
   MenubarContent,
@@ -34,7 +35,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -62,6 +63,11 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       case 'nonMemberSummary':
         if (isOfficeBearer) {
           return <SummaryTable summaryType="non-member" />;
+        }
+        return null;
+      case 'expenditureReport':
+        if (isOfficeBearer) {
+          return <ExpenditureReport />;
         }
         return null;
       case 'entry':
@@ -193,6 +199,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                     <MenubarContent>
                         <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
                         <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
+                        <MenubarItem onClick={() => setActiveView('expenditureReport')}>Expenditure Report</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
                 <MenubarMenu>
