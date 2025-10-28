@@ -45,10 +45,12 @@ interface OfficeBearerData {
 interface Complaint {
     id: string;
     submissionDate: string;
+    flatNo: string;
     formType: string;
     issueCategory: string;
     description: string;
     status: string;
+    remarks: string;
 }
 
 type DashboardData = MemberData | OfficeBearerData;
@@ -118,6 +120,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
+  const [userResolvedComplaints, setUserResolvedComplaints] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   
   const defaultFrom = subMonths(now, 11);
@@ -164,7 +167,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             if (!response.ok) throw new Error("Failed to fetch complaints.");
             const data = await response.json();
 
-            // Sort and limit the data here
+            // Sort and limit the data for the community feedback view
             const sortedData = data.sort((a: Complaint, b: Complaint) => {
                 const aIsPending = a.status === 'Open';
                 const bIsPending = b.status === 'Open';
@@ -173,15 +176,21 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 if (!aIsPending && bIsPending) return 1;
 
                 if (aIsPending && bIsPending) {
-                    // Sort by pending days descending for 'Open' complaints
                     return calculatePendingDays(b.submissionDate) - calculatePendingDays(a.submissionDate);
                 }
                 
-                // For other statuses, sort by date descending (already default from API)
                 return 0; 
             });
 
             setAllComplaints(sortedData.slice(0, 10));
+
+            // Filter for the user's own resolved/closed complaints if they are a member
+            if (user.userType === 'Member') {
+                const resolved = data.filter((c: Complaint) => 
+                    c.flatNo === user.flatNo && (c.status === 'Resolved' || c.status === 'Closed')
+                );
+                setUserResolvedComplaints(resolved);
+            }
 
         } catch (err) {
              // setError can be used here if you want to show error for this part too
@@ -348,6 +357,54 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     </Card>
   );
   
+  const renderRwaRemarks = () => (
+     <Card>
+        <CardHeader>
+            <CardTitle>RWA Remarks on Your Feedback</CardTitle>
+            <CardDescription>Actions taken and remarks on your resolved or closed feedback.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="relative w-full overflow-auto">
+                <Table className="min-w-full">
+                     <TableHeader className="sticky top-0 bg-secondary z-20">
+                        <TableRow>
+                            <TableHead className="min-w-[150px]">Submitted</TableHead>
+                            <TableHead className="min-w-[250px]">Your Feedback</TableHead>
+                            <TableHead className="text-center min-w-[120px]">Final Status</TableHead>
+                            <TableHead className="min-w-[250px]">RWA Remarks</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {complaintsLoading ? (
+                             Array.from({ length: 2 }).map((_, index) => (
+                            <TableRow key={`skeleton-remarks-${index}`}>
+                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                            </TableRow>
+                            ))
+                        ) : userResolvedComplaints.length === 0 ? (
+                            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No remarks on resolved feedback yet.</TableCell></TableRow>
+                        ) : (
+                            userResolvedComplaints.map((item) => (
+                                <TableRow key={`remark-${item.id}`}>
+                                    <TableCell className="text-sm">{item.submissionDate}</TableCell>
+                                    <TableCell className="text-sm whitespace-normal">{item.description}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-sm whitespace-normal">{item.remarks || '-'}</TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </CardContent>
+     </Card>
+  );
+
   if (loading) {
     return (
         <div className="grid gap-6 md:grid-cols-2">
@@ -386,6 +443,13 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         <div className="mt-6">
             {renderCommunityFeedback()}
         </div>
+         {user.userType === 'Member' && (
+             <div className="mt-6">
+                {renderRwaRemarks()}
+            </div>
+         )}
     </div>
   );
 }
+
+    
