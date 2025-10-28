@@ -73,9 +73,10 @@ const getStatusBadgeColor = (status: string) => {
 const calculatePendingDays = (submissionDate: string) => {
     try {
         const date = parse(submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
+        if (isNaN(date.getTime())) return 0;
         return differenceInDays(new Date(), date);
     } catch {
-        return null;
+        return 0;
     }
 };
 
@@ -85,30 +86,30 @@ const now = startOfMonth(new Date());
 const fromDateOptions = (() => {
     const options = [];
     const startDate = new Date(2015, 9, 1); // October 2015
-    let currentDate = startDate;
-    while (currentDate <= now) {
+    let currentDate = now;
+    while (currentDate >= startDate) {
         options.push({
             value: format(currentDate, 'yyyy-MM'),
             label: format(currentDate, 'MMM yyyy')
         });
-        currentDate = addMonths(currentDate, 1);
+        currentDate = subMonths(currentDate, 1);
     }
-    return options.reverse();
+    return options;
 })();
 
 const toDateOptions = (() => {
     const options = [];
     const startDate = new Date(2015, 9, 1); // October 2015
     const futureLimit = addMonths(now, 12);
-    let currentDate = startDate;
-    while (currentDate <= futureLimit) {
+    let currentDate = futureLimit;
+    while (currentDate >= startDate) {
         options.push({
             value: format(currentDate, 'yyyy-MM'),
             label: format(currentDate, 'MMM yyyy')
         });
-        currentDate = addMonths(currentDate, 1);
+        currentDate = subMonths(currentDate, 1);
     }
-    return options.reverse();
+    return options;
 })();
 
 
@@ -162,7 +163,26 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             const response = await fetch('/api/complaints');
             if (!response.ok) throw new Error("Failed to fetch complaints.");
             const data = await response.json();
-            setAllComplaints(data);
+
+            // Sort and limit the data here
+            const sortedData = data.sort((a: Complaint, b: Complaint) => {
+                const aIsPending = a.status === 'Open';
+                const bIsPending = b.status === 'Open';
+                
+                if (aIsPending && !bIsPending) return -1;
+                if (!aIsPending && bIsPending) return 1;
+
+                if (aIsPending && bIsPending) {
+                    // Sort by pending days descending for 'Open' complaints
+                    return calculatePendingDays(b.submissionDate) - calculatePendingDays(a.submissionDate);
+                }
+                
+                // For other statuses, sort by date descending (already default from API)
+                return 0; 
+            });
+
+            setAllComplaints(sortedData.slice(0, 10));
+
         } catch (err) {
              // setError can be used here if you want to show error for this part too
         } finally {
@@ -282,10 +302,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     <Card>
         <CardHeader>
             <CardTitle>Community Feedback Status</CardTitle>
-            <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
+            <CardDescription>A live list of the top 10 most urgent open complaints and other recent feedback.</CardDescription>
         </CardHeader>
         <CardContent>
-            <div className="h-96 w-full overflow-auto">
+            <div className="relative w-full overflow-auto">
                 <Table className="min-w-full">
                     <TableHeader className="sticky top-0 bg-secondary z-20">
                         <TableRow>
@@ -308,7 +328,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                         ) : allComplaints.length === 0 ? (
                             <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
                         ) : (
-                            allComplaints.slice(0, 20).map((item) => ( // Show recent 20
+                            allComplaints.map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell className="font-medium sticky left-0 bg-background z-10">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
                                     <TableCell className="text-sm whitespace-normal">{item.description}</TableCell>
@@ -369,3 +389,4 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     </div>
   );
 }
+
