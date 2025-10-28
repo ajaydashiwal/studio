@@ -18,12 +18,9 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { subMonths, addMonths, format, differenceInMonths, startOfMonth } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
-
+import { subMonths, addMonths, format, startOfMonth, parse, differenceInDays } from 'date-fns';
 
 interface OverviewDashboardProps {
   user: Omit<User, 'membershipStatus'>;
@@ -72,6 +69,16 @@ const getStatusBadgeColor = (status: string) => {
         default: return '';
     }
 }
+
+const calculatePendingDays = (submissionDate: string) => {
+    try {
+        const date = parse(submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
+        return differenceInDays(new Date(), date);
+    } catch {
+        return null;
+    }
+};
+
 
 const now = startOfMonth(new Date());
 
@@ -283,7 +290,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-96 w-full">
+                <div className="h-96 w-full overflow-auto">
                     <Table className="min-w-full">
                         <TableHeader className="sticky top-0 bg-secondary z-20">
                             <TableRow>
@@ -291,6 +298,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                 <TableHead className="min-w-[150px]">Type/Category</TableHead>
                                 <TableHead className="min-w-[300px]">Description</TableHead>
                                 <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                                <TableHead className="min-w-[150px]">Pending Since</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -301,10 +309,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                                     <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                                 </TableRow>
                                 ))
                             ) : allComplaints.length === 0 ? (
-                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No feedback found.</TableCell></TableRow>
                             ) : (
                                 allComplaints.slice(0, 20).map((item) => ( // Show recent 20
                                     <TableRow key={item.id}>
@@ -314,12 +323,15 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <TableCell className="text-center">
                                             <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
                                         </TableCell>
+                                        <TableCell>
+                                            {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             )}
                         </TableBody>
                     </Table>
-                </ScrollArea>
+                </div>
             </CardContent>
         </Card>
     </div>
@@ -363,5 +375,3 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     </div>
   );
 }
-
-    

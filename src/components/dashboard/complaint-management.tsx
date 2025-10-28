@@ -34,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { ScrollArea } from "../ui/scroll-area";
+import { differenceInDays, parse } from "date-fns";
 
 interface Complaint {
     id: string; // Now complaintId
@@ -66,6 +66,15 @@ const getStatusBadgeColor = (status: string) => {
         default: return '';
     }
 }
+
+const calculatePendingDays = (submissionDate: string) => {
+    try {
+        const date = parse(submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
+        return differenceInDays(new Date(), date);
+    } catch {
+        return null;
+    }
+};
 
 export default function ComplaintManagement() {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -143,6 +152,7 @@ export default function ComplaintManagement() {
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell className="text-center"><Skeleton className="h-8 w-20 rounded-md" /></TableCell>
             </TableRow>
         ))
@@ -157,7 +167,7 @@ export default function ComplaintManagement() {
                 </CardHeader>
                 <CardContent>
                     <div className="rounded-md border">
-                        <ScrollArea className="h-[65vh] w-full">
+                        <div className="h-[65vh] w-full overflow-auto">
                             <Table className="min-w-full">
                                 <TableHeader className="sticky top-0 bg-secondary z-10">
                                     <TableRow>
@@ -166,14 +176,15 @@ export default function ComplaintManagement() {
                                         <TableHead className="min-w-[150px]">Category/Type</TableHead>
                                         <TableHead className="min-w-[150px]">Complaint ID</TableHead>
                                         <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                                        <TableHead className="min-w-[150px]">Pending Since</TableHead>
                                         <TableHead className="text-center min-w-[100px]">Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {loading ? renderSkeletons() : error ? (
-                                        <TableRow><TableCell colSpan={6} className="text-center text-destructive">{error}</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={7} className="text-center text-destructive">{error}</TableCell></TableRow>
                                     ) : complaints.length === 0 ? (
-                                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No complaints or suggestions found.</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No complaints or suggestions found.</TableCell></TableRow>
                                     ) : (
                                         complaints.map((item) => (
                                             <TableRow key={item.id}>
@@ -184,6 +195,9 @@ export default function ComplaintManagement() {
                                                 <TableCell className="text-center">
                                                     <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
                                                 </TableCell>
+                                                <TableCell>
+                                                    {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
+                                                </TableCell>
                                                 <TableCell className="text-center">
                                                     <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)}>Update</Button>
                                                 </TableCell>
@@ -192,7 +206,7 @@ export default function ComplaintManagement() {
                                     )}
                                 </TableBody>
                             </Table>
-                        </ScrollArea>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
