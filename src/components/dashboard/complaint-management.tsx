@@ -156,11 +156,11 @@ export default function ComplaintManagement() {
                     <CardDescription>View and update the status of all submitted feedback.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-[65vh] rounded-md border">
-                        <Table>
-                            <TableHeader className="sticky top-0 bg-secondary">
+                    <ScrollArea className="h-[65vh] rounded-md border w-full">
+                        <Table className="min-w-full">
+                            <TableHeader className="sticky top-0 bg-secondary z-10">
                                 <TableRow>
-                                    <TableHead>Date</TableHead>
+                                    <TableHead className="sticky left-0 bg-secondary z-20">Date</TableHead>
                                     <TableHead>Flat</TableHead>
                                     <TableHead>Category/Type</TableHead>
                                     <TableHead>Complaint ID</TableHead>
@@ -176,7 +176,7 @@ export default function ComplaintManagement() {
                                 ) : (
                                     complaints.map((item) => (
                                         <TableRow key={item.id}>
-                                            <TableCell>{item.submissionDate}</TableCell>
+                                            <TableCell className="sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
                                             <TableCell>{item.flatNo}</TableCell>
                                             <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
                                             <TableCell>{item.id}</TableCell>

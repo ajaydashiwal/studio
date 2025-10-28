@@ -71,15 +71,15 @@ export default function DataTable({ flatNo }: DataTableProps) {
           <CardDescription>Showing payment history.</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
-            <ScrollArea className="h-96 rounded-md border">
-                <Table>
-                    <TableHeader className="sticky top-0 bg-secondary">
+            <ScrollArea className="h-96 rounded-md border w-full">
+                <Table className="min-w-full">
+                    <TableHeader className="sticky top-0 bg-secondary z-10">
                     <TableRow>
-                        <TableHead className="w-[120px] px-2 text-xs md:w-[150px] md:px-4 md:text-sm">Month</TableHead>
+                        <TableHead className="w-[150px] px-2 text-xs md:px-4 md:text-sm sticky left-0 bg-secondary z-20">Month</TableHead>
                         <TableHead className="px-2 text-xs md:px-4 md:text-sm">Receipt No</TableHead>
                         <TableHead className="px-2 text-xs md:px-4 md:text-sm">Receipt Date</TableHead>
                         <TableHead className="px-2 text-right text-xs md:px-4 md:text-sm">Amount</TableHead>
-                        <TableHead className="w-[100px] px-2 text-center text-xs md:w-[120px] md:px-4 md:text-sm">Status</TableHead>
+                        <TableHead className="w-[120px] px-2 text-center text-xs md:px-4 md:text-sm">Status</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -100,7 +100,7 @@ export default function DataTable({ flatNo }: DataTableProps) {
                     ) : (
                         data.map((item) => (
                             <TableRow key={item.id} className="text-xs md:text-sm">
-                            <TableCell className="font-medium px-2 md:px-4">{item.month}</TableCell>
+                            <TableCell className="font-medium px-2 md:px-4 sticky left-0 bg-background z-10">{item.month}</TableCell>
                             <TableCell className="px-2 md:px-4">{item.receiptNo}</TableCell>
                             <TableCell className="px-2 md:px-4">{item.receiptDate}</TableCell>
                             <TableCell className="text-right px-2 md:px-4">₹{item.amount}</TableCell>                        

@@ -170,11 +170,11 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-[60vh] rounded-md border">
-                        <Table>
-                            <TableHeader className="sticky top-0 bg-secondary">
+                    <ScrollArea className="h-[60vh] rounded-md border w-full">
+                        <Table className="min-w-full">
+                            <TableHeader className="sticky top-0 bg-secondary z-10">
                                 <TableRow>
-                                    <TableHead className="w-[120px]">Flat No</TableHead>
+                                    <TableHead className="w-[120px] sticky left-0 bg-secondary z-20">Flat No</TableHead>
                                     <TableHead>Owner/Tenant Name</TableHead>
                                     <TableHead className="text-right">Total Paid</TableHead>
                                     <TableHead className="text-right">Total Due</TableHead>
@@ -202,7 +202,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                                         className="cursor-pointer" 
                                         onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
                                     >
-                                        <TableCell className="font-medium">{item.flatNo}</TableCell>
+                                        <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
                                         <TableCell>{item.ownerName}</TableCell>
                                         <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
                                         <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        

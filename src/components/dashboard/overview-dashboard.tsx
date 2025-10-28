@@ -224,7 +224,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {dateOptions.map(option => (
+                                        {dateOptions.slice(0, 24).map(option => (
                                             <SelectItem key={`from-${option.value}`} value={option.value}>{option.label}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -278,11 +278,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardDescription>A live list of all recent complaints and suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-96 rounded-md border">
-                    <Table>
-                        <TableHeader className="sticky top-0 bg-secondary">
+                <ScrollArea className="h-96 rounded-md border w-full">
+                    <Table className="min-w-full">
+                        <TableHeader className="sticky top-0 bg-secondary z-10">
                             <TableRow>
-                                <TableHead>Date</TableHead>
+                                <TableHead className="sticky left-0 bg-secondary z-20">Date</TableHead>
                                 <TableHead>Type/Category</TableHead>
                                 <TableHead>Description</TableHead>
                                 <TableHead className="text-center">Status</TableHead>
@@ -292,7 +292,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                             {complaintsLoading ? (
                                 Array.from({ length: 5 }).map((_, index) => (
                                 <TableRow key={`skeleton-${index}`}>
-                                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                    <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-24" /></TableCell>
                                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                                     <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                                     <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
@@ -303,7 +303,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                             ) : (
                                 allComplaints.slice(0, 20).map((item) => ( // Show recent 20
                                     <TableRow key={item.id}>
-                                        <TableCell className="text-xs">{item.submissionDate}</TableCell>
+                                        <TableCell className="text-xs sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
                                         <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
                                         <TableCell className="text-sm max-w-xs truncate">{item.description}</TableCell>
                                         <TableCell className="text-center">
