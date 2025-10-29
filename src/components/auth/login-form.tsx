@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -14,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Building, KeyRound } from 'lucide-react';
-import imageData from '@/app/lib/placeholder-images.json';
 
 interface LoginFormProps {
   onLogin: (flatNo: string, password: string) => void;
@@ -23,7 +23,6 @@ interface LoginFormProps {
 export default function LoginForm({ onLogin }: LoginFormProps) {
   const [flatNo, setFlatNo] = useState('');
   const [password, setPassword] = useState('');
-  const { login_building } = imageData;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +33,12 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     <Card className="w-full max-w-sm shadow-xl overflow-hidden">
       <div className="relative">
           <Image 
-              src={login_building.src}
-              alt={login_building.alt}
-              width={login_building.width}
-              height={login_building.height}
+              src="/images/login-background.jpg"
+              alt="A picture of the Upvan apartment building"
+              width={400}
+              height={250}
               className="w-full object-cover"
               priority
-              data-ai-hint={login_building.hint}
           />
       </div>
       <CardHeader className="text-center">
@@ -60,7 +58,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                 required
                 value={flatNo}
                 onChange={(e) => setFlatNo(e.target.value)}
-                className="pl-10"
+                className="pl-10 md:text-sm"
                 />
             </div>
           </div>
@@ -75,7 +73,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
+                className="pl-10 md:text-sm"
                 />
             </div>
           </div>
