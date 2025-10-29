@@ -37,8 +37,7 @@ const formSchema = z.object({
 
 export default function UserEntryForm() {
   const { toast } = useToast()
-  const [isFetchedAndPending, setIsFetchedAndPending] = useState(false);
-  const [isManuallyCreatable, setIsManuallyCreatable] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -58,14 +57,14 @@ export default function UserEntryForm() {
         ownerName: "",
         userType: "Member",
     });
-    setIsFetchedAndPending(false);
-    setIsManuallyCreatable(false);
+    setIsFetched(false);
     setIsChecking(false);
   }
 
   const handleFetchUserData = async (flatNo: string) => {
     if (!flatNo) return;
     setIsChecking(true);
+    setIsFetched(false); // Reset on new check
 
     try {
       const response = await fetch(`/api/users/${flatNo}`);
@@ -75,20 +74,19 @@ export default function UserEntryForm() {
         form.setValue("ownerName", data.ownerName);
         form.setValue("userType", data.userType);
         
-        setIsFetchedAndPending(true);
-        setIsManuallyCreatable(false);
+        setIsFetched(true);
 
         toast({
             title: "Pending User Data Found",
             description: `Details for ${data.ownerName} loaded. You can now create this user.`,
         });
       } else {
-        // Not found, allow manual entry
+        // Not found, do not allow manual entry
         resetForm(flatNo);
-        setIsManuallyCreatable(true);
         toast({
-            title: "New User",
-            description: "No pending record found. Please enter details manually to create a new user.",
+            variant: "destructive",
+            title: "No Pending Record",
+            description: `No unprocessed membership record was found for Flat No. ${flatNo}. Please create a membership record first.`,
         });
       }
     } catch (error) {
@@ -96,7 +94,7 @@ export default function UserEntryForm() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch user data.",
+        description: "Failed to fetch user data. Could not connect to the server.",
       });
     } finally {
         setIsChecking(false);
@@ -142,7 +140,7 @@ export default function UserEntryForm() {
     }
   }
 
-  const isReadOnly = isFetchedAndPending;
+  const isReadOnly = isFetched || isChecking;
 
   return (
     <Form {...form}>
@@ -159,7 +157,7 @@ export default function UserEntryForm() {
                         placeholder="Enter flat no & press Tab to fetch" 
                         {...field}
                         onBlur={() => handleFetchUserData(field.value)}
-                        disabled={isFetchedAndPending || isManuallyCreatable || isChecking}
+                        readOnly={isReadOnly}
                        />
                   </FormControl>
                   <FormMessage />
@@ -174,9 +172,9 @@ export default function UserEntryForm() {
                   <FormLabel>Owner Name</FormLabel>
                   <FormControl>
                       <Input 
-                        placeholder={isChecking ? "Checking..." : "Auto-filled or enter manually"}
+                        placeholder={isChecking ? "Checking..." : "Auto-filled"}
                         {...field}
-                        readOnly={isReadOnly}
+                        readOnly
                        />
                   </FormControl>
                   <FormMessage />
@@ -192,9 +190,9 @@ export default function UserEntryForm() {
                   <FormControl>
                       <Input 
                         type="number" 
-                        placeholder={isChecking ? "Checking..." : "Auto-filled or enter manually"}
+                        placeholder={isChecking ? "Checking..." : "Auto-filled"}
                         {...field}
-                        readOnly={isReadOnly}
+                        readOnly
                        />
                   </FormControl>
                   <FormMessage />
@@ -209,7 +207,7 @@ export default function UserEntryForm() {
                 <FormLabel>User Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger disabled={!isFetched}>
                         <SelectValue placeholder="Select a user type" />
                     </SelectTrigger>
                     </FormControl>
@@ -228,7 +226,7 @@ export default function UserEntryForm() {
             />
         </div>
         <div className="flex gap-4">
-            <Button type="submit" disabled={isChecking || (!isFetchedAndPending && !isManuallyCreatable)}>
+            <Button type="submit" disabled={isChecking || !isFetched}>
                 {isChecking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create User
             </Button>
@@ -237,7 +235,7 @@ export default function UserEntryForm() {
             </Button>
         </div>
         <FormDescription>
-            Enter a flat number and press Tab to find a pending membership record. If found, details will be auto-filled. If not, you can create a new user manually.
+            Enter a flat number and press Tab to find a pending membership record. A user can only be created if a valid, unprocessed record exists in the master membership list.
         </FormDescription>
       </form>
     </Form>
