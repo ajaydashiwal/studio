@@ -132,9 +132,48 @@ export default function DataEntryForm() {
 
   const watchedModeOfPayment = form.watch("modeOfPayment");
   const watchedAmount = form.watch("amount");
+  const watchedFlatNo = form.watch("flatNo");
 
   const isSinglePayment = watchedAmount === 300;
   const isBulkPayment = watchedAmount > 300 && watchedAmount % 300 === 0;
+
+  const fetchTenantName = useCallback(async (flatNo: string) => {
+    if (!flatNo || flatNo.length === 0) return;
+    try {
+        const response = await fetch(`/api/maintenance/${flatNo}/tenant`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.tenantName) {
+                form.setValue("tenantName", data.tenantName);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to fetch tenant name:", error);
+    }
+  }, [form]);
+
+  const checkMembership = useCallback(debounce(async (flatNo) => {
+    if (!flatNo || flatNo <= 0) {
+      setIsMember(true); // Reset to default
+      return;
+    }
+    try {
+      const response = await fetch(`/api/maintenance/${flatNo}/status`);
+      if (response.ok) {
+        const { isMember: memberStatus } = await response.json();
+        setIsMember(memberStatus);
+        if (!memberStatus) {
+            fetchTenantName(flatNo);
+        }
+      } else {
+        setIsMember(false); // Assume not a member if API fails or returns 404
+        fetchTenantName(flatNo);
+      }
+    } catch (error) {
+      console.error("Failed to check membership:", error);
+      setIsMember(false); // Assume not a member on network error
+    }
+  }, 300), [fetchTenantName]);
 
   const fetchUnpaidMonths = useCallback(debounce(async (flatNo) => {
     if (!flatNo || flatNo <= 0) {
@@ -156,24 +195,12 @@ export default function DataEntryForm() {
   }, 300), []);
 
 
-  const checkMembership = useCallback(debounce(async (flatNo) => {
-    if (!flatNo || flatNo <= 0) {
-      setIsMember(true); // Reset to default
-      return;
+  useEffect(() => {
+    if (watchedFlatNo) {
+        checkMembership(watchedFlatNo);
+        fetchUnpaidMonths(watchedFlatNo);
     }
-    try {
-      const response = await fetch(`/api/maintenance/${flatNo}/status`);
-      if (response.ok) {
-        const { isMember } = await response.json();
-        setIsMember(isMember);
-      } else {
-        setIsMember(false); // Assume not a member if API fails or returns 404
-      }
-    } catch (error) {
-      console.error("Failed to check membership:", error);
-      setIsMember(false); // Assume not a member on network error
-    }
-  }, 300), []);
+  }, [watchedFlatNo, checkMembership, fetchUnpaidMonths]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -266,11 +293,6 @@ export default function DataEntryForm() {
                         type="number" 
                         placeholder="Enter flat number" 
                         {...field}
-                        onChange={(e) => {
-                            field.onChange(e);
-                            checkMembership(e.target.value);
-                            fetchUnpaidMonths(e.target.value);
-                        }}
                        />
                   </FormControl>
                   <FormMessage />

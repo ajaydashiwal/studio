@@ -56,7 +56,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                 <Input
                 id="flatNo"
                 type="number"
-                placeholder="e.g., 101"
+                placeholder="e.g. 101"
                 required
                 value={flatNo}
                 onChange={(e) => setFlatNo(e.target.value)}
