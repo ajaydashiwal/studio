@@ -167,11 +167,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             if (!response.ok) throw new Error("Failed to fetch complaints.");
             const data = await response.json();
 
-            // Sort and limit the data for the community feedback view
             const sortedData = data.sort((a: Complaint, b: Complaint) => {
                 const aIsPending = a.status === 'Open';
                 const bIsPending = b.status === 'Open';
-                
+
                 if (aIsPending && !bIsPending) return -1;
                 if (!aIsPending && bIsPending) return 1;
 
@@ -179,12 +178,18 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                     return calculatePendingDays(b.submissionDate) - calculatePendingDays(a.submissionDate);
                 }
                 
-                return 0; 
+                // For non-open items, sort by date descending (most recent first)
+                try {
+                    const dateA = parse(a.submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
+                    const dateB = parse(b.submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
+                    return dateB.getTime() - dateA.getTime();
+                } catch {
+                    return -1; // Keep order if dates are invalid
+                }
             });
 
             setAllComplaints(sortedData.slice(0, 10));
 
-            // Filter for the user's own resolved/closed complaints if they are a member
             if (user.userType === 'Member') {
                 const resolved = data.filter((c: Complaint) => 
                     c.flatNo === user.flatNo && (c.status === 'Resolved' || c.status === 'Closed')
@@ -291,8 +296,8 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         </Card>
         <Card>
             <CardHeader>
-                <CardTitle>Feedback Breakdown</CardTitle>
-                <CardDescription>Total complaints vs. suggestions for the period.</CardDescription>
+                <CardTitle>Complaint/Feedback Breakdown</CardTitle>
+                <CardDescription>Total complaints vs. Suggestions for the period.</CardDescription>
             </CardHeader>
             <CardContent>
                  {officeData.feedbackSummary && officeData.feedbackSummary.some(d => d.value > 0) ? (
@@ -310,7 +315,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const renderCommunityFeedback = () => (
     <Card>
         <CardHeader>
-            <CardTitle>Community Feedback Status</CardTitle>
+            <CardTitle>Residents Complaints/Suggestion Status</CardTitle>
             <CardDescription>A live list of the top 10 most urgent open complaints and other recent feedback.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -360,7 +365,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const renderRwaRemarks = () => (
      <Card>
         <CardHeader>
-            <CardTitle>RWA Remarks on Your Feedback</CardTitle>
+            <CardTitle>RWA Remarks on Your Complaint/Suggestion</CardTitle>
             <CardDescription>Actions taken and remarks on your resolved or closed feedback.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -451,5 +456,3 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     </div>
   );
 }
-
-    
