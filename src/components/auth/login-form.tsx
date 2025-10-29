@@ -44,7 +44,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
           />
       </div>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-headline">Upvan Apartment Resident Welfare Association</CardTitle>
+        <CardTitle className="text-xl md:text-2xl font-headline">Upvan Apartment Resident Welfare Association</CardTitle>
         <CardDescription>Please sign in to view your maintenance records</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

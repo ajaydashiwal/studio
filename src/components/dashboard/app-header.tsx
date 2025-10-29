@@ -15,15 +15,15 @@ export default function AppHeader({ user, onLogout }: AppHeaderProps) {
             <div className="flex items-center gap-3 mb-4 sm:mb-0">
                 <UserCircle className="h-8 w-8 text-primary" />
                 <div>
-                    <h1 className="text-lg font-bold text-foreground font-headline tracking-tight">
+                    <h1 className="text-lg md:text-xl font-bold text-foreground font-headline tracking-tight">
                         {user.ownerName}
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                         Flat No: <span className="font-semibold">{user.flatNo}</span>
                         &nbsp; | Membership No: <span className="font-semibold">{user.membershipId}</span>
                     </p>
                     {user.userType !== 'Member' && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                             Office Bearer: <span className="font-semibold">{user.userType}</span>
                         </p>
                     )}
