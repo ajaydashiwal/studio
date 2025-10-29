@@ -72,13 +72,14 @@ const getStatusBadgeColor = (status: string) => {
     }
 }
 
-const calculatePendingDays = (submissionDate: string) => {
+const calculatePendingDays = (submissionDate: string): number => {
+    if (!submissionDate) return 0;
     try {
         const date = parse(submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
-        if (isNaN(date.getTime())) return 0;
+        if (isNaN(date.getTime())) return 0; // Return 0 if date is invalid
         return differenceInDays(new Date(), date);
     } catch {
-        return 0;
+        return 0; // Return 0 on any parsing error
     }
 };
 
@@ -178,13 +179,14 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                     return calculatePendingDays(b.submissionDate) - calculatePendingDays(a.submissionDate);
                 }
                 
-                // For non-open items, sort by date descending (most recent first)
                 try {
                     const dateA = parse(a.submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
                     const dateB = parse(b.submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
+                    if (isNaN(dateA.getTime())) return 1;
+                    if (isNaN(dateB.getTime())) return -1;
                     return dateB.getTime() - dateA.getTime();
                 } catch {
-                    return -1; // Keep order if dates are invalid
+                    return 0; 
                 }
             });
 
@@ -208,109 +210,119 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     fetchAllComplaints();
   }, [user, period]);
 
-  const renderMemberDashboard = (memberData: MemberData) => (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
-          <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
-        </CardHeader>
-        <CardContent>
-           {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
-            <MaintenancePieChart data={memberData.maintenance} />
-          ) : (
-             <div className="flex items-center justify-center h-full text-muted-foreground">
-              No maintenance data to display.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>My Feedback Status</CardTitle>
-          <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {(memberData.feedback && memberData.feedback.length > 0) ? (
-            <FeedbackBarChart data={memberData.feedback} />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              You have not submitted any feedback yet.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderMemberDashboard = (memberData: MemberData) => {
+    const feedbackChartData: ChartData[] = memberData.feedback ? memberData.feedback.map(item => ({ name: item.name, value: item.value })) : [];
 
-  const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => (
-    <div className="grid gap-6 lg:grid-cols-2">
+    return (
+        <div className="grid gap-6 md:grid-cols-2">
         <Card>
             <CardHeader>
-               <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-                    <div>
-                        <CardTitle>Financial Summary</CardTitle>
-                        <CardDescription>
-                            Collections vs. total expenditure for the period.
-                        </CardDescription>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="grid gap-1.5">
-                            <Label htmlFor="from-period" className="text-xs">From</Label>
-                            <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
-                                    <SelectValue placeholder="Select Period" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {fromDateOptions.map(option => (
-                                        <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div className="grid gap-1.5">
-                            <Label htmlFor="to-period" className="text-xs">To</Label>
-                            <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
-                                    <SelectValue placeholder="Select Period" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {toDateOptions.map(option => (
-                                        <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-               </div>
+            <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
+            <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
             </CardHeader>
             <CardContent>
-                {officeData.financialSummary && officeData.financialSummary.some(d => d.value > 0) ? (
-                    <MaintenancePieChart data={officeData.financialSummary} />
-                ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                        No financial data for the selected period.
-                    </div>
-                )}
+            {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
+                <MaintenancePieChart data={memberData.maintenance} />
+            ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                No maintenance data to display.
+                </div>
+            )}
             </CardContent>
         </Card>
         <Card>
             <CardHeader>
-                <CardTitle>Complaint/Feedback Breakdown</CardTitle>
-                <CardDescription>Total complaints vs. Suggestions for the period.</CardDescription>
+            <CardTitle>My Feedback Status</CardTitle>
+            <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
             </CardHeader>
             <CardContent>
-                 {officeData.feedbackSummary && officeData.feedbackSummary.some(d => d.value > 0) ? (
-                    <MaintenancePieChart data={officeData.feedbackSummary} />
-                ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                        No feedback data for the selected period.
-                    </div>
-                )}
+            {(feedbackChartData && feedbackChartData.length > 0) ? (
+                <FeedbackBarChart data={feedbackChartData} />
+            ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                You have not submitted any feedback yet.
+                </div>
+            )}
             </CardContent>
         </Card>
-    </div>
-  );
+        </div>
+    );
+  };
+
+  const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => {
+    // The data for these charts already comes in the correct ChartData[] format
+    const financialChartData = officeData.financialSummary || [];
+    const feedbackChartData = officeData.feedbackSummary || [];
+    
+    return (
+        <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+                <CardHeader>
+                <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                        <div>
+                            <CardTitle>Financial Summary</CardTitle>
+                            <CardDescription>
+                                Collections vs. total expenditure for the period.
+                            </CardDescription>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="from-period" className="text-xs">From</Label>
+                                <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {fromDateOptions.map(option => (
+                                            <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="to-period" className="text-xs">To</Label>
+                                <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {toDateOptions.map(option => (
+                                            <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                </div>
+                </CardHeader>
+                <CardContent>
+                    {financialChartData.some(d => d.value > 0) ? (
+                        <MaintenancePieChart data={financialChartData} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                            No financial data for the selected period.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Complaint/Feedback Breakdown</CardTitle>
+                    <CardDescription>Total complaints vs. Suggestions for the period.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {feedbackChartData.some(d => d.value > 0) ? (
+                        <MaintenancePieChart data={feedbackChartData} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                            No feedback data for the selected period.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+  };
 
   const renderCommunityFeedback = () => (
     <Card>
