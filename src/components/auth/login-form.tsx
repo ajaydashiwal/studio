@@ -33,7 +33,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     <Card className="w-full max-w-sm shadow-xl overflow-hidden">
       <div className="bg-primary/5 p-6 flex justify-center items-center">
           <Image 
-              src="/upvan-logo.png"
+              src="/rwa-logo.jpg"
               alt="Upvan Apartment Resident Welfare Association Logo"
               width={200}
               height={200}

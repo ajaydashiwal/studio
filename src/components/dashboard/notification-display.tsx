@@ -81,7 +81,7 @@ export default function NotificationDisplay() {
             <CardContent>
                 {notifications.length === 0 ? (
                     <div className="flex items-center justify-center h-24 text-muted-foreground">
-                        No announcements at the moment.
+                        Nothing new!
                     </div>
                 ) : (
                     <ScrollArea className="h-64 w-full">
