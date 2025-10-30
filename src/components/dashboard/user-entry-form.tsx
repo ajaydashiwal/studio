@@ -39,6 +39,7 @@ export default function UserEntryForm() {
   const { toast } = useToast()
   const [isFetched, setIsFetched] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [userExists, setUserExists] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,17 +60,22 @@ export default function UserEntryForm() {
     });
     setIsFetched(false);
     setIsChecking(false);
+    setUserExists(false);
+    form.clearErrors();
   }
 
   const handleFetchUserData = async (flatNo: string) => {
     if (!flatNo) return;
     setIsChecking(true);
-    setIsFetched(false); // Reset on new check
+    setIsFetched(false);
+    setUserExists(false);
+    form.clearErrors();
 
     try {
       const response = await fetch(`/api/users/${flatNo}`);
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+
+      if (response.ok) { // Status 200: Pending user found
         form.setValue("membershipNo", data.membershipNo);
         form.setValue("ownerName", data.ownerName);
         form.setValue("userType", data.userType);
@@ -80,17 +86,18 @@ export default function UserEntryForm() {
             title: "Pending User Data Found",
             description: `Details for ${data.ownerName} loaded. You can now create this user.`,
         });
-      } else {
-        // Not found, do not allow manual entry
-        resetForm(flatNo);
+      } else { // Status 404, 409, or 500
+        if (response.status === 409) { // 409 Conflict: User already exists
+            setUserExists(true);
+            form.setError("flatNo", { type: "manual", message: data.message });
+        }
         toast({
             variant: "destructive",
-            title: "No Pending Record",
-            description: `No unprocessed membership record was found for Flat No. ${flatNo}. Please create a membership record first.`,
+            title: response.status === 409 ? "User Exists" : "No Pending Record",
+            description: data.message || data.error || "An error occurred.",
         });
       }
     } catch (error) {
-      resetForm(flatNo);
       toast({
         variant: "destructive",
         title: "Error",
@@ -140,7 +147,7 @@ export default function UserEntryForm() {
     }
   }
 
-  const isReadOnly = isFetched || isChecking;
+  const isReadOnly = isFetched || isChecking || userExists;
 
   return (
     <Form {...form}>
@@ -226,7 +233,7 @@ export default function UserEntryForm() {
             />
         </div>
         <div className="flex gap-4">
-            <Button type="submit" disabled={isChecking || !isFetched}>
+            <Button type="submit" disabled={isChecking || !isFetched || userExists}>
                 {isChecking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create User
             </Button>

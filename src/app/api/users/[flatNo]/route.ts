@@ -26,7 +26,21 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    // Search masterMembership for a pending record (blank status)
+    // 1. Check if user already exists in memberUsers
+    const usersResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${USERS_SHEET_NAME}!A:A`, // Only need to check flat numbers
+    });
+    const userRows = usersResponse.data.values;
+    if (userRows) {
+        const existingUser = userRows.slice(1).find(row => row[0] == flatNo);
+        if (existingUser) {
+            return NextResponse.json({ status: 'USER_EXISTS', message: 'User already exists for this flat number.' }, { status: 409 });
+        }
+    }
+
+
+    // 2. If not, search masterMembership for a pending record (blank status)
     const masterResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: MASTER_RANGE,
@@ -41,20 +55,18 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
       if (masterRecord) {
         const userDetails = {
+            status: 'PENDING_USER_FOUND',
             flatNo: masterRecord[0],
             membershipNo: masterRecord[2],
             ownerName: masterRecord[1],
-            // Default other fields for the form, these are not from master
-            userType: 'Member',
-            membershipStatus: 'Active',
-            isExistingUser: false, // This record can be converted to a user
+            userType: 'Member', // Default user type for the form
         };
         return NextResponse.json(userDetails);
       }
     }
 
-    // If no pending record is found in masterMembership
-    return NextResponse.json({ error: 'No unprocessed record found in masterMembership. User can be created manually.' }, { status: 404 });
+    // 3. If no pending record is found in masterMembership
+    return NextResponse.json({ status: 'NO_RECORD_FOUND', message: 'No unprocessed membership record was found for this flat number.' }, { status: 404 });
 
   } catch (error: any) {
     console.error('Error accessing Google Sheets:', error);
