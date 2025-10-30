@@ -31,19 +31,19 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
 
   return (
     <Card className="w-full max-w-sm shadow-xl overflow-hidden">
-      <div className="relative">
+      <div className="bg-primary/5 p-6 flex justify-center items-center">
           <Image 
-              src="/images/login-background.jpg"
-              alt="A picture of the Upvan apartment building"
-              width={400}
-              height={250}
-              className="w-full object-cover"
+              src="/upvan-logo.png"
+              alt="Upvan Apartment Resident Welfare Association Logo"
+              width={200}
+              height={200}
+              className="object-contain"
               priority
           />
       </div>
       <CardHeader className="text-center">
-        <CardTitle className="text-xl md:text-2xl font-headline">Upvan Apartment Resident Welfare Association</CardTitle>
-        <CardDescription>Please sign in to view your maintenance records</CardDescription>
+        <CardTitle className="text-xl md:text-2xl font-headline">Member Sign In</CardTitle>
+        <CardDescription>Please enter your credentials to proceed</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
