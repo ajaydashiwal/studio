@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
@@ -31,7 +31,21 @@ export async function GET(request: Request) {
       message: row[1],
       createdBy: row[2],
       timestamp: row[3],
-    })).reverse(); // Show most recent first
+    }));
+
+    // Sort by timestamp descending (latest first)
+    notifications.sort((a, b) => {
+        try {
+            const dateA = parse(a.timestamp, "dd/MM/yyyy HH:mm:ss", new Date());
+            const dateB = parse(b.timestamp, "dd/MM/yyyy HH:mm:ss", new Date());
+            // Check for invalid dates which might be parsed as NaN
+            if (isNaN(dateA.getTime())) return 1;
+            if (isNaN(dateB.getTime())) return -1;
+            return dateB.getTime() - dateA.getTime();
+        } catch (e) {
+            return 0; // Don't change order if parsing fails
+        }
+    });
 
     return NextResponse.json(notifications);
 
@@ -76,7 +90,7 @@ export async function POST(request: Request) {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: SHEET_NAME, // Corrected: Use SHEET_NAME for append, not the full RANGE
+      range: SHEET_NAME,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [newRow],
