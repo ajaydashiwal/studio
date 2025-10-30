@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
-const SHEET_NAME = 'rwaNotification';
+const SHEET_NAME = 'rwaNotifications';
 // Columns: notificationId, message, createdBy, timestamps
 const RANGE = `${SHEET_NAME}!A:D`;
 
