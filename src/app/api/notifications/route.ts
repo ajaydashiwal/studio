@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     
     const nowInIst = getIstDate();
-    const notificationId = format(nowInIst, "yyyyMMddHHmm");
+    const notificationId = format(nowInIst, "yyyyMMddHHmmss");
     const timestamp = format(nowInIst, "dd/MM/yyyy HH:mm:ss");
 
     const newRow = [
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: SHEET_NAME,
+      range: SHEET_NAME, // Corrected: Use SHEET_NAME for append, not the full RANGE
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [newRow],
