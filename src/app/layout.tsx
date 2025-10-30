@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Spreadsheet Data Viewer',
+  title: 'Upvan Apartment RWA',
   description: 'View data from a Google Spreadsheet.',
 };
 
