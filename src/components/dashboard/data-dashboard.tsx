@@ -15,6 +15,7 @@ import ComplaintSuggestionForm from '@/components/dashboard/complaint-suggestion
 import ComplaintManagement from '@/components/dashboard/complaint-management';
 import OverviewDashboard from '@/components/dashboard/overview-dashboard';
 import ExpenditureReport from '@/components/dashboard/expenditure-report';
+import NotificationEntryForm from '@/components/dashboard/notification-entry-form';
 import {
   Menubar,
   MenubarContent,
@@ -35,7 +36,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'postNotification';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -174,6 +175,23 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               </CardContent>
             </Card>
         );
+      case 'postNotification':
+        if (isOfficeBearer) {
+          return (
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle>Post RWA Notification</CardTitle>
+                <CardDescription>
+                  Broadcast a message to all residents.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <NotificationEntryForm createdBy={user.ownerName} />
+              </CardContent>
+            </Card>
+          );
+        }
+        return null;
       default:
         return <OverviewDashboard user={user} />;
     }
@@ -203,9 +221,10 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                     </MenubarContent>
                 </MenubarMenu>
                 <MenubarMenu>
-                    <MenubarTrigger>Complaints</MenubarTrigger>
+                    <MenubarTrigger>Communication</MenubarTrigger>
                     <MenubarContent>
                         <MenubarItem onClick={() => setActiveView('complaintManagement')}>Manage Feedback</MenubarItem>
+                        <MenubarItem onClick={() => setActiveView('postNotification')}>Post Notification</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
              </>

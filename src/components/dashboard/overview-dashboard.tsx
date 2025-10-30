@@ -6,9 +6,10 @@ import type { User } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { Terminal, Megaphone } from 'lucide-react';
 import MaintenancePieChart from '@/components/charts/maintenance-pie-chart';
 import FeedbackBarChart from '@/components/charts/feedback-bar-chart';
+import NotificationDisplay from '@/components/dashboard/notification-display';
 import {
     Table,
     TableBody,
@@ -76,10 +77,10 @@ const calculatePendingDays = (submissionDate: string): number => {
     if (!submissionDate) return 0;
     try {
         const date = parse(submissionDate, "dd/MM/yyyy HH:mm:ss", new Date());
-        if (isNaN(date.getTime())) return 0; // Return 0 if date is invalid
+        if (isNaN(date.getTime())) return 0;
         return differenceInDays(new Date(), date);
     } catch {
-        return 0; // Return 0 on any parsing error
+        return 0;
     }
 };
 
@@ -237,7 +238,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             </CardHeader>
             <CardContent>
             {(feedbackChartData && feedbackChartData.length > 0) ? (
-                <FeedbackBarChart data={feedbackChartData} />
+                <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
             ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                 You have not submitted any feedback yet.
@@ -250,7 +251,6 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   };
 
   const renderOfficeBearerDashboard = (officeData: OfficeBearerData) => {
-    // The data for these charts already comes in the correct ChartData[] format
     const financialChartData = officeData.financialSummary || [];
     const feedbackChartData = officeData.feedbackSummary || [];
     
@@ -453,6 +453,8 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
 
   return (
     <div className="space-y-6">
+        <NotificationDisplay />
+
         {user.userType === 'Member'
             ? renderMemberDashboard(data as MemberData)
             : renderOfficeBearerDashboard(data as OfficeBearerData)
