@@ -199,7 +199,7 @@ export default function ComplaintManagement() {
                                                     {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)}>Update</Button>
+                                                    <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)} disabled={item.status === 'Closed'}>Update</Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))
