@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Building, KeyRound } from 'lucide-react';
+import imageData from '@/app/lib/placeholder-images.json';
 
 interface LoginFormProps {
   onLogin: (flatNo: string, password: string) => void;
@@ -23,6 +23,7 @@ interface LoginFormProps {
 export default function LoginForm({ onLogin }: LoginFormProps) {
   const [flatNo, setFlatNo] = useState('');
   const [password, setPassword] = useState('');
+  const { login_building } = imageData;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +34,18 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     <Card className="w-full max-w-sm shadow-xl overflow-hidden">
       <div className="bg-primary/5 p-6 flex justify-center items-center">
           <Image 
-              src="/rwa-logo.jpg"
-              alt="Upvan Apartment Resident Welfare Association Logo"
-              width={200}
-              height={200}
-              className="object-contain"
+              src={login_building.src}
+              alt={login_building.alt}
+              width={login_building.width}
+              height={login_building.height}
+              data-ai-hint={login_building.hint}
+              className="object-cover rounded-lg"
               priority
           />
       </div>
       <CardHeader className="text-center">
-        <CardTitle className="text-xl md:text-2xl font-headline">Member Sign In</CardTitle>
-        <CardDescription>Please enter your credentials to proceed</CardDescription>
+        <CardTitle className="text-xl md:text-2xl font-headline">Upvan Apartments RWA</CardTitle>
+        <CardDescription>Member Sign In</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">

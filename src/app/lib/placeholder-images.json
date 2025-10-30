@@ -1,9 +1,9 @@
 {
   "login_building": {
-    "src": "https://picsum.photos/seed/tower/400/250",
+    "src": "https://picsum.photos/seed/society/400/300",
     "width": 400,
-    "height": 250,
-    "alt": "Exterior view of a multistory apartment tower",
-    "hint": "multistory apartment"
+    "height": 300,
+    "alt": "Modern residential society building exterior",
+    "hint": "residential society"
   }
 }
