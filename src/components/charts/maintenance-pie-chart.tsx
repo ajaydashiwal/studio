@@ -32,7 +32,7 @@ export default function MaintenancePieChart({ data }: MaintenancePieChartProps) 
   return (
     <ChartContainer
       config={chartConfig}
-      className="mx-auto aspect-square h-[250px]"
+      className="mx-auto aspect-square h-[250px] w-full"
     >
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
