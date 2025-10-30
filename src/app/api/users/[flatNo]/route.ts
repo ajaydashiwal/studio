@@ -39,7 +39,6 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
         }
     }
 
-
     // 2. If not, search masterMembership for a pending record (blank status)
     const masterResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
