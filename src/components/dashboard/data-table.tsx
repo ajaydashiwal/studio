@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { MonthlyData } from "@/lib/data"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton";
   
 interface DataTableProps {
@@ -71,52 +70,50 @@ export default function DataTable({ flatNo }: DataTableProps) {
           <CardDescription>Showing payment history.</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
-            <div className="rounded-md border">
-              <ScrollArea className="h-96 w-full">
-                  <Table className="min-w-full">
-                      <TableHeader className="sticky top-0 bg-secondary z-10">
+            <div className="rounded-md border h-96 overflow-auto">
+              <Table className="min-w-full">
+                  <TableHeader className="sticky top-0 bg-secondary z-10">
+                  <TableRow>
+                      <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Month</TableHead>
+                      <TableHead className="min-w-[120px]">Receipt No</TableHead>
+                      <TableHead className="min-w-[120px]">Receipt Date</TableHead>
+                      <TableHead className="text-right min-w-[100px]">Amount</TableHead>
+                      <TableHead className="text-center min-w-[100px]">Status</TableHead>
+                  </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                  {loading ? (
+                      renderSkeletons()
+                  ) : error ? (
                       <TableRow>
-                          <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Month</TableHead>
-                          <TableHead className="min-w-[120px]">Receipt No</TableHead>
-                          <TableHead className="min-w-[120px]">Receipt Date</TableHead>
-                          <TableHead className="text-right min-w-[100px]">Amount</TableHead>
-                          <TableHead className="text-center min-w-[100px]">Status</TableHead>
+                          <TableCell colSpan={5} className="text-center text-destructive">
+                              {error}
+                          </TableCell>
                       </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                      {loading ? (
-                          renderSkeletons()
-                      ) : error ? (
-                          <TableRow>
-                              <TableCell colSpan={5} className="text-center text-destructive">
-                                  {error}
-                              </TableCell>
+                  ) : data.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                              No maintenance records found.
+                          </TableCell>
+                      </TableRow>
+                  ) : (
+                      data.map((item) => (
+                          <TableRow key={item.id} className="text-xs md:text-sm">
+                          <TableCell className="font-medium sticky left-0 bg-background z-10">{item.month}</TableCell>
+                          <TableCell>{item.receiptNo}</TableCell>
+                          <TableCell>{item.receiptDate}</TableCell>
+                          <TableCell className="text-right">₹{item.amount}</TableCell>                        
+                          <TableCell className="text-center">
+                              <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
+                              className={item.status === 'Paid' ? 'bg-green-600' : ''}>
+                                  {item.status}
+                              </Badge>
+                          </TableCell>
                           </TableRow>
-                      ) : data.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                  No maintenance records found.
-                              </TableCell>
-                          </TableRow>
-                      ) : (
-                          data.map((item) => (
-                              <TableRow key={item.id} className="text-xs md:text-sm">
-                              <TableCell className="font-medium sticky left-0 bg-background z-10">{item.month}</TableCell>
-                              <TableCell>{item.receiptNo}</TableCell>
-                              <TableCell>{item.receiptDate}</TableCell>
-                              <TableCell className="text-right">₹{item.amount}</TableCell>                        
-                              <TableCell className="text-center">
-                                  <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
-                                  className={item.status === 'Paid' ? 'bg-green-600' : ''}>
-                                      {item.status}
-                                  </Badge>
-                              </TableCell>
-                              </TableRow>
-                          ))
-                      )}
-                      </TableBody>
-                  </Table>
-              </ScrollArea>
+                      ))
+                  )}
+                  </TableBody>
+              </Table>
             </div>
         </CardContent>
       </Card>
