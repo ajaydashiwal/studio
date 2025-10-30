@@ -40,8 +40,9 @@ export default function NotificationEntryForm({ createdBy }: NotificationEntryFo
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
+    // Corrected the submission data structure
     const submissionData = {
-        ...values,
+        message: values.message,
         createdBy,
     };
     

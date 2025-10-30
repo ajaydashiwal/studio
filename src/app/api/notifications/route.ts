@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json(notifications);
 
   } catch (error: any) {
-    console.error('Error reading from Google Sheets for notifications:', error);
+    console.error('Error reading data for notifications:', error);
     if (error.code === 'ENOENT') {
       return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
     }
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: 'Notification posted successfully.' });
 
   } catch (error: any) {
-    console.error('Error writing to Google Sheets for notifications:', error);
+    console.error('Error Saving data for notifications:', error);
     if (error.code === 'ENOENT') {
         return NextResponse.json({ error: 'Server configuration error: The `google-credentials.json` file was not found.' }, { status: 500 });
     }
