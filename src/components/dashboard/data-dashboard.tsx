@@ -16,11 +16,13 @@ import ComplaintManagement from '@/components/dashboard/complaint-management';
 import OverviewDashboard from '@/components/dashboard/overview-dashboard';
 import ExpenditureReport from '@/components/dashboard/expenditure-report';
 import NotificationEntryForm from '@/components/dashboard/notification-entry-form';
+import ResetPasswordForm from '@/components/dashboard/reset-password-form';
 import {
   Menubar,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
+  MenubarSeparator,
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import {
@@ -36,7 +38,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'postNotification';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'postNotification' | 'resetPassword';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -192,6 +194,23 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
           );
         }
         return null;
+      case 'resetPassword':
+        if (isGeneralSecretary) {
+            return (
+                <Card className="shadow-md">
+                    <CardHeader>
+                        <CardTitle>Reset User Password</CardTitle>
+                        <CardDescription>
+                            Reset a user's password to the default value.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ResetPasswordForm />
+                    </CardContent>
+                </Card>
+            );
+        }
+        return null;
       default:
         return <OverviewDashboard user={user} />;
     }
@@ -246,6 +265,8 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               <MenubarContent>
                 <MenubarItem onClick={() => setActiveView('membershipEntry')}>Membership Entry</MenubarItem>
                 <MenubarItem onClick={() => setActiveView('userEntry')}>User Entry</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem onClick={() => setActiveView('resetPassword')}>Reset User Password</MenubarItem>
               </MenubarContent>
             </MenubarMenu>
           )}
