@@ -97,7 +97,7 @@ export default function ResetPasswordForm() {
                 />
               </FormControl>
               <FormDescription>
-                The user's password will be reset to the default value.
+                The user's password will be reset to a new default password.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -116,7 +116,8 @@ export default function ResetPasswordForm() {
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action will permanently reset the password for flat number 
-                <span className="font-bold"> {form.watch('flatNo')}</span> to the default password ('password'). This user will lose access until they use the new password.
+                <span className="font-bold"> {form.watch('flatNo')}</span>. 
+                The new password will be a combination of 'UAarwa', their membership number, and their flat number.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -5,9 +5,8 @@ import * as crypto from 'crypto';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'memberUsers';
-// Columns: flatNo, ..., password
-const RANGE = `${SHEET_NAME}!A:E`; 
-const DEFAULT_PASSWORD_HASH = '96b33694c4bb7dbd07391e0be54745fb'; // MD5 for "password"
+// Columns: flatNo, membershipNo, ownerName, userType, password, membershipStatus, IsMember
+const RANGE = `${SHEET_NAME}!A:G`; 
 
 export async function PUT(request: Request, { params }: { params: { flatNo: string } }) {
   const { flatNo } = params;
@@ -26,7 +25,7 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
 
     const getResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!A:A`, // Only need flatNo to find the row
+        range: RANGE,
     });
 
     const rows = getResponse.data.values;
@@ -34,12 +33,28 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
         return NextResponse.json({ error: 'User sheet is empty or not found.' }, { status: 404 });
     }
 
-    // Find the row index of the user, skipping the header
-    const rowIndex = rows.slice(1).findIndex(row => row[0] == flatNo) + 2; // +2 for 1-based index and header
+    // Find the row index and the full row data of the user, skipping the header
+    let userRow: string[] | undefined;
+    const rowIndex = rows.slice(1).findIndex(row => {
+        if (row[0] == flatNo) {
+            userRow = row;
+            return true;
+        }
+        return false;
+    }) + 2; // +2 for 1-based index and header
     
-    if (rowIndex < 2) {
+    if (rowIndex < 2 || !userRow) {
         return NextResponse.json({ error: 'User not found for this flat number.' }, { status: 404 });
     }
+
+    const membershipNo = userRow[1]; // membershipNo is in column B (index 1)
+    if (!membershipNo) {
+        return NextResponse.json({ error: 'Membership number not found for this user, cannot reset password.' }, { status: 400 });
+    }
+
+    // Construct the new dynamic password and hash it
+    const newPasswordString = `UAarwa${membershipNo}${flatNo}@`;
+    const newPasswordHash = crypto.createHash('md5').update(newPasswordString).digest('hex');
 
     // Update the password in Column E for the found row
     const updateRange = `${SHEET_NAME}!E${rowIndex}`; 
@@ -48,7 +63,7 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
         range: updateRange,
         valueInputOption: 'RAW',
         requestBody: {
-            values: [[DEFAULT_PASSWORD_HASH]],
+            values: [[newPasswordHash]],
         },
     });
 
