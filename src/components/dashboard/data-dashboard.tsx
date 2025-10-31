@@ -265,8 +265,6 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               <MenubarContent>
                 <MenubarItem onClick={() => setActiveView('membershipEntry')}>Membership Entry</MenubarItem>
                 <MenubarItem onClick={() => setActiveView('userEntry')}>User Entry</MenubarItem>
-                <MenubarSeparator />
-                <MenubarItem onClick={() => setActiveView('resetPassword')}>Reset User Password</MenubarItem>
               </MenubarContent>
             </MenubarMenu>
           )}
@@ -284,6 +282,12 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             <MenubarTrigger>Account</MenubarTrigger>
             <MenubarContent>
               <MenubarItem onClick={() => setActiveView('changePassword')}>Change Password</MenubarItem>
+                {isGeneralSecretary && (
+                <>
+                    <MenubarSeparator />
+                    <MenubarItem onClick={() => setActiveView('resetPassword')}>Reset User Password</MenubarItem>
+                </>
+                )}
             </MenubarContent>
           </MenubarMenu>
         </Menubar>
