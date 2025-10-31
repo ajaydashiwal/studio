@@ -124,7 +124,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
-  const [userResolvedComplaints, setUserResolvedComplaints] = useState<Complaint[]>([]);
+  const [userActionedFeedback, setUserActionedFeedback] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   
   const defaultFrom = subMonths(now, 11);
@@ -196,10 +196,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             setAllComplaints(sortedData.slice(0, 10));
 
             if (user.userType === 'Member') {
-                const resolved = data.filter((c: Complaint) => 
-                    c.flatNo === user.flatNo && (c.status === 'Resolved' || c.status === 'Closed')
+                const actioned = data.filter((c: Complaint) => 
+                    c.flatNo === user.flatNo && c.status !== 'Open'
                 );
-                setUserResolvedComplaints(resolved);
+                setUserActionedFeedback(actioned);
             }
 
         } catch (err) {
@@ -379,8 +379,8 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const renderRwaRemarks = () => (
      <Card>
         <CardHeader>
-            <CardTitle>RWA Remarks on Your Complaint/Suggestion</CardTitle>
-            <CardDescription>Actions taken and remarks on your resolved or closed feedback.</CardDescription>
+            <CardTitle>RWA Remarks on Your Feedback</CardTitle>
+            <CardDescription>Actions taken and remarks on your submitted feedback.</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="relative w-full overflow-auto">
@@ -403,10 +403,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                 <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                             </TableRow>
                             ))
-                        ) : userResolvedComplaints.length === 0 ? (
-                            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No remarks on resolved feedback yet.</TableCell></TableRow>
+                        ) : userActionedFeedback.length === 0 ? (
+                            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No remarks on actioned feedback yet.</TableCell></TableRow>
                         ) : (
-                            userResolvedComplaints.map((item) => (
+                            userActionedFeedback.map((item) => (
                                 <TableRow key={`remark-${item.id}`}>
                                     <TableCell className="text-sm">{item.submissionDate}</TableCell>
                                     <TableCell className="text-sm whitespace-normal">{item.description}</TableCell>
