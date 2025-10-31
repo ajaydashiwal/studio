@@ -58,7 +58,6 @@ export default function ResetPasswordForm() {
     setIsSubmitting(true);
     setUserDetails(null);
     try {
-        // CORRECTED API ENDPOINT: This endpoint fetches details for an existing active member.
         const response = await fetch(`/api/master-membership/${values.flatNo}`);
         const data = await response.json();
 
@@ -151,17 +150,24 @@ export default function ResetPasswordForm() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will reset the password for flat 
-                <span className="font-bold"> {form.watch('flatNo')}</span>.
-                <br/><br/>
-                The new password will be:
-                <div className="my-2 p-2 bg-muted text-foreground rounded-md font-mono text-center">
-                    {generatedPassword}
-                </div>
-                Please confirm this action.
+               <AlertDialogDescription asChild>
+                  <div>
+                    This will reset the password for flat
+                    <span className="font-bold"> {form.watch('flatNo')}</span>.
+                    <br /><br />
+                    The new password will be:
+                  </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
+
+            <div className="my-2 p-2 bg-muted text-foreground rounded-md font-mono text-center">
+                {generatedPassword}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+                Please confirm this action.
+            </p>
+            
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setUserDetails(null)}>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleReset} disabled={isSubmitting}>
