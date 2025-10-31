@@ -50,19 +50,21 @@ interface Complaint {
 
 const statusOptions = ["Open", "In Progress", "Resolved", "Closed"];
 
-const getStatusBadgeVariant = (status: string) => {
+const getStatusBadgeVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
     switch (status) {
         case 'Open': return 'destructive';
         case 'In Progress': return 'secondary';
         case 'Resolved': return 'default';
-        case 'Closed': return 'outline';
+        case 'Closed': return 'destructive';
         default: return 'outline';
     }
 };
 
-const getStatusBadgeColor = (status: string) => {
+const getStatusBadgeClass = (status: string) => {
      switch (status) {
-        case 'Resolved': return 'bg-green-600';
+        case 'Resolved': return 'bg-green-600 hover:bg-green-700';
+        case 'Closed': return 'bg-red-800 hover:bg-red-900';
+        case 'In Progress': return 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500';
         default: return '';
     }
 }
@@ -193,7 +195,7 @@ export default function ComplaintManagement() {
                                                 <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
                                                 <TableCell>{item.id}</TableCell>
                                                 <TableCell className="text-center">
-                                                    <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                                    <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
                                                 </TableCell>
                                                 <TableCell>
                                                     {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}

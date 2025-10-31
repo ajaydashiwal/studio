@@ -56,19 +56,21 @@ interface Complaint {
 
 type DashboardData = MemberData | OfficeBearerData;
 
-const getStatusBadgeVariant = (status: string) => {
+const getStatusBadgeVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
     switch (status) {
         case 'Open': return 'destructive';
         case 'In Progress': return 'secondary';
         case 'Resolved': return 'default';
-        case 'Closed': return 'outline';
+        case 'Closed': return 'destructive';
         default: return 'outline';
     }
 };
 
-const getStatusBadgeColor = (status: string) => {
+const getStatusBadgeClass = (status: string) => {
      switch (status) {
-        case 'Resolved': return 'bg-green-600';
+        case 'Resolved': return 'bg-green-600 hover:bg-green-700';
+        case 'Closed': return 'bg-red-800 hover:bg-red-900';
+        case 'In Progress': return 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500';
         default: return '';
     }
 }
@@ -359,7 +361,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     <TableCell className="font-medium sticky left-0 bg-background z-10">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
                                     <TableCell className="text-sm whitespace-normal">{item.description}</TableCell>
                                     <TableCell className="text-center">
-                                        <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                        <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
                                     </TableCell>
                                     <TableCell>
                                         {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
@@ -409,7 +411,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     <TableCell className="text-sm">{item.submissionDate}</TableCell>
                                     <TableCell className="text-sm whitespace-normal">{item.description}</TableCell>
                                     <TableCell className="text-center">
-                                        <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeColor(item.status)}>{item.status}</Badge>
+                                        <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
                                     </TableCell>
                                     <TableCell className="text-sm whitespace-normal">{item.remarks || '-'}</TableCell>
                                 </TableRow>
