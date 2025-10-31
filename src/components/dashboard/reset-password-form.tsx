@@ -58,29 +58,18 @@ export default function ResetPasswordForm() {
     setIsSubmitting(true);
     setUserDetails(null);
     try {
-        // This endpoint will return a 409 if user exists, and 404 if no record found
-        // A 200 OK means a PENDING user was found, which is close enough for our needs here.
-        // We just need the membership number.
-        const response = await fetch(`/api/users/${values.flatNo}`);
+        // CORRECTED API ENDPOINT: This endpoint fetches details for an existing active member.
+        const response = await fetch(`/api/master-membership/${values.flatNo}`);
         const data = await response.json();
 
-        if (response.status === 404) {
-            toast({
-                variant: "destructive",
-                title: "Not Found",
-                description: data.message || "No user record found for this flat number.",
-            });
-            return;
-        }
-
-        if (data.membershipNo) {
+        if (response.ok && data.exists) {
             setUserDetails({ membershipNo: data.membershipNo });
             setIsDialogOpen(true);
         } else {
              toast({
                 variant: "destructive",
-                title: "Missing Details",
-                description: "Could not retrieve membership number for this user. Cannot reset password.",
+                title: "Not Found",
+                description: data.message || "No active member record found for this flat number.",
             });
         }
     } catch (error) {
