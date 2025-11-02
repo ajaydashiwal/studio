@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format, addMonths, startOfMonth, parse } from 'date-fns';
+import { format, addMonths, startOfMonth, parse, isBefore, isEqual } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
@@ -41,34 +41,46 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     }).filter(Boolean));
 
     const now = getIstDate();
-    const historicMonthsDue = [];
-    const futureMonthsAvailable = [];
-
-    // Check last 6 months for historic dues
-    for (let i = 5; i >= 0; i--) {
-      const monthDate = addMonths(startOfMonth(now), -i);
-      const monthYear = format(monthDate, 'MMM yyyy');
-      if (!paidMonths.has(monthYear)) {
-        historicMonthsDue.push(monthYear);
-      }
-    }
-
+    const today = startOfMonth(now);
+    
     // Find the latest paid month to calculate future months from
     const paidMonthDates = Array.from(paidMonths).map(m => m ? parse(m, 'MMM yyyy', new Date()) : new Date(0));
-    const latestPaidDate = paidMonthDates.length > 0 ? new Date(Math.max.apply(null, paidMonthDates.map(d => d.getTime()))) : now;
+    const latestPaidDate = paidMonthDates.length > 0 ? new Date(Math.max.apply(null, paidMonthDates.map(d => d.getTime()))) : addMonths(today, -1);
     
-    // Generate next 12 available future months
+    const allPossibleMonths = new Set<string>();
+
+    // Add last 6 historic months (including current month)
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = addMonths(today, -i);
+      allPossibleMonths.add(format(monthDate, 'MMM yyyy'));
+    }
+
+    // Add next 12 available future months
     for (let i = 1; i <= 12; i++) {
         const monthDate = addMonths(latestPaidDate, i);
-        const monthYear = format(monthDate, 'MMM yyyy');
-        if (!paidMonths.has(monthYear)) {
-            futureMonthsAvailable.push(monthYear);
-        }
+        allPossibleMonths.add(format(monthDate, 'MMM yyyy'));
     }
     
+    const historicMonthsDue: string[] = [];
+    const futureMonthsAvailable: string[] = [];
+    
+    allPossibleMonths.forEach(monthYear => {
+        if (!paidMonths.has(monthYear)) {
+            const monthDate = parse(monthYear, 'MMM yyyy', new Date());
+            if (isBefore(monthDate, today) || isEqual(monthDate, today)) {
+                historicMonthsDue.push(monthYear);
+            } else {
+                futureMonthsAvailable.push(monthYear);
+            }
+        }
+    });
+
+    // Sort historic months ascending
+    historicMonthsDue.sort((a, b) => parse(a, 'MMM yyyy', new Date()).getTime() - parse(b, 'MMM yyyy', new Date()).getTime());
+
     return NextResponse.json({
-        historic: historicMonthsDue, // Full list of up to 6 historic months
-        future: futureMonthsAvailable.slice(0, 12),   // Limit to 12
+        historic: historicMonthsDue,
+        future: futureMonthsAvailable,
     });
 
   } catch (error: any) {
