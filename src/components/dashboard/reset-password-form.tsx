@@ -51,7 +51,7 @@ export default function ResetPasswordForm() {
   })
 
   const generatedPassword = userDetails
-    ? `UAarwa${userDetails.membershipNo}${form.getValues("flatNo")}@`
+    ? `UArwa2015${form.getValues("flatNo")}@`
     : "";
 
   const preSubmitCheck = async (values: z.infer<typeof formSchema>) => {
