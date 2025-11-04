@@ -46,7 +46,10 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const isTreasurer = user.userType === 'Treasurer';
   const isMember = user.userType === 'Member';
   const isGeneralSecretary = user.userType === 'GeneralSecretary';
+  const isAgent = user.userType === 'Agent';
   const isOfficeBearer = !isMember;
+
+  const canDoFinancialEntry = isTreasurer || isAgent;
 
   useEffect(() => {
     setActiveView('overview');
@@ -74,7 +77,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
         }
         return null;
       case 'entry':
-        if (isTreasurer) {
+        if (canDoFinancialEntry) {
           return (
             <Card className="shadow-md">
               <CardHeader>
@@ -125,7 +128,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             }
             return null;
         case 'expenditureEntry':
-            if (isTreasurer) {
+            if (canDoFinancialEntry) {
                 return (
                     <Card className="shadow-md">
                         <CardHeader>
@@ -249,7 +252,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
              </>
           )}
 
-          {isTreasurer && (
+          {canDoFinancialEntry && (
             <MenubarMenu>
               <MenubarTrigger>Data Entry</MenubarTrigger>
               <MenubarContent>
@@ -261,7 +264,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
 
           {isGeneralSecretary && (
              <MenubarMenu>
-              <MenubarTrigger>Data Entry</MenubarTrigger>
+              <MenubarTrigger>User Management</MenubarTrigger>
               <MenubarContent>
                 <MenubarItem onClick={() => setActiveView('membershipEntry')}>Membership Entry</MenubarItem>
                 <MenubarItem onClick={() => setActiveView('userEntry')}>User Entry</MenubarItem>

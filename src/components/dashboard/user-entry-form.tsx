@@ -30,7 +30,7 @@ const formSchema = z.object({
   flatNo: z.string().min(1, { message: "Flat number is required." }),
   membershipNo: z.coerce.number().positive({ message: "Membership number is required." }),
   ownerName: z.string().min(1, { message: "Owner name is required." }),
-  userType: z.enum(["Member", "President", "VicePresident", "GeneralSecretary", "JointSecretary", "Treasurer"], {
+  userType: z.enum(["Member", "President", "VicePresident", "GeneralSecretary", "JointSecretary", "Treasurer", "Agent"], {
     required_error: "Please select a user type.",
   }),
 })
@@ -225,6 +225,7 @@ export default function UserEntryForm() {
                         <SelectItem value="GeneralSecretary">General Secretary</SelectItem>
                         <SelectItem value="JointSecretary">Joint Secretary</SelectItem>
                         <SelectItem value="Treasurer">Treasurer</SelectItem>
+                        <SelectItem value="Agent">Agent</SelectItem>
                     </SelectContent>
                 </Select>
                 <FormMessage />
