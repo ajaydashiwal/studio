@@ -66,6 +66,10 @@ export default function NotificationDisplay() {
         );
     }
 
+    if (!loading && notifications.length === 0) {
+        return null;
+    }
+
 
     return (
         <Card className="shadow-lg border-primary/20">
@@ -79,32 +83,27 @@ export default function NotificationDisplay() {
                 </div>
             </CardHeader>
             <CardContent>
-                {notifications.length === 0 ? (
-                    <div className="flex items-center justify-center h-24 text-muted-foreground">
-                        Nothing new!
-                    </div>
-                ) : (
-                    <ScrollArea className="h-64 w-full">
-                        <div className="space-y-6 pr-6">
-                            {notifications.map(notification => (
-                                <div key={notification.id} className="p-4 rounded-lg border bg-background/50">
-                                    <p className="text-sm text-foreground mb-3">{notification.message}</p>
-                                    <div className="flex items-center justify-end text-xs text-muted-foreground gap-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <User className="h-3 w-3" />
-                                            <span>{notification.createdBy}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Calendar className="h-3 w-3" />
-                                            <span>{notification.timestamp}</span>
-                                        </div>
+                <ScrollArea className="h-64 w-full">
+                    <div className="space-y-6 pr-6">
+                        {notifications.map(notification => (
+                            <div key={notification.id} className="p-4 rounded-lg border bg-background/50">
+                                <p className="text-sm text-foreground mb-3">{notification.message}</p>
+                                <div className="flex items-center justify-end text-xs text-muted-foreground gap-4">
+                                    <div className="flex items-center gap-1.5">
+                                        <User className="h-3 w-3" />
+                                        <span>{notification.createdBy}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="h-3 w-3" />
+                                        <span>{notification.timestamp}</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                )}
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
             </CardContent>
         </Card>
     );
 }
+
