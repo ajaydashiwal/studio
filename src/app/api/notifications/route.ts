@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format, parse } from 'date-fns';
+import { format, parse, differenceInDays } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
@@ -26,12 +26,21 @@ export async function GET(request: Request) {
     });
 
     const rows = response.data.values || [];
+    const now = getIstDate();
+
     const notifications = rows.slice(1).map((row) => ({
       id: row[0],
       message: row[1],
       createdBy: row[2],
       timestamp: row[3],
-    }));
+    })).filter(notification => {
+        try {
+            const notificationDate = parse(notification.timestamp, "dd/MM/yyyy HH:mm:ss", new Date());
+            return differenceInDays(now, notificationDate) <= 7;
+        } catch (e) {
+            return false;
+        }
+    });
 
     // Sort by timestamp descending (latest first)
     notifications.sort((a, b) => {
