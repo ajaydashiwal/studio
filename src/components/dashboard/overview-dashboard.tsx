@@ -17,6 +17,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    TableFooter,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,9 +34,15 @@ interface ChartData {
   fill?: string;
 }
 
+interface ExpenditureReportSection {
+    type: string;
+    total: number;
+}
+
 interface MemberData {
   maintenance: ChartData[];
   feedback: ChartData[];
+  expenditure: ExpenditureReportSection[];
 }
 
 interface OfficeBearerData {
@@ -215,39 +222,113 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
 
   const renderMemberDashboard = (memberData: MemberData) => {
     const feedbackChartData: ChartData[] = memberData.feedback ? memberData.feedback.map(item => ({ name: item.name, value: item.value })) : [];
+    const expenditureData = memberData.expenditure || [];
+    const grandTotalExpenditure = expenditureData.reduce((acc, item) => acc + item.total, 0);
 
     return (
         <div className="grid gap-6 md:grid-cols-2">
-        <Card className="h-full flex flex-col">
-            <CardHeader>
-            <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
-            <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-center justify-center">
-            {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
-                <MaintenancePieChart data={memberData.maintenance} />
-            ) : (
-                <div className="text-muted-foreground">
-                No maintenance data to display.
-                </div>
-            )}
-            </CardContent>
-        </Card>
-        <Card className="h-full flex flex-col">
-            <CardHeader>
-            <CardTitle>My Feedback Status</CardTitle>
-            <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-center justify-center">
-            {(feedbackChartData && feedbackChartData.length > 0) ? (
-                <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
-            ) : (
-                <div className="text-muted-foreground">
-                You have not submitted any feedback yet.
-                </div>
-            )}
-            </CardContent>
-        </Card>
+            <Card className="h-full flex flex-col">
+                <CardHeader>
+                <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
+                <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex items-center justify-center">
+                {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
+                    <MaintenancePieChart data={memberData.maintenance} />
+                ) : (
+                    <div className="text-muted-foreground">
+                    No maintenance data to display.
+                    </div>
+                )}
+                </CardContent>
+            </Card>
+            <Card className="h-full flex flex-col">
+                <CardHeader>
+                <CardTitle>My Feedback Status</CardTitle>
+                <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex items-center justify-center">
+                {(feedbackChartData && feedbackChartData.length > 0) ? (
+                    <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
+                ) : (
+                    <div className="text-muted-foreground">
+                    You have not submitted any feedback yet.
+                    </div>
+                )}
+                </CardContent>
+            </Card>
+             <Card className="md:col-span-2">
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                        <div>
+                            <CardTitle>Expenditure Summary</CardTitle>
+                            <CardDescription>
+                                Category-wise RWA expenditure for the selected period.
+                            </CardDescription>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="exp-from-period" className="text-xs">From</Label>
+                                <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="exp-from-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {fromDateOptions.map(option => (
+                                            <SelectItem key={`exp-from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="exp-to-period" className="text-xs">To</Label>
+                                <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="exp-to-period">
+                                        <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {toDateOptions.map(option => (
+                                            <SelectItem key={`exp-to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Category</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {expenditureData.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="text-center text-muted-foreground h-24">
+                                        No expenditure data for this period.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                expenditureData.map((item) => (
+                                    <TableRow key={item.type}>
+                                        <TableCell className="font-medium">{item.type}</TableCell>
+                                        <TableCell className="text-right">₹{item.total.toLocaleString()}</TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell className="font-bold">Grand Total</TableCell>
+                                <TableCell className="text-right font-bold">₹{grandTotalExpenditure.toLocaleString()}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     );
   };

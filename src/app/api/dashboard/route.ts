@@ -21,7 +21,85 @@ const getSheetsClient = () => {
     return google.sheets({ version: 'v4', auth });
 };
 
-const getMemberDashboardData = async (sheets: any, flatNo: string) => {
+const getExpenditureSummary = async (sheets: any, fromDate: Date, toDate: Date) => {
+    const expenditureRange = `${EXPENDITURE_SHEET}!B:D`; // expenditureType, description, amount
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: expenditureRange });
+    const rows = response.data.values?.slice(1) || [];
+
+    const categoryTotals: { [key: string]: number } = {};
+
+    for (const row of rows) {
+        const expenditureType = row[0];
+        const amountStr = row[2];
+        const paymentDateStr = row[3]; // Assuming paymentDate is in column D
+
+        if (!expenditureType || !amountStr || !paymentDateStr) continue;
+
+        try {
+            // Adjust date parsing if the format is different
+            const paymentDate = parse(paymentDateStr, 'dd/MM/yyyy', new Date());
+            if (isWithinInterval(paymentDate, { start: fromDate, end: toDate })) {
+                const amount = parseFloat(amountStr);
+                if (!isNaN(amount)) {
+                    categoryTotals[expenditureType] = (categoryTotals[expenditureType] || 0) + amount;
+                }
+            }
+        } catch (e) {
+            // Ignore rows with invalid dates
+        }
+    }
+    
+    // Fetch all expenditure categories to ensure all are present in the final report
+    const expReportResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${EXPENDITURE_SHEET}!B:F`, // B is type, F is timestamp
+    });
+    const expenditureRows = expReportResponse.data.values?.slice(1) || [];
+    
+    const monthlyData: { [type: string]: { [month: string]: number } } = {};
+    const dateInterval = { start: fromDate, end: toDate };
+    
+    for (const row of expenditureRows) {
+        const expenditureType = row[0];
+        const amountStr = row[2];
+        const timestampStr = row[4];
+
+        if (!expenditureType || !amountStr || !timestampStr) continue;
+
+        try {
+            const expenditureDate = parse(timestampStr, 'dd/MM/yyyy HH:mm:ss', new Date());
+            if (isWithinInterval(expenditureDate, dateInterval)) {
+                const amount = parseFloat(amountStr);
+                if (isNaN(amount)) continue;
+
+                if (!monthlyData[expenditureType]) {
+                    monthlyData[expenditureType] = {};
+                }
+                const monthYear = format(expenditureDate, 'MMM yyyy');
+                monthlyData[expenditureType][monthYear] = (monthlyData[expenditureType][monthYear] || 0) + amount;
+            }
+        } catch (e) {
+            // Ignore rows with invalid dates
+        }
+    }
+
+    const reportData = Object.keys(monthlyData).map(type => {
+        const total = Object.values(monthlyData[type]).reduce((acc, amount) => acc + amount, 0);
+        return {
+            type,
+            total
+        };
+    }).sort((a, b) => a.type.localeCompare(b.type));
+
+
+    return reportData;
+};
+
+
+const getMemberDashboardData = async (sheets: any, flatNo: string, from?: string, to?: string) => {
+    const toDate = to ? endOfMonth(parse(to, 'yyyy-MM', new Date())) : getIstDate();
+    const fromDate = from ? startOfMonth(parse(from, 'yyyy-MM', new Date())) : subMonths(toDate, 11);
+
     // Maintenance Data from monthCollection
     const collectionRange = `${COLLECTION_SHEET}!A:E`; // Flat No, ..., monthpaid
     const collectionResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: collectionRange });
@@ -50,6 +128,9 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
+    
+    // Expenditure data for member
+    const expenditureData = await getExpenditureSummary(sheets, fromDate, toDate);
 
     return {
         maintenance: [
@@ -57,6 +138,7 @@ const getMemberDashboardData = async (sheets: any, flatNo: string) => {
             { name: 'Due', value: dueCount, fill: 'var(--color-due)' },
         ],
         feedback: Object.keys(feedbackSummary).map(key => ({ name: key, value: feedbackSummary[key] })),
+        expenditure: expenditureData,
     };
 };
 
@@ -152,7 +234,7 @@ export async function GET(request: Request) {
         let data;
 
         if (userType === 'Member') {
-            data = await getMemberDashboardData(sheets, flatNo!);
+            data = await getMemberDashboardData(sheets, flatNo!, from || undefined, to || undefined);
         } else {
             data = await getOfficeBearerDashboardData(sheets, from || undefined, to || undefined);
         }
