@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
   const { flatNo } = params;
 
   if (!flatNo) {
-    çreturn NextResponse.json({ error: 'Missing flat number' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing flat number' }, { status: 400 });
   }
 
   try {
