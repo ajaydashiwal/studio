@@ -50,6 +50,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const isOfficeBearer = !isMember;
 
   const canDoFinancialEntry = isTreasurer || isAgent;
+  const canCommunicate = isOfficeBearer && !isAgent;
 
   useEffect(() => {
     setActiveView('overview');
@@ -162,7 +163,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             }
             return null;
         case 'complaintManagement':
-            if (isOfficeBearer) {
+            if (canCommunicate) {
                 return <ComplaintManagement />;
             }
             return null;
@@ -181,7 +182,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             </Card>
         );
       case 'postNotification':
-        if (isOfficeBearer) {
+        if (canCommunicate) {
           return (
             <Card className="shadow-md">
               <CardHeader>
@@ -233,23 +234,24 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
             </MenubarMenu>
 
           {isOfficeBearer && (
-             <>
-                <MenubarMenu>
-                    <MenubarTrigger>Reports</MenubarTrigger>
-                    <MenubarContent>
-                        <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
-                        <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
-                        <MenubarItem onClick={() => setActiveView('expenditureReport')}>Expenditure Report</MenubarItem>
-                    </MenubarContent>
-                </MenubarMenu>
-                <MenubarMenu>
-                    <MenubarTrigger>Communication</MenubarTrigger>
-                    <MenubarContent>
-                        <MenubarItem onClick={() => setActiveView('complaintManagement')}>Manage Feedback</MenubarItem>
-                        <MenubarItem onClick={() => setActiveView('postNotification')}>Post Notification</MenubarItem>
-                    </MenubarContent>
-                </MenubarMenu>
-             </>
+             <MenubarMenu>
+                <MenubarTrigger>Reports</MenubarTrigger>
+                <MenubarContent>
+                    <MenubarItem onClick={() => setActiveView('memberSummary')}>Member Summary</MenubarItem>
+                    <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
+                    <MenubarItem onClick={() => setActiveView('expenditureReport')}>Expenditure Report</MenubarItem>
+                </MenubarContent>
+            </MenubarMenu>
+          )}
+          
+          {canCommunicate && (
+            <MenubarMenu>
+                <MenubarTrigger>Communication</MenubarTrigger>
+                <MenubarContent>
+                    <MenubarItem onClick={() => setActiveView('complaintManagement')}>Manage Feedback</MenubarItem>
+                    <MenubarItem onClick={() => setActiveView('postNotification')}>Post Notification</MenubarItem>
+                </MenubarContent>
+            </MenubarMenu>
           )}
 
           {canDoFinancialEntry && (
