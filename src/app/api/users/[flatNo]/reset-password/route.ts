@@ -53,7 +53,7 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
     }
 
     // Construct the new dynamic password and hash it
-    const newPasswordString = `UAarwa${membershipNo}${flatNo}@`;
+    const newPasswordString = `UArwa2015${flatNo}@`;
     const newPasswordHash = crypto.createHash('md5').update(newPasswordString).digest('hex');
 
     // Update the password in Column E for the found row
