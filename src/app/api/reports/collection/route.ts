@@ -3,7 +3,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { parse, format } from 'date-fns';
+import { parse, format, getYear, getMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
@@ -17,9 +17,12 @@ export async function GET(request: Request) {
     if (!period) {
         return NextResponse.json({ error: 'Missing "period" parameter' }, { status: 400 });
     }
-    const targetMonth = format(parse(period, 'yyyy-MM', new Date()), 'MMMM yyyy');
 
     try {
+        const targetDate = parse(period, 'yyyy-MM', new Date());
+        const targetYear = getYear(targetDate);
+        const targetMonth = getMonth(targetDate);
+
         const auth = new google.auth.GoogleAuth({
             keyFile: 'google-credentials.json',
             scopes: 'https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -35,26 +38,27 @@ export async function GET(request: Request) {
 
         const reportData = rows
             .map((row, index) => {
-                const monthPaid = row[4];
-                let formattedMonthPaid = '';
-                try {
-                    // Handle both 'MMM yyyy' and 'MMMM yyyy'
-                    formattedMonthPaid = format(parse(monthPaid, monthPaid.length > 8 ? 'MMMM yyyy' : 'MMM yyyy', new Date()), 'MMMM yyyy');
-                } catch {
-                    return null; // Skip malformed rows
+                const receiptDateStr = row[2]; // Column C is receiptDate
+                if (!receiptDateStr) {
+                    return null;
                 }
 
-                if (formattedMonthPaid === targetMonth) {
-                    return {
-                        id: index,
-                        flatNo: row[0],
-                        tenantName: row[1] || '-',
-                        receiptDate: row[2],
-                        receiptNo: row[3],
-                        amount: parseFloat(row[5]) || 0,
-                        modeOfPayment: row[6],
-                        transactionRef: row[7] || '-',
-                    };
+                try {
+                    const receiptDate = parse(receiptDateStr, 'dd/MM/yyyy', new Date());
+                    if (getYear(receiptDate) === targetYear && getMonth(receiptDate) === targetMonth) {
+                        return {
+                            id: index,
+                            flatNo: row[0],
+                            tenantName: row[1] || '-',
+                            receiptDate: row[2],
+                            receiptNo: row[3],
+                            amount: parseFloat(row[5]) || 0,
+                            modeOfPayment: row[6],
+                            transactionRef: row[7] || '-',
+                        };
+                    }
+                } catch {
+                    return null; // Skip rows with malformed dates
                 }
                 return null;
             })
