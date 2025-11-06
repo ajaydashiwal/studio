@@ -49,8 +49,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     
     const allPossibleMonths = new Set<string>();
 
-    // Add last 6 historic months (including current month)
-    for (let i = 5; i >= 0; i--) {
+    // Add last 6 historic months (excluding current month)
+    for (let i = 6; i >= 1; i--) {
       const monthDate = addMonths(today, -i);
       allPossibleMonths.add(format(monthDate, 'MMM yyyy'));
     }
@@ -67,7 +67,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     allPossibleMonths.forEach(monthYear => {
         if (!paidMonths.has(monthYear)) {
             const monthDate = parse(monthYear, 'MMM yyyy', new Date());
-            if (isBefore(monthDate, today) || isEqual(monthDate, today)) {
+            // Historic months are strictly before today's month start
+            if (isBefore(monthDate, today)) {
                 historicMonthsDue.push(monthYear);
             } else {
                 futureMonthsAvailable.push(monthYear);

@@ -43,7 +43,7 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const today = startOfMonth(getIstDate());
     if (selectedMonthDate < today) { // It's a historic month
         const monthDiff = differenceInCalendarMonths(today, selectedMonthDate);
-        if (monthDiff > 5) { // More than 5 months ago (0-5 is 6 months total)
+        if (monthDiff > 6) { // More than 6 months ago (e.g., 7) is not allowed
             return NextResponse.json({ 
                 error: 'Historic payments are restricted to the last 6 months only.' 
             }, { status: 400 });
