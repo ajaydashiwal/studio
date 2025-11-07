@@ -3,12 +3,12 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { parse, format, getYear, getMonth } from 'date-fns';
+import { parse, getYear, getMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
-// Columns: flatNo, tenantName, receiptDate, receiptNo, monthPaid, amountPaid, modeOfPayment, transactionRef
-const RANGE = `${COLLECTION_SHEET}!A:H`;
+// Columns: flatNo(A), ... receiptDate(C), ... amountPaid(F)
+const RANGE = `${COLLECTION_SHEET}!A:F`;
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -36,34 +36,38 @@ export async function GET(request: Request) {
 
         const rows = response.data.values?.slice(1) || [];
 
-        const reportData = rows
-            .map((row, index) => {
-                const receiptDateStr = row[2]; // Column C is receiptDate
-                if (!receiptDateStr) {
-                    return null;
-                }
+        const filteredRows = rows.filter(row => {
+            const receiptDateStr = row[2]; // Column C is receiptDate
+            if (!receiptDateStr) return false;
+            try {
+                const receiptDate = parse(receiptDateStr, 'dd/MM/yyyy', new Date());
+                return getYear(receiptDate) === targetYear && getMonth(receiptDate) === targetMonth;
+            } catch {
+                return false;
+            }
+        });
+        
+        // Group by flatNo
+        const groupedData = new Map<string, number>();
 
-                try {
-                    const receiptDate = parse(receiptDateStr, 'dd/MM/yyyy', new Date());
-                    if (getYear(receiptDate) === targetYear && getMonth(receiptDate) === targetMonth) {
-                        return {
-                            id: index,
-                            flatNo: row[0],
-                            tenantName: row[1] || '-',
-                            receiptDate: row[2],
-                            receiptNo: row[3],
-                            amount: parseFloat(row[5]) || 0,
-                            modeOfPayment: row[6],
-                            transactionRef: row[7] || '-',
-                        };
-                    }
-                } catch {
-                    return null; // Skip rows with malformed dates
-                }
-                return null;
-            })
-            .filter(Boolean)
-            .sort((a, b) => parseInt(a!.flatNo, 10) - parseInt(b!.flatNo, 10));
+        filteredRows.forEach(row => {
+            const flatNo = row[0];
+            const amount = parseFloat(row[5]) || 0;
+
+            if (groupedData.has(flatNo)) {
+                groupedData.set(flatNo, groupedData.get(flatNo)! + amount);
+            } else {
+                groupedData.set(flatNo, amount);
+            }
+        });
+        
+        const reportData = Array.from(groupedData.entries())
+          .map(([flatNo, totalAmount], index) => ({ 
+              id: index,
+              flatNo, 
+              amount: totalAmount 
+          }))
+          .sort((a, b) => parseInt(a.flatNo, 10) - parseInt(b.flatNo, 10));
 
 
         return NextResponse.json(reportData);

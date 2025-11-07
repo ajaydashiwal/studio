@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Upvan Apartment RWA',
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>
   );

@@ -74,10 +74,11 @@ export async function POST(request: Request) {
         modeOfPayment, 
         transactionRef,
         bulkPaymentType,
+        entryByFlatNo,
     } = body;
 
     // Validation
-    if (!flatNo || !amount || !receiptDate || !receiptNo || !modeOfPayment || !bulkPaymentType) {
+    if (!flatNo || !amount || !receiptDate || !receiptNo || !modeOfPayment || !bulkPaymentType || !entryByFlatNo) {
         return NextResponse.json({ error: 'Missing required fields for bulk payment' }, { status: 400 });
     }
     if (amount <= 300 || amount % 300 !== 0) {
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
       300, // Amount per month
       modeOfPayment,
       transactionRef || '',
+      entryByFlatNo,
     ]));
 
     await sheets.spreadsheets.values.append({

@@ -187,47 +187,49 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-[60vh] w-full">
-                        <Table className="min-w-full">
-                            <TableHeader className="sticky top-0 bg-secondary z-20">
-                                <TableRow>
-                                    <TableHead className="sticky left-0 bg-secondary z-30 min-w-[120px]">Flat No</TableHead>
-                                    <TableHead className="min-w-[200px]">Owner/Tenant Name</TableHead>
-                                    <TableHead className="text-right min-w-[120px]">Total Paid</TableHead>
-                                    <TableHead className="text-right min-w-[120px]">Total Due</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {loading ? (
-                                renderSkeletons()
-                            ) : error ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-destructive">
-                                        {error}
-                                    </TableCell>
-                                </TableRow>
-                            ) : filteredData.length === 0 ? (
-                                <TableRow>
-                                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                                        {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                filteredData.map((item) => (
-                                    <TableRow 
-                                        key={item.flatNo} 
-                                        className="cursor-pointer" 
-                                        onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
-                                    >
-                                        <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
-                                        <TableCell>{item.ownerName}</TableCell>
-                                        <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
-                                        <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
+                    <ScrollArea className="h-[60vh]">
+                        <div className="relative w-full overflow-auto">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-secondary z-20">
+                                    <TableRow>
+                                        <TableHead className="sticky left-0 bg-secondary z-30 min-w-[120px]">Flat No</TableHead>
+                                        <TableHead className="min-w-[200px]">Owner/Tenant Name</TableHead>
+                                        <TableHead className="text-right min-w-[120px]">Total Paid</TableHead>
+                                        <TableHead className="text-right min-w-[120px]">Total Due</TableHead>
                                     </TableRow>
-                                ))
-                            )}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                {loading ? (
+                                    renderSkeletons()
+                                ) : error ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-destructive">
+                                            {error}
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredData.length === 0 ? (
+                                    <TableRow>
+                                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                            {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredData.map((item) => (
+                                        <TableRow 
+                                            key={item.flatNo} 
+                                            className="cursor-pointer" 
+                                            onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
+                                        >
+                                            <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
+                                            <TableCell>{item.ownerName}</TableCell>
+                                            <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
+                                            <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
+                                        </TableRow>
+                                    ))
+                                )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </ScrollArea>
                 </CardContent>
             </Card>
@@ -237,7 +239,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                     <DialogHeader>
                         <DialogTitle>Maintenance Statement for {selectedFlat?.ownerName} (Flat: {selectedFlat?.flatNo})</DialogTitle>
                         <DialogDescription>
-                            Showing payment history for the last 24 months.
+                            Showing payment history.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="mt-4">
@@ -248,5 +250,3 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
         </>
     )
 }
-
-    

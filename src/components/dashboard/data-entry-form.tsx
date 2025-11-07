@@ -98,21 +98,11 @@ const formSchema = z.object({
     path: ["amount"],
 });
 
-
-const generateMonthYearOptions = () => {
-    const options = [];
-    const currentYear = new Date().getFullYear();
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    for (let i = -1; i < 4; i++) {
-        const year = currentYear + i;
-        for (const month of monthNames) {
-            options.push(`${month} ${year}`);
-        }
-    }
-    return options;
+interface DataEntryFormProps {
+    entryByFlatNo: string;
 }
 
-export default function DataEntryForm() {
+export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
   const { toast } = useToast()
   
   const [isMember, setIsMember] = useState(true); // Default to true to hide tenant name initially
@@ -225,6 +215,7 @@ export default function DataEntryForm() {
     let body = {
       ...values,
       receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
+      entryByFlatNo,
     };
     
     if (isBulkPayment) {
@@ -239,6 +230,7 @@ export default function DataEntryForm() {
           modeOfPayment: values.modeOfPayment,
           transactionRef: values.transactionRef,
           bulkPaymentType: values.bulkPaymentType,
+          entryByFlatNo,
         } as any;
     }
 

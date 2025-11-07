@@ -68,8 +68,11 @@ const formSchema = z.object({
     path: ["chequeDate"],
 });
 
+interface ExpenditureEntryFormProps {
+    entryByFlatNo: string;
+}
 
-export default function ExpenditureEntryForm() {
+export default function ExpenditureEntryForm({ entryByFlatNo }: ExpenditureEntryFormProps) {
   const { toast } = useToast()
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -89,6 +92,7 @@ export default function ExpenditureEntryForm() {
       ...values,
       paymentDate: format(values.paymentDate, "dd/MM/yyyy"),
       chequeDate: values.chequeDate ? format(values.chequeDate, "dd/MM/yyyy") : "",
+      entryByFlatNo,
     };
     
     try {

@@ -62,7 +62,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       case 'overview':
         return <OverviewDashboard user={user} />;
       case 'statement':
-        return <DataTable flatNo={user.flatNo} />;
+        return <DataTable flatNo={user.flatNo} user={user} />;
       case 'memberSummary':
          if (isOfficeBearer) {
           return <SummaryTable summaryType="member" />;
@@ -94,7 +94,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DataEntryForm />
+                <DataEntryForm entryByFlatNo={user.flatNo} />
               </CardContent>
             </Card>
           );
@@ -145,7 +145,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ExpenditureEntryForm />
+                            <ExpenditureEntryForm entryByFlatNo={user.flatNo} />
                         </CardContent>
                     </Card>
                 );

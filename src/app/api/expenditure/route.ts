@@ -21,11 +21,12 @@ export async function POST(request: Request) {
         modeOfPayment,
         transactionRef,
         chequeNo,
-        chequeDate
+        chequeDate,
+        entryByFlatNo,
     } = body;
 
     // Basic validation
-    if (!paymentDate || !description || !amount || !modeOfPayment || !expenditureType) {
+    if (!paymentDate || !description || !amount || !modeOfPayment || !expenditureType || !entryByFlatNo) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -49,14 +50,15 @@ export async function POST(request: Request) {
         transactionDetails = 'Cash';
     }
     
-    // Columns: expenditureId, expenditureType, description, amount, transactionDetails, date, submissionTimestamp
+    // Columns: expenditureId, expenditureType, description, amount, transactionDetails, submissionTimestamp, entryByFlatNo
     const newRow = [
       expenditureId,
       expenditureType,
       description,
       amount,
       transactionDetails,
-      submissionTimestamp
+      submissionTimestamp,
+      entryByFlatNo,
     ];
 
     await sheets.spreadsheets.values.append({

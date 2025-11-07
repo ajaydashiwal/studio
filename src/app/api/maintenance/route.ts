@@ -18,11 +18,12 @@ export async function POST(request: Request) {
         receiptNo, 
         tenantName, 
         modeOfPayment, 
-        transactionRef 
+        transactionRef,
+        entryByFlatNo,
     } = body;
 
     // Basic validation
-    if (!flatNo || !monthYear || !amount || !receiptDate || !receiptNo || !modeOfPayment) {
+    if (!flatNo || !monthYear || !amount || !receiptDate || !receiptNo || !modeOfPayment || !entryByFlatNo) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 
     const sheets = google.sheets({ version: 'v4', auth });
     
-    // New Schema: Flatno, name of tenant, receipt date, receipt number, monthpaid, amount paid, mode of payment, transaction ref
+    // New Schema: Flatno, name of tenant, receipt date, receipt number, monthpaid, amount paid, mode of payment, transaction ref, entryByFlatNo
     const newRow = [
       flatNo,
       tenantName || '', // name of tenant
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
       amount,
       modeOfPayment,
       transactionRef || '',
+      entryByFlatNo,
     ];
 
     await sheets.spreadsheets.values.append({

@@ -83,7 +83,7 @@ export default function NotificationDisplay() {
                 </div>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-64 w-full">
+                <ScrollArea className="w-full max-h-72">
                     <div className="space-y-6 pr-6">
                         {notifications.map(notification => (
                             <div key={notification.id} className="p-4 rounded-lg border bg-background/50">
@@ -106,4 +106,3 @@ export default function NotificationDisplay() {
         </Card>
     );
 }
-
