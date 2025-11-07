@@ -18,6 +18,7 @@ import ExpenditureReport from '@/components/dashboard/expenditure-report';
 import CollectionReport from '@/components/dashboard/collection-report';
 import NotificationEntryForm from '@/components/dashboard/notification-entry-form';
 import ResetPasswordForm from '@/components/dashboard/reset-password-form';
+import DefaulterReport from '@/components/dashboard/defaulter-report';
 import {
   Menubar,
   MenubarContent,
@@ -39,7 +40,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'collectionReport' | 'postNotification' | 'resetPassword';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'collectionReport' | 'postNotification' | 'resetPassword' | 'defaulterReport';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -81,6 +82,11 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       case 'collectionReport':
         if (isOfficeBearer) {
           return <CollectionReport />;
+        }
+        return null;
+      case 'defaulterReport':
+        if (isOfficeBearer) {
+          return <DefaulterReport />;
         }
         return null;
       case 'entry':
@@ -247,6 +253,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                     <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
                     <MenubarItem onClick={() => setActiveView('collectionReport')}>Collection Report</MenubarItem>
                     <MenubarItem onClick={() => setActiveView('expenditureReport')}>Expenditure Report</MenubarItem>
+                    <MenubarItem onClick={() => setActiveView('defaulterReport')}>Defaulter Report</MenubarItem>
                 </MenubarContent>
             </MenubarMenu>
           )}
