@@ -371,108 +371,110 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     const feedbackChartData = officeData.feedbackSummary || [];
     
     return (
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 h-full flex flex-col">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-              <div>
-                <CardTitle>Financial Summary</CardTitle>
-                <CardDescription>
-                  Collections vs. total expenditure for the period.
-                </CardDescription>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="from-period" className="text-xs">From</Label>
-                  <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
-                      <SelectValue placeholder="Select Period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fromDateOptions.map(option => (
-                        <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="to-period" className="text-xs">To</Label>
-                  <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
-                      <SelectValue placeholder="Select Period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {toDateOptions.map(option => (
-                        <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 flex items-center justify-center">
-            {financialChartData.some(d => d.value > 0) ? (
-              <MaintenancePieChart data={financialChartData} />
-            ) : (
-              <div className="text-muted-foreground">
-                No financial data for the selected period.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>Maintenance Pending</CardTitle>
-                            <CardDescription>Outstanding dues for the month.</CardDescription>
-                        </div>
-                        <Select value={pendingDuesPeriod} onValueChange={setPendingDuesPeriod}>
-                            <SelectTrigger className="w-[140px] h-9" id="pending-dues-period">
-                                <SelectValue placeholder="Select Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {fromDateOptions.map(option => (
-                                    <SelectItem key={`pending-${option.value}`} value={option.value}>{option.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {pendingDuesLoading ? <Skeleton className="h-24 w-full" /> : (
-                        <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+                <Card className="h-full flex flex-col">
+                    <CardHeader>
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
                             <div>
-                                <p className="text-sm text-muted-foreground">Paid</p>
-                                <p className="text-2xl font-bold flex items-center justify-center gap-2"><Users className="h-6 w-6 text-green-600" />{pendingDues?.paidCount ?? 'N/A'}</p>
+                                <CardTitle>Financial Summary</CardTitle>
+                                <CardDescription>
+                                Collections vs. total expenditure for the period.
+                                </CardDescription>
                             </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Pending</p>
-                                <p className="text-2xl font-bold flex items-center justify-center gap-2"><UserX className="h-6 w-6 text-red-600" />{pendingDues?.pendingCount ?? 'N/A'}</p>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <div className="grid gap-1.5">
+                                <Label htmlFor="from-period" className="text-xs">From</Label>
+                                <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
+                                    <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                    {fromDateOptions.map(option => (
+                                        <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                </div>
+                                <div className="grid gap-1.5">
+                                <Label htmlFor="to-period" className="text-xs">To</Label>
+                                <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
+                                    <SelectValue placeholder="Select Period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                    {toDateOptions.map(option => (
+                                        <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                </div>
                             </div>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
-             <Card className="h-full flex flex-col">
-                <CardHeader>
-                    <CardTitle>Feedback Breakdown</CardTitle>
-                    <CardDescription>Complaints vs. Suggestions.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center">
-                    {feedbackChartData.some(d => d.value > 0) ? (
-                        <MaintenancePieChart data={feedbackChartData} />
-                    ) : (
+                    </CardHeader>
+                    <CardContent className="flex-1 flex items-center justify-center">
+                        {financialChartData.some(d => d.value > 0) ? (
+                        <MaintenancePieChart data={financialChartData} />
+                        ) : (
                         <div className="text-muted-foreground">
-                            No feedback data for the period.
+                            No financial data for the selected period.
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle>Maintenance Pending</CardTitle>
+                                <CardDescription>Outstanding dues for the month.</CardDescription>
+                            </div>
+                            <Select value={pendingDuesPeriod} onValueChange={setPendingDuesPeriod}>
+                                <SelectTrigger className="w-[140px] h-9" id="pending-dues-period">
+                                    <SelectValue placeholder="Select Month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fromDateOptions.map(option => (
+                                        <SelectItem key={`pending-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {pendingDuesLoading ? <Skeleton className="h-24 w-full" /> : (
+                            <div className="grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Paid</p>
+                                    <p className="text-2xl font-bold flex items-center justify-center gap-2"><Users className="h-6 w-6 text-green-600" />{pendingDues?.paidCount ?? 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Pending</p>
+                                    <p className="text-2xl font-bold flex items-center justify-center gap-2"><UserX className="h-6 w-6 text-red-600" />{pendingDues?.pendingCount ?? 'N/A'}</p>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+                <Card className="h-full flex flex-col">
+                    <CardHeader>
+                        <CardTitle>Feedback Breakdown</CardTitle>
+                        <CardDescription>Complaints vs. Suggestions.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex items-center justify-center">
+                        {feedbackChartData.some(d => d.value > 0) ? (
+                            <MaintenancePieChart data={feedbackChartData} />
+                        ) : (
+                            <div className="text-muted-foreground">
+                                No feedback data for the period.
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
-      </div>
     );
   };
 
@@ -497,7 +499,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                         {complaintsLoading ? (
                             Array.from({ length: 5 }).map((_, index) => (
                             <TableRow key={`skeleton-${index}`}>
-                                <TableCell className="sticky left-0 bg-background z-10"><Skeleton className="h-4 w-32" /></TableCell>
+                                <TableCell className="font-medium sticky left-0 bg-background z-10"><Skeleton className="h-4 w-32" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                                 <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -611,9 +613,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             ? renderMemberDashboard(data as MemberData)
             : renderOfficeBearerDashboard(data as OfficeBearerData)
         }
+        
         <div className="mt-6">
             {renderCommunityFeedback()}
         </div>
+
          {user.userType === 'Member' && (
              <div className="mt-6">
                 {renderRwaRemarks()}
