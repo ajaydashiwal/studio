@@ -1,7 +1,7 @@
 
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { format, parse, differenceInDays } from 'date-fns';
+import { format, parse, differenceInDays, isValid } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
@@ -34,10 +34,18 @@ export async function GET(request: Request) {
       createdBy: row[2],
       timestamp: row[3],
     })).filter(notification => {
+        if (!notification.timestamp) {
+            return false; // Exclude notifications without a timestamp
+        }
         try {
             const notificationDate = parse(notification.timestamp, "dd/MM/yyyy HH:mm:ss", new Date());
+            // Ensure the parsed date is valid before comparing
+            if (!isValid(notificationDate)) {
+                return false;
+            }
             return differenceInDays(now, notificationDate) <= 7;
         } catch (e) {
+            // If parsing throws an error for any reason, exclude this item
             return false;
         }
     });
@@ -48,8 +56,8 @@ export async function GET(request: Request) {
             const dateA = parse(a.timestamp, "dd/MM/yyyy HH:mm:ss", new Date());
             const dateB = parse(b.timestamp, "dd/MM/yyyy HH:mm:ss", new Date());
             // Check for invalid dates which might be parsed as NaN
-            if (isNaN(dateA.getTime())) return 1;
-            if (isNaN(dateB.getTime())) return -1;
+            if (!isValid(dateA)) return 1;
+            if (!isValid(dateB)) return -1;
             return dateB.getTime() - dateA.getTime();
         } catch (e) {
             return 0; // Don't change order if parsing fails
