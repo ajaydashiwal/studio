@@ -74,7 +74,7 @@ const getStatusBadgeVariant = (status: string): "default" | "destructive" | "sec
         case 'In Progress': return 'secondary';
         case 'Resolved': return 'default';
         case 'Closed': return 'destructive';
-        default: 'outline';
+        default: return 'outline';
     }
 };
 
@@ -609,22 +609,20 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     <div className="space-y-6">
         <NotificationDisplay />
 
-        {user.userType === 'Member'
-            ? renderMemberDashboard(data as MemberData)
-            : renderOfficeBearerDashboard(data as OfficeBearerData)
-        }
-        
-        <div className="mt-6">
-            {renderCommunityFeedback()}
-        </div>
-
-         {user.userType === 'Member' && (
-             <div className="mt-6">
+        {user.userType === 'Member' ? (
+            <div className="space-y-6">
+                {renderMemberDashboard(data as MemberData)}
+                {renderCommunityFeedback()}
                 {renderRwaRemarks()}
             </div>
-         )}
+        ) : (
+            <div className="space-y-6">
+                {renderOfficeBearerDashboard(data as OfficeBearerData)}
+                {renderCommunityFeedback()}
+            </div>
+        )}
     </div>
   );
 }
 
-  
+    
