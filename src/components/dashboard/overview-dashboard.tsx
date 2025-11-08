@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,7 +7,7 @@ import type { User } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, Megaphone, Users, UserX } from 'lucide-react';
+import { Terminal, Users, UserX } from 'lucide-react';
 import MaintenancePieChart from '@/components/charts/maintenance-pie-chart';
 import FeedbackBarChart from '@/components/charts/feedback-bar-chart';
 import NotificationDisplay from '@/components/dashboard/notification-display';
@@ -147,13 +148,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   });
 
   const [pendingDues, setPendingDues] = useState<PendingDues | null>(null);
-  const [pendingDuesLoading, setPendingDuesLoading] = useState(false);
+  const [pendingDuesLoading, setPendingDuesLoading] = useState(true);
   const [pendingDuesPeriod, setPendingDuesPeriod] = useState<string>(format(now, 'yyyy-MM'));
 
   useEffect(() => {
     const fetchPendingDues = async () => {
-        if(user.userType === 'Member') return;
-
         setPendingDuesLoading(true);
         try {
             const response = await fetch(`/api/reports/collection?period=${pendingDuesPeriod}`);
@@ -172,7 +171,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         }
     };
     fetchPendingDues();
-  }, [pendingDuesPeriod, user.userType]);
+  }, [pendingDuesPeriod]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -372,41 +371,6 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     
     return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>Maintenance Pending</CardTitle>
-                            <CardDescription>Outstanding dues for the month.</CardDescription>
-                        </div>
-                        <Select value={pendingDuesPeriod} onValueChange={setPendingDuesPeriod}>
-                            <SelectTrigger className="w-[140px] h-9" id="pending-dues-period">
-                                <SelectValue placeholder="Select Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {fromDateOptions.map(option => (
-                                    <SelectItem key={`pending-${option.value}`} value={option.value}>{option.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {pendingDuesLoading ? <Skeleton className="h-24 w-full" /> : (
-                        <div className="grid grid-cols-2 gap-4 text-center">
-                            <div>
-                                <p className="text-sm text-muted-foreground">Paid</p>
-                                <p className="text-2xl font-bold flex items-center justify-center gap-2"><Users className="h-6 w-6 text-green-600" />{pendingDues?.paidCount ?? 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Pending</p>
-                                <p className="text-2xl font-bold flex items-center justify-center gap-2"><UserX className="h-6 w-6 text-red-600" />{pendingDues?.pendingCount ?? 'N/A'}</p>
-                            </div>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <Card className="h-full flex flex-col">
@@ -480,6 +444,43 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
         </div>
     );
   };
+  
+  const renderMaintenancePending = () => (
+    <Card>
+        <CardHeader>
+            <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle>Maintenance Pending</CardTitle>
+                    <CardDescription>Outstanding dues for the selected month.</CardDescription>
+                </div>
+                <Select value={pendingDuesPeriod} onValueChange={setPendingDuesPeriod}>
+                    <SelectTrigger className="w-[140px] h-9" id="pending-dues-period">
+                        <SelectValue placeholder="Select Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {fromDateOptions.map(option => (
+                            <SelectItem key={`pending-${option.value}`} value={option.value}>{option.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+        </CardHeader>
+        <CardContent>
+            {pendingDuesLoading ? <Skeleton className="h-24 w-full" /> : (
+                <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Paid</p>
+                        <p className="text-2xl font-bold flex items-center justify-center gap-2"><Users className="h-6 w-6 text-green-600" />{pendingDues?.paidCount ?? 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Pending</p>
+                        <p className="text-2xl font-bold flex items-center justify-center gap-2"><UserX className="h-6 w-6 text-red-600" />{pendingDues?.pendingCount ?? 'N/A'}</p>
+                    </div>
+                </div>
+            )}
+        </CardContent>
+    </Card>
+  );
 
   const renderCommunityFeedback = () => (
     <Card>
@@ -581,15 +582,18 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
 
   if (loading) {
     return (
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
-                <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
-            </Card>
-            <Card>
-                <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
-                <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
-            </Card>
+        <div className="space-y-6">
+            <Skeleton className="h-32 w-full" />
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+                    <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+                    <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
+                </Card>
+            </div>
         </div>
     );
   }
@@ -611,23 +615,24 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   return (
     <div className="space-y-6">
         <NotificationDisplay />
-
-        {user.userType === 'Member' ? (
-            <div className="space-y-6">
-                {renderMemberDashboard(data as MemberData)}
-                {renderCommunityFeedback()}
-                {renderRwaRemarks()}
-            </div>
-        ) : (
-            <div className="space-y-6">
-                {renderOfficeBearerDashboard(data as OfficeBearerData)}
-                {renderCommunityFeedback()}
-            </div>
-        )}
+        {renderMaintenancePending()}
+        
+        <div className="space-y-6">
+            {user.userType === 'Member' ? (
+                <>
+                    {renderMemberDashboard(data as MemberData)}
+                    {renderCommunityFeedback()}
+                    {renderRwaRemarks()}
+                </>
+            ) : (
+                 <>
+                    {renderOfficeBearerDashboard(data as OfficeBearerData)}
+                    {renderCommunityFeedback()}
+                </>
+            )}
+        </div>
     </div>
   );
 }
-
-    
 
     
