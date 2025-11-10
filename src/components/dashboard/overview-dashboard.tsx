@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -302,7 +301,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                             <div className="grid gap-1.5">
                                 <Label htmlFor="exp-from-period" className="text-xs">From</Label>
                                 <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="exp-from-period">
+                                    <SelectTrigger className="w-full sm:w-auto h-9" id="exp-from-period">
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -315,7 +314,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                             <div className="grid gap-1.5">
                                 <Label htmlFor="exp-to-period" className="text-xs">To</Label>
                                 <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                    <SelectTrigger className="w-full sm:w-[140px] h-9" id="exp-to-period">
+                                    <SelectTrigger className="w-full sm:w-auto h-9" id="exp-to-period">
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -386,7 +385,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     <div className="grid gap-1.5">
                                     <Label htmlFor="from-period" className="text-xs">From</Label>
                                     <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                        <SelectTrigger className="w-full sm:w-[140px] h-9" id="from-period">
+                                        <SelectTrigger className="w-full sm:w-auto h-9" id="from-period">
                                         <SelectValue placeholder="Select Period" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -399,7 +398,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                                     <div className="grid gap-1.5">
                                     <Label htmlFor="to-period" className="text-xs">To</Label>
                                     <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                        <SelectTrigger className="w-full sm:w-[140px] h-9" id="to-period">
+                                        <SelectTrigger className="w-full sm:w-auto h-9" id="to-period">
                                         <SelectValue placeholder="Select Period" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -424,7 +423,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                     </Card>
                 </div>
                 <div className="space-y-6">
-                    <Card className="h-full flex flex-col">
+                     <Card className="h-full flex flex-col">
                         <CardHeader>
                             <CardTitle>Feedback Breakdown</CardTitle>
                             <CardDescription>Complaints vs. Suggestions.</CardDescription>
@@ -448,13 +447,13 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const renderMaintenancePending = () => (
     <Card>
         <CardHeader>
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div>
                     <CardTitle>Maintenance Pending</CardTitle>
                     <CardDescription>Outstanding dues for the selected month.</CardDescription>
                 </div>
                 <Select value={pendingDuesPeriod} onValueChange={setPendingDuesPeriod}>
-                    <SelectTrigger className="w-[140px] h-9" id="pending-dues-period">
+                    <SelectTrigger className="w-full sm:w-auto h-9" id="pending-dues-period">
                         <SelectValue placeholder="Select Month" />
                     </SelectTrigger>
                     <SelectContent>
@@ -615,24 +614,25 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   return (
     <div className="space-y-6">
         <NotificationDisplay />
-        {renderMaintenancePending()}
-        
         <div className="space-y-6">
-            {user.userType === 'Member' ? (
-                <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-3">
+                    {renderMaintenancePending()}
+                </div>
+            </div>
+             {user.userType === 'Member' ? (
+                 <>
                     {renderMemberDashboard(data as MemberData)}
                     {renderCommunityFeedback()}
                     {renderRwaRemarks()}
                 </>
-            ) : (
-                 <>
+             ) : (
+                <>
                     {renderOfficeBearerDashboard(data as OfficeBearerData)}
                     {renderCommunityFeedback()}
                 </>
-            )}
+             )}
         </div>
     </div>
   );
 }
-
-    

@@ -118,7 +118,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
         receiptDate: new Date(),
         tenantName: "",
         transactionRef: "",
-        modeOfPayment: undefined,
+        modeOfPayment: "Cash",
         monthYear: "",
         bulkPaymentType: undefined,
     }

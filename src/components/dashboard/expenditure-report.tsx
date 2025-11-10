@@ -130,7 +130,7 @@ export default function ExpenditureReport() {
                         <div className="grid gap-2">
                             <Label htmlFor="from-period">From</Label>
                             <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                <SelectTrigger className="w-full sm:w-[160px]" id="from-period">
+                                <SelectTrigger className="w-full sm:w-auto" id="from-period">
                                     <SelectValue placeholder="Select Period" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -143,7 +143,7 @@ export default function ExpenditureReport() {
                         <div className="grid gap-2">
                             <Label htmlFor="to-period">To</Label>
                             <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                <SelectTrigger className="w-full sm:w-[160px]" id="to-period">
+                                <SelectTrigger className="w-full sm:w-auto" id="to-period">
                                     <SelectValue placeholder="Select Period" />
                                 </SelectTrigger>
                                 <SelectContent>

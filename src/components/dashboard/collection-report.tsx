@@ -181,7 +181,7 @@ export default function CollectionReport() {
             </Card>
 
             <Dialog open={!!selectedFlat} onOpenChange={(isOpen) => !isOpen && setSelectedFlat(null)}>
-                <DialogContent className="max-w-4xl h-auto sm:h-[90vh]">
+                <DialogContent className="w-full max-w-4xl h-auto sm:h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Maintenance Statement for Flat: {selectedFlat}</DialogTitle>
                         <DialogDescription>

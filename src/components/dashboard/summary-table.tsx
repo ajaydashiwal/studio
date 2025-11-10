@@ -154,13 +154,13 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                                     placeholder="e.g., 101"
                                     value={flatNoFilter}
                                     onChange={(e) => setFlatNoFilter(e.target.value)}
-                                    className="w-full sm:w-[160px]"
+                                    className="w-full sm:w-auto"
                                 />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="from-period">From</Label>
                                 <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                    <SelectTrigger className="w-full sm:w-[160px]" id="from-period">
+                                    <SelectTrigger className="w-full sm:w-auto" id="from-period">
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -173,7 +173,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                             <div className="grid gap-2">
                                 <Label htmlFor="to-period">To</Label>
                                 <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                    <SelectTrigger className="w-full sm:w-[160px]" id="to-period">
+                                    <SelectTrigger className="w-full sm:w-auto" id="to-period">
                                         <SelectValue placeholder="Select Period" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -235,7 +235,7 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
             </Card>
 
             <Dialog open={!!selectedFlat} onOpenChange={(isOpen) => !isOpen && setSelectedFlat(null)}>
-                <DialogContent className="max-w-4xl h-auto sm:h-[90vh]">
+                <DialogContent className="w-full max-w-4xl h-auto sm:h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Maintenance Statement for {selectedFlat?.ownerName} (Flat: {selectedFlat?.flatNo})</DialogTitle>
                         <DialogDescription>

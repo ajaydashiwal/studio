@@ -158,10 +158,10 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
       <Card className="shadow-md h-full flex flex-col">
         <CardHeader>
           <CardTitle>Maintenance Statement</CardTitle>
-          <CardDescription>Showing payment history.</CardDescription>
+          <CardDescription>Showing payment history for last 24 months.</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
-            <div className="rounded-md border h-96 overflow-auto">
+            <div className="rounded-md border h-[60vh] overflow-auto">
               <Table className="min-w-full">
                   <TableHeader className="sticky top-0 bg-secondary z-10">
                   <TableRow>
