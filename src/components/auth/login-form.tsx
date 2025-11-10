@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -45,7 +46,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
       </div>
       <CardHeader className="text-center">
         <CardTitle className="text-xl md:text-2xl font-headline">Upvan Apartments RWA</CardTitle>
-        <CardDescription>Member Sign In</CardDescription>
+        <CardDescription>Member Sign In <br />(For any issues, please contact the RWA Team)</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
