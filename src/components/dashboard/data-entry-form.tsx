@@ -115,8 +115,12 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
         flatNo: "" as any,
         receiptNo: "",
         amount: 300,
+        receiptDate: new Date(),
         tenantName: "",
         transactionRef: "",
+        modeOfPayment: undefined,
+        monthYear: "",
+        bulkPaymentType: undefined,
     }
   })
 
