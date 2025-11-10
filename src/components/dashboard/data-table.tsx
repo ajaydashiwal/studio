@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
     Table,
@@ -160,66 +159,64 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
           <CardTitle>Maintenance Statement</CardTitle>
           <CardDescription>Showing payment history for last 24 months.</CardDescription>
         </CardHeader>
-        <CardContent className="flex-grow">
-            <div className="rounded-md border h-[60vh] overflow-auto">
-              <Table className="min-w-full">
-                  <TableHeader className="sticky top-0 bg-secondary z-10">
-                  <TableRow>
-                      <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Month</TableHead>
-                      <TableHead className="min-w-[120px]">Receipt No</TableHead>
-                      <TableHead className="min-w-[120px]">Receipt Date</TableHead>
-                      <TableHead className="text-right min-w-[100px]">Amount</TableHead>
-                      <TableHead className="text-center min-w-[100px]">Status</TableHead>
-                      {showActionColumn && <TableHead className="text-center min-w-[120px]">Action</TableHead>}
-                  </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                  {loading ? (
-                      renderSkeletons()
-                  ) : error ? (
-                      <TableRow>
-                          <TableCell colSpan={showActionColumn ? 6 : 5} className="text-center text-destructive">
-                              {error}
-                          </TableCell>
-                      </TableRow>
-                  ) : data.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={showActionColumn ? 6 : 5} className="text-center text-muted-foreground">
-                              No maintenance records found.
-                          </TableCell>
-                      </TableRow>
-                  ) : (
-                      data.map((item) => (
-                          <TableRow key={item.id} className="text-xs md:text-sm">
-                          <TableCell className="font-medium sticky left-0 bg-background z-10">{item.month}</TableCell>
-                          <TableCell>{item.receiptNo}</TableCell>
-                          <TableCell>{item.receiptDate}</TableCell>
-                          <TableCell className="text-right">₹{item.amount}</TableCell>                        
+        <CardContent className="flex-grow max-h-[60vh] overflow-y-auto">
+            <Table>
+                <TableHeader className="sticky top-0 bg-secondary z-10">
+                <TableRow>
+                    <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Month</TableHead>
+                    <TableHead className="min-w-[120px]">Receipt No</TableHead>
+                    <TableHead className="min-w-[120px]">Receipt Date</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Amount</TableHead>
+                    <TableHead className="text-center min-w-[100px]">Status</TableHead>
+                    {showActionColumn && <TableHead className="text-center min-w-[120px]">Action</TableHead>}
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {loading ? (
+                    renderSkeletons()
+                ) : error ? (
+                    <TableRow>
+                        <TableCell colSpan={showActionColumn ? 6 : 5} className="text-center text-destructive">
+                            {error}
+                        </TableCell>
+                    </TableRow>
+                ) : data.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={showActionColumn ? 6 : 5} className="text-center text-muted-foreground">
+                            No maintenance records found.
+                        </TableCell>
+                    </TableRow>
+                ) : (
+                    data.map((item) => (
+                        <TableRow key={item.id} className="text-xs md:text-sm">
+                        <TableCell className="font-medium sticky left-0 bg-background z-10">{item.month}</TableCell>
+                        <TableCell>{item.receiptNo}</TableCell>
+                        <TableCell>{item.receiptDate}</TableCell>
+                        <TableCell className="text-right">₹{item.amount}</TableCell>                        
+                        <TableCell className="text-center">
+                            <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
+                            className={item.status === 'Paid' ? 'bg-green-600' : ''}>
+                                {item.status}
+                            </Badge>
+                        </TableCell>
+                        {showActionColumn && (
                           <TableCell className="text-center">
-                              <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
-                              className={item.status === 'Paid' ? 'bg-green-600' : ''}>
-                                  {item.status}
-                              </Badge>
+                              {item.status === 'Due' && (
+                              <Button 
+                                  size="sm" 
+                                  onClick={() => handlePayment(Number(item.amount), item.month)}
+                                  disabled={payingMonth === item.month}
+                              >
+                                  {payingMonth === item.month ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pay Now'}
+                              </Button>
+                              )}
                           </TableCell>
-                          {showActionColumn && (
-                            <TableCell className="text-center">
-                                {item.status === 'Due' && (
-                                <Button 
-                                    size="sm" 
-                                    onClick={() => handlePayment(Number(item.amount), item.month)}
-                                    disabled={payingMonth === item.month}
-                                >
-                                    {payingMonth === item.month ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pay Now'}
-                                </Button>
-                                )}
-                            </TableCell>
-                          )}
-                          </TableRow>
-                      ))
-                  )}
-                  </TableBody>
-              </Table>
-            </div>
+                        )}
+                        </TableRow>
+                    ))
+                )}
+                </TableBody>
+            </Table>
         </CardContent>
       </Card>
     )

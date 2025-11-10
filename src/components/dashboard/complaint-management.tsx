@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react";
@@ -167,47 +166,45 @@ export default function ComplaintManagement() {
                     <CardTitle>Manage Complaints & Suggestions</CardTitle>
                     <CardDescription>View and update the status of all submitted feedback.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border h-[65vh] overflow-auto">
-                        <Table className="min-w-full">
-                            <TableHeader className="sticky top-0 bg-secondary z-10">
-                                <TableRow>
-                                    <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Date</TableHead>
-                                    <TableHead className="min-w-[80px]">Flat</TableHead>
-                                    <TableHead className="min-w-[150px]">Category/Type</TableHead>
-                                    <TableHead className="min-w-[150px]">Complaint ID</TableHead>
-                                    <TableHead className="text-center min-w-[120px]">Status</TableHead>
-                                    <TableHead className="min-w-[150px]">Pending Since</TableHead>
-                                    <TableHead className="text-center min-w-[100px]">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? renderSkeletons() : error ? (
-                                    <TableRow><TableCell colSpan={7} className="text-center text-destructive">{error}</TableCell></TableRow>
-                                ) : complaints.length === 0 ? (
-                                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No complaints or suggestions found.</TableCell></TableRow>
-                                ) : (
-                                    complaints.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
-                                            <TableCell>{item.flatNo}</TableCell>
-                                            <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
-                                            <TableCell>{item.id}</TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)} disabled={item.status === 'Closed'}>Update</Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                <CardContent className="max-h-[65vh] overflow-y-auto">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-secondary z-10">
+                            <TableRow>
+                                <TableHead className="sticky left-0 bg-secondary z-20 min-w-[150px]">Date</TableHead>
+                                <TableHead className="min-w-[80px]">Flat</TableHead>
+                                <TableHead className="min-w-[150px]">Category/Type</TableHead>
+                                <TableHead className="min-w-[150px]">Complaint ID</TableHead>
+                                <TableHead className="text-center min-w-[120px]">Status</TableHead>
+                                <TableHead className="min-w-[150px]">Pending Since</TableHead>
+                                <TableHead className="text-center min-w-[100px]">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? renderSkeletons() : error ? (
+                                <TableRow><TableCell colSpan={7} className="text-center text-destructive">{error}</TableCell></TableRow>
+                            ) : complaints.length === 0 ? (
+                                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No complaints or suggestions found.</TableCell></TableRow>
+                            ) : (
+                                complaints.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell className="sticky left-0 bg-background z-10">{item.submissionDate}</TableCell>
+                                        <TableCell>{item.flatNo}</TableCell>
+                                        <TableCell className="font-medium">{item.formType === 'Complaint' ? item.issueCategory : 'Suggestion'}</TableCell>
+                                        <TableCell>{item.id}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant={getStatusBadgeVariant(item.status)} className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {item.status === 'Open' ? `${calculatePendingDays(item.submissionDate)} days` : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <Button variant="outline" size="sm" onClick={() => handleUpdateClick(item)} disabled={item.status === 'Closed'}>Update</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 

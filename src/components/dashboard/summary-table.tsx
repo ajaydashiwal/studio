@@ -1,4 +1,3 @@
-
 "use client"
 
 import {
@@ -16,7 +15,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
@@ -30,7 +28,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog"
 import DataTable from "./data-table"
-import { format, subMonths, addMonths, startOfMonth, differenceInMonths } from 'date-fns';
+import { format, subMonths, addMonths, startOfMonth } from 'date-fns';
   
 interface SummaryData {
     flatNo: string;
@@ -186,51 +184,47 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-[60vh]">
-                        <div className="relative w-full overflow-auto">
-                            <Table>
-                                <TableHeader className="sticky top-0 bg-secondary z-20">
-                                    <TableRow>
-                                        <TableHead className="sticky left-0 bg-secondary z-30 min-w-[120px]">Flat No</TableHead>
-                                        <TableHead className="min-w-[200px]">Owner/Tenant Name</TableHead>
-                                        <TableHead className="text-right min-w-[120px]">Total Paid</TableHead>
-                                        <TableHead className="text-right min-w-[120px]">Total Due</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {loading ? (
-                                    renderSkeletons()
-                                ) : error ? (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-destructive">
-                                            {error}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filteredData.length === 0 ? (
-                                    <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                                            {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    filteredData.map((item) => (
-                                        <TableRow 
-                                            key={item.flatNo} 
-                                            className="cursor-pointer" 
-                                            onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
-                                        >
-                                            <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
-                                            <TableCell>{item.ownerName}</TableCell>
-                                            <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
-                                            <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
-                                        </TableRow>
-                                    ))
-                                )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </ScrollArea>
+                <CardContent className="max-h-[60vh] overflow-y-auto">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-secondary z-20">
+                            <TableRow>
+                                <TableHead className="sticky left-0 bg-secondary z-30 min-w-[120px]">Flat No</TableHead>
+                                <TableHead className="min-w-[200px]">Owner/Tenant Name</TableHead>
+                                <TableHead className="text-right min-w-[120px]">Total Paid</TableHead>
+                                <TableHead className="text-right min-w-[120px]">Total Due</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {loading ? (
+                            renderSkeletons()
+                        ) : error ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center text-destructive">
+                                    {error}
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredData.length === 0 ? (
+                            <TableRow>
+                            <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                    {summaryData.length > 0 ? 'No flats match your filter.' : 'No summary data available for the selected period.'}
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredData.map((item) => (
+                                <TableRow 
+                                    key={item.flatNo} 
+                                    className="cursor-pointer" 
+                                    onClick={() => handleRowClick({flatNo: item.flatNo, ownerName: item.ownerName})}
+                                >
+                                    <TableCell className="font-medium sticky left-0 bg-background z-10">{item.flatNo}</TableCell>
+                                    <TableCell>{item.ownerName}</TableCell>
+                                    <TableCell className="text-right">₹{item.totalPaid.toLocaleString()}</TableCell>                        
+                                    <TableCell className="text-right text-red-600">₹{item.totalDue.toLocaleString()}</TableCell>                        
+                                </TableRow>
+                            ))
+                        )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 
