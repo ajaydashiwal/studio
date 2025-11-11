@@ -259,12 +259,12 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
 
     return (
         <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+            <Card className="flex flex-col">
                 <CardHeader>
                 <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
                 <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[350px] flex items-center justify-center">
+                <CardContent className="flex-grow flex items-center justify-center">
                 {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
                     <MaintenancePieChart data={memberData.maintenance} />
                 ) : (
@@ -274,12 +274,12 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 )}
                 </CardContent>
             </Card>
-            <Card>
+            <Card className="flex flex-col">
                 <CardHeader>
                 <CardTitle>My Feedback Status</CardTitle>
                 <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[350px] flex items-center justify-center">
+                <CardContent className="flex-grow flex items-center justify-center">
                 {(feedbackChartData && feedbackChartData.length > 0) ? (
                     <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
                 ) : (
@@ -619,7 +619,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 {renderRwaRemarks()}
             </div>
         ) : (
-            <div className="space-y-6">
+             <div className="space-y-6">
                 {renderOfficeBearerDashboard(data as OfficeBearerData)}
                 {renderCommunityFeedback()}
             </div>
