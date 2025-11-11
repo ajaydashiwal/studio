@@ -229,14 +229,14 @@ export default function SummaryTable({ summaryType }: SummaryTableProps) {
             </Card>
 
             <Dialog open={!!selectedFlat} onOpenChange={(isOpen) => !isOpen && setSelectedFlat(null)}>
-                <DialogContent className="w-full max-w-4xl h-auto sm:h-[90vh]">
+                <DialogContent className="max-w-[95vw] md:max-w-4xl h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Maintenance Statement for {selectedFlat?.ownerName} (Flat: {selectedFlat?.flatNo})</DialogTitle>
                         <DialogDescription>
                             Showing payment history.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="mt-4">
+                    <div className="mt-4 flex-grow overflow-y-auto">
                         {selectedFlat && <DataTable flatNo={selectedFlat.flatNo} />}
                     </div>
                 </DialogContent>
