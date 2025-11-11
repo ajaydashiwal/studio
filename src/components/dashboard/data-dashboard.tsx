@@ -247,6 +247,8 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
                     <MenubarItem onClick={() => setActiveView('nonMemberSummary')}>Non-Member Summary</MenubarItem>
                     <MenubarItem onClick={() => setActiveView('collectionReport')}>Collection Report</MenubarItem>
                     <MenubarItem onClick={() => setActiveView('expenditureReport')}>Expenditure Report</MenubarItem>
+                    <MenubarSeparator />
+                    <MenubarItem onClick={() => setActiveView('statement')}>My Account Statement</MenubarItem>
                 </MenubarContent>
             </MenubarMenu>
           )}
