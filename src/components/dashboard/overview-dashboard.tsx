@@ -158,6 +158,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             const response = await fetch(`/api/reports/collection?period=${pendingDuesPeriod}`);
             const result = await response.json();
             if (response.ok) {
+                // Assuming 1380 is the total number of flats
                 const paidCount = result.length;
                 setPendingDues({ paidCount, pendingCount: 1380 - paidCount });
             } else {
@@ -170,8 +171,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             setPendingDuesLoading(false);
         }
     };
-    fetchPendingDues();
-  }, [pendingDuesPeriod]);
+    if (user.userType !== 'Member') {
+      fetchPendingDues();
+    }
+  }, [pendingDuesPeriod, user.userType]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -258,8 +261,8 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     const grandTotalExpenditure = expenditureData.reduce((acc, item) => acc + item.total, 0);
 
     return (
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card className="flex flex-col">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+             <Card className="flex flex-col">
                 <CardHeader>
                 <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
                 <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
@@ -274,7 +277,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 )}
                 </CardContent>
             </Card>
-            <Card className="flex flex-col">
+             <Card className="flex flex-col">
                 <CardHeader>
                 <CardTitle>My Feedback Status</CardTitle>
                 <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
@@ -370,8 +373,8 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     const feedbackChartData = officeData.feedbackSummary || [];
     
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <Card className='flex flex-col'>
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
                         <div>
@@ -410,7 +413,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="h-[350px] flex items-center justify-center">
+                <CardContent className="flex-grow flex items-center justify-center">
                     {financialChartData.some(d => d.value > 0) ? (
                     <MaintenancePieChart data={financialChartData} />
                     ) : (
@@ -420,12 +423,12 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                     )}
                 </CardContent>
             </Card>
-            <Card>
+            <Card className='flex flex-col'>
                 <CardHeader>
                     <CardTitle>Feedback Breakdown</CardTitle>
                     <CardDescription>Complaints vs. Suggestions.</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[350px] flex items-center justify-center">
+                <CardContent className="flex-grow flex items-center justify-center">
                     {feedbackChartData.some(d => d.value > 0) ? (
                         <MaintenancePieChart data={feedbackChartData} />
                     ) : (
@@ -460,7 +463,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             </div>
         </CardHeader>
         <CardContent>
-            {pendingDuesLoading ? <Skeleton className="h-24 w-full" /> : (
+            {pendingDuesLoading ? <Skeleton className="h-12 w-full" /> : (
                 <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                         <p className="text-sm text-muted-foreground">Paid</p>
@@ -610,7 +613,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     <div className="space-y-6">
         <NotificationDisplay />
         
-        {renderMaintenancePending()}
+        {user.userType !== 'Member' && renderMaintenancePending()}
 
         {user.userType === 'Member' ? (
             <div className="space-y-6">
