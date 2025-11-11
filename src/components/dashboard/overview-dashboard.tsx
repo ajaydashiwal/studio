@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -258,31 +259,31 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
 
     return (
         <div className="grid gap-6 md:grid-cols-2">
-            <Card className="h-full flex flex-col">
+            <Card>
                 <CardHeader>
                 <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
                 <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center">
+                <CardContent className="flex items-center justify-center">
                 {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
                     <MaintenancePieChart data={memberData.maintenance} />
                 ) : (
-                    <div className="text-muted-foreground">
+                    <div className="text-muted-foreground h-[250px] flex items-center">
                     No maintenance data to display.
                     </div>
                 )}
                 </CardContent>
             </Card>
-            <Card className="h-full flex flex-col">
+            <Card>
                 <CardHeader>
                 <CardTitle>My Feedback Status</CardTitle>
                 <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center">
+                <CardContent className="flex items-center justify-center">
                 {(feedbackChartData && feedbackChartData.length > 0) ? (
                     <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
                 ) : (
-                    <div className="text-muted-foreground">
+                    <div className="text-muted-foreground h-[250px] flex items-center">
                     You have not submitted any feedback yet.
                     </div>
                 )}
@@ -369,77 +370,71 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     const feedbackChartData = officeData.feedbackSummary || [];
     
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <Card className="h-full flex flex-col">
-                        <CardHeader>
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-                                <div>
-                                    <CardTitle>Financial Summary</CardTitle>
-                                    <CardDescription>
-                                    Collections vs. total expenditure for the period.
-                                    </CardDescription>
-                                </div>
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                    <div className="grid gap-1.5">
-                                    <Label htmlFor="from-period" className="text-xs">From</Label>
-                                    <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
-                                        <SelectTrigger className="w-full sm:w-auto h-9" id="from-period">
-                                        <SelectValue placeholder="Select Period" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                        {fromDateOptions.map(option => (
-                                            <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
-                                        ))}
-                                        </SelectContent>
-                                    </Select>
-                                    </div>
-                                    <div className="grid gap-1.5">
-                                    <Label htmlFor="to-period" className="text-xs">To</Label>
-                                    <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
-                                        <SelectTrigger className="w-full sm:w-auto h-9" id="to-period">
-                                        <SelectValue placeholder="Select Period" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                        {toDateOptions.map(option => (
-                                            <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
-                                        ))}
-                                        </SelectContent>
-                                    </Select>
-                                    </div>
-                                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                        <div>
+                            <CardTitle>Financial Summary</CardTitle>
+                            <CardDescription>
+                            Collections vs. total expenditure for the period.
+                            </CardDescription>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="grid gap-1.5">
+                            <Label htmlFor="from-period" className="text-xs">From</Label>
+                            <Select value={period.from} onValueChange={(value) => setPeriod(p => ({ ...p, from: value }))}>
+                                <SelectTrigger className="w-full sm:w-auto h-9" id="from-period">
+                                <SelectValue placeholder="Select Period" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                {fromDateOptions.map(option => (
+                                    <SelectItem key={`from-${option.value}`} value={option.value} disabled={option.value > period.to}>{option.label}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
                             </div>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex items-center justify-center">
-                            {financialChartData.some(d => d.value > 0) ? (
-                            <MaintenancePieChart data={financialChartData} />
-                            ) : (
-                            <div className="text-muted-foreground">
-                                No financial data for the selected period.
+                            <div className="grid gap-1.5">
+                            <Label htmlFor="to-period" className="text-xs">To</Label>
+                            <Select value={period.to} onValueChange={(value) => setPeriod(p => ({ ...p, to: value }))}>
+                                <SelectTrigger className="w-full sm:w-auto h-9" id="to-period">
+                                <SelectValue placeholder="Select Period" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                {toDateOptions.map(option => (
+                                    <SelectItem key={`to-${option.value}`} value={option.value} disabled={option.value < period.from}>{option.label}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
                             </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-                <div className="space-y-6">
-                     <Card className="h-full flex flex-col">
-                        <CardHeader>
-                            <CardTitle>Feedback Breakdown</CardTitle>
-                            <CardDescription>Complaints vs. Suggestions.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex items-center justify-center">
-                            {feedbackChartData.some(d => d.value > 0) ? (
-                                <MaintenancePieChart data={feedbackChartData} />
-                            ) : (
-                                <div className="text-muted-foreground">
-                                    No feedback data for the period.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center">
+                    {financialChartData.some(d => d.value > 0) ? (
+                    <MaintenancePieChart data={financialChartData} />
+                    ) : (
+                    <div className="text-muted-foreground h-[250px] flex items-center">
+                        No financial data for the selected period.
+                    </div>
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Feedback Breakdown</CardTitle>
+                    <CardDescription>Complaints vs. Suggestions.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center">
+                    {feedbackChartData.some(d => d.value > 0) ? (
+                        <MaintenancePieChart data={feedbackChartData} />
+                    ) : (
+                        <div className="text-muted-foreground h-[250px] flex items-center">
+                            No feedback data for the period.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
   };
@@ -621,16 +616,16 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 </div>
             </div>
              {user.userType === 'Member' ? (
-                 <>
+                 <div className="space-y-6">
                     {renderMemberDashboard(data as MemberData)}
                     {renderCommunityFeedback()}
                     {renderRwaRemarks()}
-                </>
+                </div>
              ) : (
-                <>
+                <div className="space-y-6">
                     {renderOfficeBearerDashboard(data as OfficeBearerData)}
                     {renderCommunityFeedback()}
-                </>
+                </div>
              )}
         </div>
     </div>
