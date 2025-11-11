@@ -264,11 +264,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
                 <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center">
+                <CardContent className="flex items-center justify-center h-[350px]">
                 {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
                     <MaintenancePieChart data={memberData.maintenance} />
                 ) : (
-                    <div className="text-muted-foreground h-[250px] flex items-center">
+                    <div className="text-muted-foreground h-full flex items-center">
                     No maintenance data to display.
                     </div>
                 )}
@@ -279,11 +279,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardTitle>My Feedback Status</CardTitle>
                 <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center">
+                <CardContent className="flex items-center justify-center h-[350px]">
                 {(feedbackChartData && feedbackChartData.length > 0) ? (
                     <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
                 ) : (
-                    <div className="text-muted-foreground h-[250px] flex items-center">
+                    <div className="text-muted-foreground h-full flex items-center">
                     You have not submitted any feedback yet.
                     </div>
                 )}
@@ -609,25 +609,21 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   return (
     <div className="space-y-6">
         <NotificationDisplay />
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                <div className="lg:col-span-1">
-                    {renderMaintenancePending()}
-                </div>
+        
+        {renderMaintenancePending()}
+
+        {user.userType === 'Member' ? (
+            <div className="space-y-6">
+                {renderMemberDashboard(data as MemberData)}
+                {renderCommunityFeedback()}
+                {renderRwaRemarks()}
             </div>
-            {user.userType === 'Member' ? (
-                <div className="space-y-6">
-                    {renderMemberDashboard(data as MemberData)}
-                    {renderCommunityFeedback()}
-                    {renderRwaRemarks()}
-                </div>
-            ) : (
-                <div className="space-y-6">
-                    {renderOfficeBearerDashboard(data as OfficeBearerData)}
-                    {renderCommunityFeedback()}
-                </div>
-            )}
-        </div>
+        ) : (
+            <div className="space-y-6">
+                {renderOfficeBearerDashboard(data as OfficeBearerData)}
+                {renderCommunityFeedback()}
+            </div>
+        )}
     </div>
   );
 }
