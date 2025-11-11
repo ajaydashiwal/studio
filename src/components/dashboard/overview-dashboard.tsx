@@ -264,11 +264,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardTitle>Maintenance Status (Last 24 Months)</CardTitle>
                 <CardDescription>Overview of your paid vs. due maintenance fees.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center h-[350px]">
+                <CardContent className="h-[350px] flex items-center justify-center">
                 {memberData.maintenance && memberData.maintenance.length > 0 && memberData.maintenance.some(d => d.value > 0) ? (
                     <MaintenancePieChart data={memberData.maintenance} />
                 ) : (
-                    <div className="text-muted-foreground h-full flex items-center">
+                    <div className="text-muted-foreground">
                     No maintenance data to display.
                     </div>
                 )}
@@ -279,11 +279,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                 <CardTitle>My Feedback Status</CardTitle>
                 <CardDescription>Summary of your submitted complaints and suggestions.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center h-[350px]">
+                <CardContent className="h-[350px] flex items-center justify-center">
                 {(feedbackChartData && feedbackChartData.length > 0) ? (
                     <FeedbackBarChart data={feedbackChartData.map(d => ({ ...d, fill: 'hsl(var(--chart-1))' }))} />
                 ) : (
-                    <div className="text-muted-foreground h-full flex items-center">
+                    <div className="text-muted-foreground">
                     You have not submitted any feedback yet.
                     </div>
                 )}
@@ -410,11 +410,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center">
+                <CardContent className="h-[350px] flex items-center justify-center">
                     {financialChartData.some(d => d.value > 0) ? (
                     <MaintenancePieChart data={financialChartData} />
                     ) : (
-                    <div className="text-muted-foreground h-[250px] flex items-center">
+                    <div className="text-muted-foreground">
                         No financial data for the selected period.
                     </div>
                     )}
@@ -425,11 +425,11 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
                     <CardTitle>Feedback Breakdown</CardTitle>
                     <CardDescription>Complaints vs. Suggestions.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center">
+                <CardContent className="h-[350px] flex items-center justify-center">
                     {feedbackChartData.some(d => d.value > 0) ? (
                         <MaintenancePieChart data={feedbackChartData} />
                     ) : (
-                        <div className="text-muted-foreground h-[250px] flex items-center">
+                        <div className="text-muted-foreground">
                             No feedback data for the period.
                         </div>
                     )}

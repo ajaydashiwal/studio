@@ -35,7 +35,7 @@ const chartConfig = {
 
 export default function FeedbackBarChart({ data }: FeedbackBarChartProps) {
   return (
-    <ChartContainer config={chartConfig} className="min-h-[250px] h-[250px] w-full">
+    <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart accessibilityLayer data={data} margin={{ top: 20, right: 20, bottom: 20, left: 0 }} barCategoryGap="40%">
           <CartesianGrid vertical={false} />
