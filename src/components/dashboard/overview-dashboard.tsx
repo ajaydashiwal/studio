@@ -171,10 +171,10 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
             setPendingDuesLoading(false);
         }
     };
-    if (user.userType !== 'Member') {
-      fetchPendingDues();
-    }
-  }, [pendingDuesPeriod, user.userType]);
+    
+    fetchPendingDues();
+    
+  }, [pendingDuesPeriod]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -613,7 +613,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
     <div className="space-y-6">
         <NotificationDisplay />
         
-        {user.userType !== 'Member' && renderMaintenancePending()}
+        {renderMaintenancePending()}
 
         {user.userType === 'Member' ? (
             <div className="space-y-6">
