@@ -1,0 +1,89 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model MemberUser {
+  id               String   @id @default(cuid())
+  flatNo           Int      @unique
+  membershipNo     Int
+  ownerName        String
+  userType         String
+  password         String
+  membershipStatus String   // "Active", "Inactive"
+  isOfficeBearer   String   // "Yes", "No"
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Membership {
+  id           String   @id @default(cuid())
+  receiptNo    String
+  receiptDate  DateTime
+  flatNo       Int
+  memberName   String
+  membershipNo Int      @unique
+  status       String?  // Blank or "Inactive"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([flatNo, status])
+}
+
+model MaintenancePayment {
+  id              String   @id @default(cuid())
+  flatNo          Int
+  tenantName      String?
+  receiptDate     DateTime
+  receiptNo       String
+  monthPaid       String
+  amountPaid      Float
+  modeOfPayment   String
+  transactionRef  String?
+  entryByFlatNo   Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Complaint {
+  id             String   @id @default(cuid())
+  submissionDate DateTime
+  flatNo         Int
+  formType       String   // "Complaint", "Suggestion"
+  issueCategory  String?
+  description    String   @db.Text
+  status         String   @default("Open")
+  remarks        String?  @db.Text
+  actionDate     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Expenditure {
+  id                 String   @id @default(cuid())
+  expenditureType    String
+  description        String   @db.Text
+  amount             Float
+  transactionDetails String
+  submissionTimestamp DateTime
+  entryByFlatNo      Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  message     String   @db.Text
+  createdBy   String
+  timestamp   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
