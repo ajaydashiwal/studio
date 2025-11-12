@@ -138,7 +138,7 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
         }
     }
     
-    const showActionColumn = user?.userType === 'Member';
+    const showActionColumn = user?.userType !== 'Agent';
 
     const renderSkeletons = () => (
         Array.from({ length: 12 }).map((_, index) => (
