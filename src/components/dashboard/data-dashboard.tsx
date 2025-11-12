@@ -62,7 +62,10 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
       case 'overview':
         return <OverviewDashboard user={user} />;
       case 'statement':
-        return <DataTable flatNo={user.flatNo} user={user} />;
+        if (!isAgent) {
+          return <DataTable flatNo={user.flatNo} user={user} />;
+        }
+        return null;
       case 'memberSummary':
          if (isOfficeBearer) {
           return <SummaryTable summaryType="member" />;
@@ -235,7 +238,9 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               <MenubarTrigger>Dashboard</MenubarTrigger>
               <MenubarContent>
                 <MenubarItem onClick={() => setActiveView('overview')}>Overview</MenubarItem>
-                <MenubarItem onClick={() => setActiveView('statement')}>Account Statement</MenubarItem>
+                {!isAgent && (
+                    <MenubarItem onClick={() => setActiveView('statement')}>Account Statement</MenubarItem>
+                )}
               </MenubarContent>
             </MenubarMenu>
 
