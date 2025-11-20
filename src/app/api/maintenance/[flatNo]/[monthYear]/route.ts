@@ -114,9 +114,10 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
 
     const sheets = google.sheets({ version: 'v4', auth });
 
+    // Fetch all rows to find the correct one to update
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${COLLECTION_SHEET_NAME}!A:I`,
+      range: `${COLLECTION_SHEET_NAME}!A:I`, // Fetch all relevant columns
     });
     
     const allRows = response.data.values;
@@ -124,7 +125,8 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
         return NextResponse.json({ error: 'No data found in the sheet.' }, { status: 404 });
     }
 
-    // Find the specific row for the flat and month, which has a blank receipt number
+    // Find the index of the row that matches flatNo, monthYear, and has a blank receiptNo.
+    // Columns: A (flatNo), D (receiptNo), E (monthYear)
     const rowIndex = allRows.findIndex(row => 
         row[0] == flatNo && 
         row[4] === decodedMonthYear && 

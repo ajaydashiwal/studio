@@ -46,7 +46,7 @@ const formSchema = z.object({
   }),
   receiptNo: z.string(),
   tenantName: z.string().optional(),
-  modeOfPayment: z.enum(['Cash', 'Transfer', 'Processing'], {
+  modeOfPayment: z.enum(['Cash', 'Transfer'], {
     required_error: "Please select a mode of payment.",
   }),
   transactionRef: z.string().optional(),
@@ -500,7 +500,6 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                         <SelectContent>
                             <SelectItem value="Cash">Cash</SelectItem>
                             <SelectItem value="Transfer">Transfer</SelectItem>
-                             <SelectItem value="Processing">Processing</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
