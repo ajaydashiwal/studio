@@ -101,7 +101,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
 
             let recordStatus: 'Paid' | 'Due' | 'Processing' = 'Due';
             if (paidRecord) {
-                if (paidRecord[6] === 'Processing') {
+                 const receiptNo = paidRecord[3]; // Receipt No is in column D
+                if (!receiptNo || receiptNo.trim() === '') {
                     recordStatus = 'Processing';
                 } else {
                     recordStatus = 'Paid';
