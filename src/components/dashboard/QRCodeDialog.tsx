@@ -102,7 +102,7 @@ export default function QRCodeDialog({
         receiptDate: formattedReceiptDate,
         receiptNo: '', // Receipt number is blank for processing
         tenantName: '', // Not applicable for online payments
-        modeOfPayment: 'Processing', // Initially set to Processing
+        modeOfPayment: 'Online', // Set mode of payment to Online
         transactionRef: transactionId,
         entryByFlatNo: flatNo,
     };
