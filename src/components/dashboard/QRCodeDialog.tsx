@@ -94,14 +94,13 @@ export default function QRCodeDialog({
     setIsSubmitting(true);
     const currentDate = new Date();
     const formattedReceiptDate = format(currentDate, 'dd/MM/yyyy');
-    const generatedReceiptNo = 'O' + format(currentDate, 'ddMMyy');
 
     const paymentData = {
         flatNo: flatNo,
         monthYear: month,
         amount: amount,
         receiptDate: formattedReceiptDate,
-        receiptNo: generatedReceiptNo, 
+        receiptNo: '', // Receipt number is blank for processing
         tenantName: '', // Not applicable for online payments
         modeOfPayment: 'Processing', // Initially set to Processing
         transactionRef: transactionId,

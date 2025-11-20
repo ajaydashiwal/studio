@@ -33,6 +33,23 @@ declare global {
         Razorpay: any;
     }
 }
+
+const getStatusBadgeVariant = (status: 'Paid' | 'Due' | 'Processing'): "default" | "destructive" | "secondary" => {
+    switch (status) {
+        case 'Paid': return 'default';
+        case 'Due': return 'destructive';
+        case 'Processing': return 'secondary';
+        default: return 'secondary';
+    }
+};
+
+const getStatusBadgeClass = (status: 'Paid' | 'Due' | 'Processing') => {
+     switch (status) {
+        case 'Paid': return 'bg-green-600 hover:bg-green-700';
+        case 'Processing': return 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500';
+        default: return '';
+    }
+}
   
 export default function DataTable({ flatNo, user }: DataTableProps) {
     const [data, setData] = useState<MonthlyData[]>([]);
@@ -97,7 +114,7 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell className="text-right"><Skeleton className="h-4 w-16" /></TableCell>
-                <TableCell className="text-center"><Skeleton className="h-6 w-14 rounded-full" /></TableCell>
+                <TableCell className="text-center"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                 {showActionColumn && <TableCell className="text-center"><Skeleton className="h-9 w-24 rounded-md" /></TableCell>}
             </TableRow>
         ))
@@ -145,8 +162,9 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
                           <TableCell>{item.receiptDate}</TableCell>
                           <TableCell className="text-right">₹{item.amount}</TableCell>                        
                           <TableCell className="text-center">
-                              <Badge variant={item.status === 'Paid' ? 'default' : 'destructive'} 
-                              className={item.status === 'Paid' ? 'bg-green-600' : ''}>
+                                <Badge 
+                                    variant={getStatusBadgeVariant(item.status as any)} 
+                                    className={getStatusBadgeClass(item.status as any)}>
                                   {item.status}
                               </Badge>
                           </TableCell>

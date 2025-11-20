@@ -81,8 +81,8 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     const defaultMaintenanceAmount = '300'; // Standard monthly fee
 
     if (allRows) {
-        // Filter rows for the specific flat, skipping header and processing payments
-        const userRows = allRows.slice(1).filter(row => row[0] == flatNo && row[6] !== 'Processing');
+        // Filter rows for the specific flat, skipping header
+        const userRows = allRows.slice(1).filter(row => row[0] == flatNo);
         const paidMonths = userRows.map(row => row[4]); // Column E is monthpaid
 
         const allMonthsToDisplay = getMonthRange(paidMonths);
@@ -99,11 +99,21 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
                 }
             });
 
+            let recordStatus: 'Paid' | 'Due' | 'Processing' = 'Due';
+            if (paidRecord) {
+                if (paidRecord[6] === 'Processing') {
+                    recordStatus = 'Processing';
+                } else {
+                    recordStatus = 'Paid';
+                }
+            }
+
+
             records.push({
                 id: ++idCounter,
                 month: month,
                 amount: paidRecord ? paidRecord[5] : defaultMaintenanceAmount, // Column F is amount
-                status: paidRecord ? 'Paid' : 'Due',
+                status: recordStatus,
                 receiptNo: paidRecord ? paidRecord[3] : '-',
                 receiptDate: paidRecord ? paidRecord[2] : '-',
             });
