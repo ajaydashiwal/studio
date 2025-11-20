@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { QRCode } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Copy } from "lucide-react";
 
@@ -45,7 +45,7 @@ export default function QRCodeDialog({ isOpen, onClose, upiLink, month, flatNo }
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4 gap-6">
           <div className="p-4 bg-white rounded-lg border">
-            <QRCode value={upiLink} size={220} />
+            <QRCodeSVG value={upiLink} size={220} />
           </div>
           <div className="text-center text-sm text-muted-foreground">
             <p>Or copy the link below:</p>
