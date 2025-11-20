@@ -23,9 +23,14 @@ export async function POST(request: Request) {
     } = body;
 
     // Basic validation
-    if (!flatNo || !monthYear || !amount || !receiptDate || !receiptNo || !modeOfPayment || !entryByFlatNo) {
+    if (!flatNo || !monthYear || !amount || !receiptDate || !modeOfPayment || !entryByFlatNo) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    // Receipt number is not required for 'Online' payments, which are processed later
+    if (modeOfPayment !== 'Online' && !receiptNo) {
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
 
     const auth = new google.auth.GoogleAuth({
       keyFile: 'google-credentials.json',
