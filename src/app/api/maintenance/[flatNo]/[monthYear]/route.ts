@@ -124,37 +124,45 @@ export async function PUT(request: Request, { params }: { params: { flatNo: stri
         return NextResponse.json({ error: 'No data found in the sheet.' }, { status: 404 });
     }
 
-    // Find the specific row for the flat and month, which is marked as 'Processing'
+    // Find the specific row for the flat and month, which has a blank receipt number
     const rowIndex = allRows.findIndex(row => 
         row[0] == flatNo && 
         row[4] === decodedMonthYear && 
-        row[6] === 'Processing'
+        (!row[3] || row[3].trim() === '')
     );
 
     if (rowIndex === -1) {
-        return NextResponse.json({ error: 'No processing payment record found for the specified flat and month.' }, { status: 404 });
+        return NextResponse.json({ error: 'No matching unconfirmed payment record found for the specified flat and month.' }, { status: 404 });
     }
 
-    const rangeToUpdate = `${COLLECTION_SHEET_NAME}!D${rowIndex + 1}:I${rowIndex + 1}`;
+    // Sheet row index is 1-based, array index is 0-based
+    const sheetRowIndex = rowIndex + 1;
 
-    // Update Receipt No., Mode of Payment to 'Transfer', and Entry By
-    const valuesToUpdate = [
-        [receiptNo, , 'Transfer', , entryByFlatNo]
-    ];
-
-    await sheets.spreadsheets.values.update({
+    // We are updating columns D (receiptNo) and I (entryByFlatNo)
+    await sheets.spreadsheets.values.batchUpdate({
         spreadsheetId: SPREADSHEET_ID,
-        range: rangeToUpdate,
-        valueInputOption: 'USER_ENTERED',
         requestBody: {
-            values: valuesToUpdate,
-        },
+            valueInputOption: 'USER_ENTERED',
+            data: [
+                {
+                    range: `${COLLECTION_SHEET_NAME}!D${sheetRowIndex}`,
+                    values: [[receiptNo]]
+                },
+                {
+                    range: `${COLLECTION_SHEET_NAME}!I${sheetRowIndex}`,
+                    values: [[entryByFlatNo]]
+                }
+            ]
+        }
     });
 
-    return NextResponse.json({ message: 'Payment confirmed and finalized successfully.' });
+    return NextResponse.json({ success: true, message: 'Payment confirmed and finalized successfully.' });
 
   } catch (error: any) {
     console.error('Error updating Google Sheets:', error);
+    if (error.code === 'ENOENT') {
+        return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
+    }
     return NextResponse.json({ error: 'Internal Server Error while updating Google Sheets.' }, { status: 500 });
   }
 }

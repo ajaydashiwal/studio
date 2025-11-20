@@ -26,29 +26,37 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const processingPayments = allRows
+    const unconfirmedPayments = allRows
       .slice(1) // Skip header
-      .filter(row => row[6] === 'Processing')
+      .filter(row => !row[3] || row[3].trim() === '') // Filter for blank receipt number (column D)
       .map((row, index) => ({
-        id: `${row[0]}-${row[4]}`,
+        id: `${row[0]}-${row[4]}`, // flatNo-monthYear
         flatNo: row[0],
         receiptDate: row[2],
         monthYear: row[4],
         amount: parseFloat(row[5]),
+        modeOfPayment: row[6],
         transactionRef: row[7],
         rowIndex: index + 2, // For identifying the row in the sheet
       }))
       .sort((a, b) => {
           // Sort by receiptDate, oldest first
-          const dateA = parse(a.receiptDate, 'dd/MM/yyyy', new Date());
-          const dateB = parse(b.receiptDate, 'dd/MM/yyyy', new Date());
-          return dateA.getTime() - dateB.getTime();
+          try {
+            const dateA = parse(a.receiptDate, 'dd/MM/yyyy', new Date());
+            const dateB = parse(b.receiptDate, 'dd/MM/yyyy', new Date());
+            return dateA.getTime() - dateB.getTime();
+          } catch {
+            return 0;
+          }
       });
 
-    return NextResponse.json(processingPayments);
+    return NextResponse.json(unconfirmedPayments);
 
   } catch (error: any) {
-    console.error('Error fetching processing payments:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Error fetching unconfirmed payments:', error);
+    if (error.code === 'ENOENT') {
+        return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Internal Server Error while fetching payments.' }, { status: 500 });
   }
 }

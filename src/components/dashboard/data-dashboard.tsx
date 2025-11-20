@@ -106,19 +106,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
         return null;
       case 'processingPayments':
         if (canDoFinancialEntry) {
-          return (
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Confirm Online Payments</CardTitle>
-                <CardDescription>
-                  Finalize payments that were made online and are awaiting confirmation.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProcessingPaymentsForm entryByFlatNo={user.flatNo} />
-              </CardContent>
-            </Card>
-          );
+          return <ProcessingPaymentsForm entryByFlatNo={user.flatNo} />;
         }
         return null;
        case 'userEntry':
