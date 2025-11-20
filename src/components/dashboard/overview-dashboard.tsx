@@ -140,7 +140,7 @@ export default function OverviewDashboard({ user }: OverviewDashboardProps) {
   const [userActionedFeedback, setUserActionedFeedback] = useState<Complaint[]>([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   
-  const defaultFrom = subMonths(now, 11);
+  const defaultFrom = subMonths(now, 5);
   
   const [period, setPeriod] = useState<{ from: string; to: string }>({ 
       from: format(defaultFrom, 'yyyy-MM'),
