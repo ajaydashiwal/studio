@@ -18,6 +18,7 @@ import ExpenditureReport from '@/components/dashboard/expenditure-report';
 import CollectionReport from '@/components/dashboard/collection-report';
 import NotificationEntryForm from '@/components/dashboard/notification-entry-form';
 import ResetPasswordForm from '@/components/dashboard/reset-password-form';
+import ProcessingPaymentsForm from '@/components/dashboard/processing-payments-form';
 import {
   Menubar,
   MenubarContent,
@@ -39,7 +40,7 @@ interface DataDashboardProps {
   onLogout: () => void;
 }
 
-type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'collectionReport' | 'postNotification' | 'resetPassword';
+type View = 'overview' | 'statement' | 'entry' | 'expenditureEntry' | 'userEntry' | 'membershipEntry' | 'changePassword' | 'memberSummary' | 'nonMemberSummary' | 'feedback' | 'complaintManagement' | 'expenditureReport' | 'collectionReport' | 'postNotification' | 'resetPassword' | 'processingPayments';
 
 export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
   const [activeView, setActiveView] = useState<View>('overview');
@@ -98,6 +99,23 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               </CardHeader>
               <CardContent>
                 <DataEntryForm entryByFlatNo={user.flatNo} />
+              </CardContent>
+            </Card>
+          );
+        }
+        return null;
+      case 'processingPayments':
+        if (canDoFinancialEntry) {
+          return (
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle>Confirm Online Payments</CardTitle>
+                <CardDescription>
+                  Finalize payments that were made online and are awaiting confirmation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProcessingPaymentsForm entryByFlatNo={user.flatNo} />
               </CardContent>
             </Card>
           );
@@ -271,6 +289,7 @@ export default function DataDashboard({ user, onLogout }: DataDashboardProps) {
               <MenubarTrigger>Data Entry</MenubarTrigger>
               <MenubarContent>
                 <MenubarItem onClick={() => setActiveView('entry')}>Maintenance Entry</MenubarItem>
+                <MenubarItem onClick={() => setActiveView('processingPayments')}>Confirm Online Payments</MenubarItem>
                 <MenubarItem onClick={() => setActiveView('expenditureEntry')}>Expenditure Entry</MenubarItem>
               </MenubarContent>
             </MenubarMenu>

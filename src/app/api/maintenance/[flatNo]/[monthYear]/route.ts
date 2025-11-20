@@ -95,3 +95,66 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     return NextResponse.json({ error: 'Internal Server Error while validating record.' }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request, { params }: { params: { flatNo: string, monthYear: string } }) {
+  const { flatNo, monthYear } = params;
+  const { receiptNo, entryByFlatNo } = await request.json();
+
+  if (!flatNo || !monthYear || !receiptNo || !entryByFlatNo) {
+    return NextResponse.json({ error: 'Missing required fields for update.' }, { status: 400 });
+  }
+  
+  const decodedMonthYear = decodeURIComponent(monthYear);
+
+  try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: 'google-credentials.json',
+      scopes: 'https://www.googleapis.com/auth/spreadsheets',
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${COLLECTION_SHEET_NAME}!A:I`,
+    });
+    
+    const allRows = response.data.values;
+    if (!allRows) {
+        return NextResponse.json({ error: 'No data found in the sheet.' }, { status: 404 });
+    }
+
+    // Find the specific row for the flat and month, which is marked as 'Processing'
+    const rowIndex = allRows.findIndex(row => 
+        row[0] == flatNo && 
+        row[4] === decodedMonthYear && 
+        row[6] === 'Processing'
+    );
+
+    if (rowIndex === -1) {
+        return NextResponse.json({ error: 'No processing payment record found for the specified flat and month.' }, { status: 404 });
+    }
+
+    const rangeToUpdate = `${COLLECTION_SHEET_NAME}!D${rowIndex + 1}:I${rowIndex + 1}`;
+
+    // Update Receipt No., Mode of Payment to 'Transfer', and Entry By
+    const valuesToUpdate = [
+        [receiptNo, , 'Transfer', , entryByFlatNo]
+    ];
+
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: rangeToUpdate,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+            values: valuesToUpdate,
+        },
+    });
+
+    return NextResponse.json({ message: 'Payment confirmed and finalized successfully.' });
+
+  } catch (error: any) {
+    console.error('Error updating Google Sheets:', error);
+    return NextResponse.json({ error: 'Internal Server Error while updating Google Sheets.' }, { status: 500 });
+  }
+}

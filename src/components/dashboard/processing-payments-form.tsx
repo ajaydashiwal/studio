@@ -1,0 +1,152 @@
+
+"use client"
+
+import { useState, useEffect, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, RefreshCw } from 'lucide-react';
+
+const formSchema = z.object({
+  receiptNo: z.string().min(1, { message: "Receipt number is required." }),
+});
+
+interface ProcessingPayment {
+    id: string;
+    flatNo: string;
+    receiptDate: string;
+    monthYear: string;
+    amount: number;
+    transactionRef: string;
+}
+
+interface ProcessingPaymentsFormProps {
+    entryByFlatNo: string;
+}
+
+export default function ProcessingPaymentsForm({ entryByFlatNo }: ProcessingPaymentsFormProps) {
+    const { toast } = useToast();
+    const [payments, setPayments] = useState<ProcessingPayment[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [submittingId, setSubmittingId] = useState<string | null>(null);
+
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+    });
+
+    const fetchPayments = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/maintenance/processing');
+            if (response.ok) {
+                const data = await response.json();
+                setPayments(data);
+            } else {
+                toast({ variant: "destructive", title: "Error", description: "Failed to fetch processing payments." });
+            }
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Could not connect to the server." });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchPayments();
+    }, [fetchPayments]);
+
+    const onSubmit = async (data: z.infer<typeof formSchema>, payment: ProcessingPayment) => {
+        setSubmittingId(payment.id);
+        try {
+            const response = await fetch(`/api/maintenance/${payment.flatNo}/${encodeURIComponent(payment.monthYear)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...data, entryByFlatNo }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                toast({ title: "Success", description: result.message });
+                fetchPayments(); // Refresh the list
+                reset();
+            } else {
+                toast({ variant: "destructive", title: "Error", description: result.error });
+            }
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
+        } finally {
+            setSubmittingId(null);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Confirm Processing Payments</h2>
+                 <Button variant="outline" size="icon" onClick={fetchPayments} disabled={isLoading}>
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+            </div>
+
+            {isLoading ? (
+                <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            ) : payments.length === 0 ? (
+                <p className="text-muted-foreground">No payments are currently pending confirmation.</p>
+            ) : (
+                <div className="border rounded-lg overflow-hidden">
+                     <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flat No</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Ref</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt No</th>
+                                <th scope="col" className="relative px-4 py-3">
+                                    <span className="sr-only">Confirm</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {payments.map((p) => (
+                                <tr key={p.id}>
+                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{p.receiptDate}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">{p.flatNo}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm">{p.monthYear}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm">₹{p.amount}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{p.transactionRef}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                        <form onSubmit={handleSubmit((data) => onSubmit(data, p))}>
+                                            <Input
+                                                {...register(`receiptNo`)}
+                                                placeholder="Enter receipt number"
+                                                className="max-w-xs"
+                                            />
+                                            {errors.receiptNo && <p className="text-xs text-red-500 mt-1">{errors.receiptNo.message}</p>}
+                                        </form>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <Button
+                                            size="sm"
+                                            onClick={handleSubmit((data) => onSubmit(data, p))}
+                                            disabled={submittingId === p.id}
+                                        >
+                                            {submittingId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm'}
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+}

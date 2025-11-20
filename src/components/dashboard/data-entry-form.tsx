@@ -32,7 +32,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon, Loader2 } from "lucide-react"
-import { format } from "date-fns"
+import { format, parse } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect, useCallback } from "react"
@@ -44,9 +44,9 @@ const formSchema = z.object({
   receiptDate: z.date({
     required_error: "A date of receipt is required.",
   }),
-  receiptNo: z.string().min(1, { message: "Receipt number is required." }),
+  receiptNo: z.string(),
   tenantName: z.string().optional(),
-  modeOfPayment: z.enum(["Cash", "Transfer"], {
+  modeOfPayment: z.enum(['Cash', 'Transfer', 'Processing'], {
     required_error: "Please select a mode of payment.",
   }),
   transactionRef: z.string().optional(),
@@ -54,6 +54,14 @@ const formSchema = z.object({
   monthYear: z.string().optional(),
   // Field for bulk payment
   bulkPaymentType: z.enum(["historic", "future"]).optional(),
+}).refine(data => {
+    if (data.modeOfPayment === 'Transfer' || data.modeOfPayment === 'Cash') {
+        return !!data.receiptNo && data.receiptNo.length > 0;
+    }
+    return true;
+}, {
+    message: "Receipt number is required.",
+    path: ["receiptNo"],
 }).refine(data => {
     if (data.modeOfPayment === 'Transfer') {
         return !!data.transactionRef && data.transactionRef.length > 0;
@@ -102,12 +110,24 @@ interface DataEntryFormProps {
     entryByFlatNo: string;
 }
 
+interface ProcessingPayment {
+    id: string;
+    monthYear: string;
+    amount: number;
+    transactionRef: string;
+    receiptDate: string;
+}
+
+
 export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
   const { toast } = useToast()
   
   const [isMember, setIsMember] = useState(true); // Default to true to hide tenant name initially
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [unpaidMonths, setUnpaidMonths] = useState<{ historic: string[], future: string[] }>({ historic: [], future: [] });
+  const [processingPayments, setProcessingPayments] = useState<ProcessingPayment[]>([]);
+  const [selectedProcessingPayment, setSelectedProcessingPayment] = useState<string | null>(null);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -188,19 +208,51 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
     }
   }, 300), []);
 
+  const fetchProcessingPayments = useCallback(debounce(async (flatNo) => {
+    if (!flatNo || flatNo <= 0) {
+      setProcessingPayments([]);
+      return;
+    }
+    try {
+      const response = await fetch(`/api/maintenance/${flatNo}?status=Processing`);
+      if (response.ok) {
+        const data = await response.json();
+        setProcessingPayments(data);
+      } else {
+        setProcessingPayments([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch processing payments:", error);
+      setProcessingPayments([]);
+    }
+  }, 300), []);
+
 
   useEffect(() => {
     if (watchedFlatNo) {
         checkMembership(watchedFlatNo);
         fetchUnpaidMonths(watchedFlatNo);
+        fetchProcessingPayments(watchedFlatNo);
     }
-  }, [watchedFlatNo, checkMembership, fetchUnpaidMonths]);
+  }, [watchedFlatNo, checkMembership, fetchUnpaidMonths, fetchProcessingPayments]);
+  
+  const handleProcessingPaymentSelect = (paymentId: string) => {
+    const payment = processingPayments.find(p => p.id === paymentId);
+    if (payment) {
+        form.setValue("monthYear", payment.monthYear);
+        form.setValue("amount", payment.amount);
+        form.setValue("transactionRef", payment.transactionRef);
+        form.setValue("receiptDate", parse(payment.receiptDate, 'dd/MM/yyyy', new Date()));
+        form.setValue("modeOfPayment", "Transfer");
+        setSelectedProcessingPayment(paymentId);
+    }
+  };
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
 
-    if (isSinglePayment && values.monthYear) {
+    if (isSinglePayment && values.monthYear && !selectedProcessingPayment) {
       // Pre-flight validation for single historic payments
       const validationResponse = await fetch(`/api/maintenance/${values.flatNo}/${encodeURIComponent(values.monthYear)}`);
       if (!validationResponse.ok) {
@@ -215,16 +267,19 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
       }
     }
     
-    let endpoint = '/api/maintenance';
-    let body = {
-      ...values,
-      receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
-      entryByFlatNo,
+    const endpoint = selectedProcessingPayment 
+        ? `/api/maintenance/${values.flatNo}/${selectedProcessingPayment}` 
+        : (isBulkPayment ? '/api/maintenance/bulk' : '/api/maintenance');
+        
+    const method = selectedProcessingPayment ? 'PUT' : 'POST';
+
+    let body: any = {
+        ...values,
+        receiptDate: format(values.receiptDate, "dd/MM/yyyy"),
+        entryByFlatNo,
     };
     
-    if (isBulkPayment) {
-        endpoint = '/api/maintenance/bulk';
-        // The bulk endpoint only needs a subset of fields
+    if (isBulkPayment && !selectedProcessingPayment) {
         body = {
           flatNo: values.flatNo,
           amount: values.amount,
@@ -235,12 +290,17 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
           transactionRef: values.transactionRef,
           bulkPaymentType: values.bulkPaymentType,
           entryByFlatNo,
-        } as any;
+        };
+    } else if (selectedProcessingPayment) {
+        body = {
+            receiptNo: values.receiptNo,
+            entryByFlatNo: entryByFlatNo,
+        };
     }
 
     try {
         const response = await fetch(endpoint, {
-            method: 'POST',
+            method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
@@ -255,6 +315,9 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
             form.reset();
             form.setValue("amount", 300);
             setIsMember(true);
+            setProcessingPayments([]);
+            setSelectedProcessingPayment(null);
+            fetchUnpaidMonths(watchedFlatNo); // Refresh unpaid months
         } else {
              toast({
                 variant: "destructive",
@@ -295,6 +358,24 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                   </FormItem>
               )}
             />
+             {processingPayments.length > 0 && (
+                <div className="md:col-span-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md">
+                    <p className="font-bold mb-2">Pending Confirmation</p>
+                    <p className="text-sm mb-3">A payment for this flat is awaiting confirmation. Select it to enter the receipt number.</p>
+                    <Select onValueChange={handleProcessingPaymentSelect} value={selectedProcessingPayment || ''}>
+                         <SelectTrigger>
+                            <SelectValue placeholder="Select a pending payment..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {processingPayments.map(p => (
+                                <SelectItem key={p.id} value={p.id}>
+                                    {p.monthYear} - ₹{p.amount} (Ref: {p.transactionRef})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
             <FormField
             control={form.control}
             name="amount"
@@ -304,7 +385,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                 <FormControl>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="300" {...field} step="300" className="pl-7" />
+                        <Input type="number" placeholder="300" {...field} step="300" className="pl-7" disabled={!!selectedProcessingPayment} />
                     </div>
                 </FormControl>
                 <FormMessage />
@@ -318,7 +399,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Month & Year</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!selectedProcessingPayment}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a month" />
@@ -363,6 +444,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                                 "w-full justify-start pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                             )}
+                             disabled={!!selectedProcessingPayment}
                             >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
@@ -409,7 +491,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Mode of Payment</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!selectedProcessingPayment}>
                         <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select payment mode" />
@@ -418,6 +500,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                         <SelectContent>
                             <SelectItem value="Cash">Cash</SelectItem>
                             <SelectItem value="Transfer">Transfer</SelectItem>
+                             <SelectItem value="Processing">Processing</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -432,7 +515,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
                         <FormItem>
                         <FormLabel>Transaction Ref.</FormLabel>
                         <FormControl>
-                            <Input placeholder="Enter transaction reference" {...field} />
+                            <Input placeholder="Enter transaction reference" {...field} disabled={!!selectedProcessingPayment} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -458,7 +541,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
               />
             )}
         </div>
-         {isBulkPayment && (
+         {isBulkPayment && !selectedProcessingPayment && (
                 <FormField
                     control={form.control}
                     name="bulkPaymentType"
@@ -496,7 +579,7 @@ export default function DataEntryForm({ entryByFlatNo }: DataEntryFormProps) {
             )}
         <Button type="submit" disabled={isSubmitting}>
              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Submit
+            {selectedProcessingPayment ? 'Confirm and Finalize Payment' : 'Submit'}
         </Button>
       </form>
     </Form>

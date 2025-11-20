@@ -94,16 +94,16 @@ export default function QRCodeDialog({
     setIsSubmitting(true);
     const currentDate = new Date();
     const formattedReceiptDate = format(currentDate, 'dd/MM/yyyy');
-    const generatedReceiptNo = `O${format(currentDate, 'ddMMyy')}`;
+    const generatedReceiptNo = 'O' + format(currentDate, 'ddMMyy');
 
     const paymentData = {
         flatNo: flatNo,
         monthYear: month,
         amount: amount,
         receiptDate: formattedReceiptDate,
-        receiptNo: generatedReceiptNo,
-        tenantName: '',
-        modeOfPayment: 'Online',
+        receiptNo: generatedReceiptNo, 
+        tenantName: '', // Not applicable for online payments
+        modeOfPayment: 'Processing', // Initially set to Processing
         transactionRef: transactionId,
         entryByFlatNo: flatNo,
     };
@@ -119,8 +119,8 @@ export default function QRCodeDialog({
 
         if (response.ok) {
             toast({
-                title: "Payment Confirmed",
-                description: `Payment for ${month} has been successfully recorded.`,
+                title: "Payment Submitted",
+                description: `Your payment for ${month} is processing. You will be notified once it is confirmed.`,
             });
             onPaymentSuccess();
             onClose();

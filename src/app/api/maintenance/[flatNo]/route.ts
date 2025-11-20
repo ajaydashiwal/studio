@@ -6,7 +6,7 @@ import { toZonedTime } from 'date-fns-tz';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const SHEET_NAME = 'monthCollection';
-const RANGE = `${SHEET_NAME}!A:F`; // Flat No, tenant name, receipt date, receipt no, monthpaid, amount
+const RANGE = `${SHEET_NAME}!A:I`; // Flat No, tenant name, receipt date, receipt no, monthpaid, amount, mode of payment, transaction ref, entry by
 
 const getIstDate = () => toZonedTime(new Date(), 'Asia/Kolkata');
 
@@ -43,6 +43,8 @@ const getMonthRange = (paidMonths: string[]) => {
 
 export async function GET(request: Request, { params }: { params: { flatNo: string } }) {
   const { flatNo } = params;
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get('status');
 
   if (!flatNo) {
     return NextResponse.json({ error: 'Missing flat number' }, { status: 400 });
@@ -62,12 +64,25 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
     });
 
     const allRows = response.data.values;
+    
+    if (status === 'Processing') {
+        const processingRows = allRows?.slice(1).filter(row => row[0] == flatNo && row[6] === 'Processing') || [];
+        const processingRecords = processingRows.map((row) => ({
+            id: row[4], // monthYear is in column E (index 4)
+            monthYear: row[4],
+            amount: parseFloat(row[5]),
+            transactionRef: row[7],
+            receiptDate: row[2],
+        }));
+        return NextResponse.json(processingRecords);
+    }
+
     const records = [];
     const defaultMaintenanceAmount = '300'; // Standard monthly fee
 
     if (allRows) {
-        // Filter rows for the specific flat, skipping header
-        const userRows = allRows.slice(1).filter(row => row[0] == flatNo);
+        // Filter rows for the specific flat, skipping header and processing payments
+        const userRows = allRows.slice(1).filter(row => row[0] == flatNo && row[6] !== 'Processing');
         const paidMonths = userRows.map(row => row[4]); // Column E is monthpaid
 
         const allMonthsToDisplay = getMonthRange(paidMonths);

@@ -1,18 +1,38 @@
-# **App Name**: Spreadsheet Data Viewer
 
-## Core Features:
+# Project Blueprint
 
-- Login Authentication: Authenticate users by validating their credentials against a Google Spreadsheet.
-- Data Fetching: Fetch data from a specified Google Spreadsheet URL.
-- Data Filtering: Filter the data fetched from the Google Spreadsheet to include only the rows with dates between October and September for the past 24 months.
-- Data Visualization: Display the filtered spreadsheet data in a single, scrollable view covering the 24-month period.
-- Header Display: Display the flat number and owner name fetched from the master sheet in the header of the screen.
+This document outlines the architecture of the project, including the client and server modules and their dependencies.
 
-## Style Guidelines:
+## Overview
 
-- Primary color: Soft blue (#A0D2EB) to convey a sense of clarity and reliability, complementing the data-driven nature of the app.
-- Background color: Very light blue (#F0F8FF) providing a clean and unobtrusive backdrop.
-- Accent color: Muted green (#8FBC8F) to highlight actionable elements and provide visual interest.
-- Font: 'Inter', a grotesque-style sans-serif, for a modern and neutral appearance, suitable for displaying tabular data and UI elements. 
-- Use a clean, tabular layout to display the spreadsheet data, ensuring readability and easy navigation through the 24-month period.
-- The header should be clearly separated from the data section, with prominent display of the flat number and owner name.
+The project is a web application with a client-server architecture. The client is built with React and the server is a set of API routes.
+
+## Client-side Architecture
+
+The client is responsible for rendering the user interface and interacting with the server to fetch and display data. It is composed of the following modules:
+
+- **`src/app`**: The main application folder, containing the core layout and pages.
+- **`src/components`**: Contains reusable React components used throughout the application.
+- **`src/hooks`**: Holds custom React hooks for managing state and logic.
+- **`src/lib`**: A library of utility functions and data definitions.
+- **`src/ui`**: Base UI components, likely part of a component library.
+
+## Server-side Architecture (API Routes)
+
+The server is responsible for providing data to the client and handling business logic. It is composed of the following modules:
+
+- **`src/app/api/auth`**: Handles user authentication.
+- **`src/app/api/dashboard`**: Provides data for the main dashboard.
+- **`src/app/api/complaints`**: Manages complaints and suggestions.
+- **`src/app/api/expenditure`**: Handles financial expenditures.
+- **`src/app/api/maintenance`**: Manages maintenance records.
+- **`src/app/api/master-membership`**: Manages membership data.
+- **`src/app/api/notifications`**: Handles notifications.
+- **`src/app/api/summary`**: Provides summary data.
+- **`src/app/api/users`**: Manages user data.
+- **`src/app/api/reports`**: Generates various reports.
+- **`src/app/api/payment`**: Handles payment processing.
+
+## Dependencies
+
+The client and server are decoupled and communicate via a well-defined API. The client depends on the server for data, but the server does not depend on the client.
