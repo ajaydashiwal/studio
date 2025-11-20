@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
     Table,
@@ -39,8 +40,13 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
     const [error, setError] = useState<string | null>(null);
     const [payingMonth, setPayingMonth] = useState<string | null>(null);
     const [isQrCodeOpen, setIsQrCodeOpen] = useState(false);
-    const [upiLink, setUpiLink] = useState("");
-    const [paymentDetails, setPaymentDetails] = useState({ month: "", flatNo: ""});
+    const [paymentDetails, setPaymentDetails] = useState({ 
+      month: "", 
+      flatNo: "", 
+      upiLink: "", 
+      amount: 300,
+      ownerName: ""
+    });
     const { toast } = useToast();
 
     const fetchData = async () => {
@@ -71,8 +77,13 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
         const transactionNote = `Maint. for ${monthYear.replace(' ', '')}, Flat ${flatNo}`;
         const generatedUpiLink = `upi://pay?pa=9811632886m@pnb&pn=UPVAN%20APARTMENT%20RW%20ASSOCIATION&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
         
-        setUpiLink(generatedUpiLink);
-        setPaymentDetails({ month: monthYear, flatNo: flatNo });
+        setPaymentDetails({ 
+          month: monthYear, 
+          flatNo: flatNo, 
+          upiLink: generatedUpiLink,
+          amount: amount,
+          ownerName: user?.ownerName || ""
+        });
         setIsQrCodeOpen(true);
         setPayingMonth(null); // Reset loader immediately as we are just opening a dialog
     };
@@ -139,7 +150,7 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
                                   {item.status}
                               </Badge>
                           </TableCell>
-                          {showActionColumn && (
+                          {showActionColumn && user?.userType !== 'Agent' && (
                             <TableCell className="text-center">
                                 {item.status === 'Due' && (
                                 <Button 
@@ -162,9 +173,12 @@ export default function DataTable({ flatNo, user }: DataTableProps) {
         <QRCodeDialog 
           isOpen={isQrCodeOpen} 
           onClose={() => setIsQrCodeOpen(false)}
-          upiLink={upiLink}
+          onPaymentSuccess={fetchData}
+          upiLink={paymentDetails.upiLink}
           month={paymentDetails.month}
           flatNo={paymentDetails.flatNo}
+          amount={paymentDetails.amount}
+          ownerName={paymentDetails.ownerName}
         />
       </>
     )
