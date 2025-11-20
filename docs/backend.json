@@ -1,0 +1,354 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "Represents a user of the application.",
+      "type": "object",
+      "properties": {
+        "flatNo": {
+          "type": "string",
+          "description": "The flat number of the user."
+        },
+        "membershipNo": {
+          "type": "string",
+          "description": "The membership number of the user."
+        },
+        "ownerName": {
+          "type": "string",
+          "description": "The name of the owner."
+        },
+        "userType": {
+          "type": "string",
+          "description": "The type of user.",
+          "enum": [
+            "Member",
+            "President",
+            "VicePresident",
+            "GeneralSecretary",
+            "JointSecretary",
+            "Treasurer",
+            "Agent"
+          ]
+        },
+        "membershipStatus": {
+          "type": "string",
+          "description": "The membership status of the user.",
+          "enum": [
+            "Active",
+            "Inactive"
+          ]
+        },
+        "isOfficeBearer": {
+          "type": "string",
+          "description": "Whether the user is an office bearer.",
+          "enum": [
+            "Yes",
+            "No"
+          ]
+        }
+      },
+      "required": [
+        "flatNo",
+        "membershipNo",
+        "ownerName",
+        "userType",
+        "membershipStatus",
+        "isOfficeBearer"
+      ]
+    },
+    "maintenance": {
+      "title": "Maintenance",
+      "description": "Represents a maintenance payment.",
+      "type": "object",
+      "properties": {
+        "flatNo": {
+          "type": "string",
+          "description": "The flat number for the payment."
+        },
+        "tenantName": {
+          "type": "string",
+          "description": "The name of the tenant, if applicable."
+        },
+        "receiptDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the receipt."
+        },
+        "receiptNo": {
+          "type": "string",
+          "description": "The receipt number."
+        },
+        "monthYear": {
+          "type": "string",
+          "description": "The month and year of the payment."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount paid."
+        },
+        "modeOfPayment": {
+          "type": "string",
+          "description": "The mode of payment.",
+          "enum": [
+            "Cash",
+            "Transfer",
+            "Online"
+          ]
+        },
+        "transactionRef": {
+          "type": "string",
+          "description": "The transaction reference, if applicable."
+        },
+        "entryByFlatNo": {
+          "type": "string",
+          "description": "The flat number of the user who made the entry."
+        }
+      },
+      "required": [
+        "flatNo",
+        "receiptDate",
+        "monthYear",
+        "amount",
+        "modeOfPayment",
+        "entryByFlatNo"
+      ]
+    },
+    "complaint": {
+      "title": "Complaint",
+      "description": "Represents a complaint or suggestion from a user.",
+      "type": "object",
+      "properties": {
+        "complaintId": {
+          "type": "string",
+          "description": "The unique ID of the complaint."
+        },
+        "submissionDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time the complaint was submitted."
+        },
+        "flatNo": {
+          "type": "string",
+          "description": "The flat number of the user who submitted the complaint."
+        },
+        "formType": {
+          "type": "string",
+          "description": "The type of feedback.",
+          "enum": [
+            "Complaint",
+            "Suggestion"
+          ]
+        },
+        "issueCategory": {
+          "type": "string",
+          "description": "The category of the issue."
+        },
+        "description": {
+          "type": "string",
+          "description": "The description of the complaint."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the complaint.",
+          "enum": [
+            "Open",
+            "In Progress",
+            "Resolved",
+            "Closed"
+          ]
+        },
+        "remarks": {
+          "type": "string",
+          "description": "Remarks on the complaint."
+        },
+        "actionDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time action was taken."
+        }
+      },
+      "required": [
+        "complaintId",
+        "submissionDate",
+        "flatNo",
+        "formType",
+        "description",
+        "status"
+      ]
+    },
+    "expenditure": {
+      "title": "Expenditure",
+      "description": "Represents an expenditure record.",
+      "type": "object",
+      "properties": {
+        "expenditureId": {
+          "type": "string",
+          "description": "The unique ID of the expenditure."
+        },
+        "paymentDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the payment."
+        },
+        "expenditureType": {
+          "type": "string",
+          "description": "The type of expenditure."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the expenditure."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the expenditure."
+        },
+        "modeOfPayment": {
+          "type": "string",
+          "description": "The mode of payment."
+        },
+        "transactionRef": {
+          "type": "string",
+          "description": "The transaction reference, if applicable."
+        },
+        "chequeNo": {
+          "type": "string",
+          "description": "The cheque number, if applicable."
+        },
+        "chequeDate": {
+          "type": "string",
+  "format": "date",
+          "description": "The date of the cheque, if applicable."
+        },
+        "entryByFlatNo": {
+          "type": "string",
+          "description": "The flat number of the user who made the entry."
+        }
+      },
+      "required": [
+        "expenditureId",
+        "paymentDate",
+        "expenditureType",
+        "description",
+        "amount",
+        "modeOfPayment",
+        "entryByFlatNo"
+      ]
+    },
+    "notification": {
+      "title": "Notification",
+      "description": "Represents a notification for residents.",
+      "type": "object",
+      "properties": {
+        "notificationId": {
+          "type": "string",
+          "description": "The unique ID of the notification."
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the notification."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "The name of the user who created the notification."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time the notification was created."
+        }
+      },
+      "required": [
+        "notificationId",
+        "message",
+        "createdBy",
+        "timestamp"
+      ]
+    },
+    "masterMembership": {
+      "title": "Master Membership",
+      "description": "Represents a master membership record.",
+      "type": "object",
+      "properties": {
+        "flatNo": {
+          "type": "string",
+          "description": "The flat number of the member."
+        },
+        "memberName": {
+          "type": "string",
+          "description": "The name of the member."
+        },
+        "membershipNo": {
+          "type": "string",
+          "description": "The membership number."
+        },
+        "receiptNo": {
+          "type": "string",
+          "description": "The receipt number for membership."
+        },
+        "receiptDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the receipt."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the membership.",
+          "enum": [
+            "Active",
+            "Inactive"
+          ]
+        }
+      },
+      "required": [
+        "flatNo",
+        "memberName",
+        "membershipNo",
+        "receiptNo",
+        "receiptDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/user"
+      },
+      "description": "Stores user profile information."
+    },
+    "/maintenance/{maintenanceId}": {
+      "schema": {
+        "$ref": "#/entities/maintenance"
+      },
+      "description": "Stores maintenance payment records."
+    },
+    "/complaints/{complaintId}": {
+      "schema": {
+        "$ref": "#/entities/complaint"
+      },
+      "description": "Stores complaints and suggestions."
+    },
+    "/expenditures/{expenditureId}": {
+      "schema": {
+        "$ref": "#/entities/expenditure"
+      },
+      "description": "Stores expenditure records."
+    },
+    "/notifications/{notificationId}": {
+      "schema": {
+        "$ref": "#/entities/notification"
+      },
+      "description": "Stores RWA notifications."
+    },
+    "/masterMemberships/{membershipId}": {
+      "schema": {
+        "$ref": "#/entities/masterMembership"
+      },
+      "description": "Stores master membership records."
+    }
+  }
+}
