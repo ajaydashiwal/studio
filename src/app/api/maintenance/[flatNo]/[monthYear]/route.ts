@@ -1,4 +1,5 @@
 
+
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { differenceInCalendarMonths, parse, startOfMonth, format } from 'date-fns';
@@ -93,78 +94,5 @@ export async function GET(request: Request, { params }: { params: { flatNo: stri
         return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
     }
     return NextResponse.json({ error: 'Internal Server Error while validating record.' }, { status: 500 });
-  }
-}
-
-export async function PUT(request: Request, { params }: { params: { flatNo: string, monthYear: string } }) {
-  const { flatNo, monthYear } = params;
-  const { receiptNo, entryByFlatNo } = await request.json();
-
-  if (!flatNo || !monthYear || !receiptNo || !entryByFlatNo) {
-    return NextResponse.json({ error: 'Missing required fields for update.' }, { status: 400 });
-  }
-  
-  const decodedMonthYear = decodeURIComponent(monthYear);
-
-  try {
-    const auth = new google.auth.GoogleAuth({
-      keyFile: 'google-credentials.json',
-      scopes: 'https://www.googleapis.com/auth/spreadsheets',
-    });
-
-    const sheets = google.sheets({ version: 'v4', auth });
-
-    // Fetch all rows to find the correct one to update
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${COLLECTION_SHEET_NAME}!A:I`, // Fetch all relevant columns
-    });
-    
-    const allRows = response.data.values;
-    if (!allRows) {
-        return NextResponse.json({ error: 'No data found in the sheet.' }, { status: 404 });
-    }
-
-    // Find the index of the row that matches flatNo, monthYear, and has a blank receiptNo.
-    // Columns: A (flatNo), D (receiptNo), E (monthYear)
-    const rowIndex = allRows.findIndex(row => 
-        row[0] == flatNo && 
-        row[4] === decodedMonthYear && 
-        (!row[3] || row[3].trim() === '')
-    );
-
-    if (rowIndex === -1) {
-        return NextResponse.json({ error: 'No matching unconfirmed payment record found for the specified flat and month.' }, { status: 404 });
-    }
-
-    // Sheet row index is 1-based, array index is 0-based
-    const sheetRowIndex = rowIndex + 1;
-
-    // We are updating columns D (receiptNo) and I (entryByFlatNo)
-    await sheets.spreadsheets.values.batchUpdate({
-        spreadsheetId: SPREADSHEET_ID,
-        requestBody: {
-            valueInputOption: 'USER_ENTERED',
-            data: [
-                {
-                    range: `${COLLECTION_SHEET_NAME}!D${sheetRowIndex}`,
-                    values: [[receiptNo]]
-                },
-                {
-                    range: `${COLLECTION_SHEET_NAME}!I${sheetRowIndex}`,
-                    values: [[entryByFlatNo]]
-                }
-            ]
-        }
-    });
-
-    return NextResponse.json({ success: true, message: 'Payment confirmed and finalized successfully.' });
-
-  } catch (error: any) {
-    console.error('Error updating Google Sheets:', error);
-    if (error.code === 'ENOENT') {
-        return NextResponse.json({ error: 'Server configuration error: `google-credentials.json` not found.' }, { status: 500 });
-    }
-    return NextResponse.json({ error: 'Internal Server Error while updating Google Sheets.' }, { status: 500 });
   }
 }

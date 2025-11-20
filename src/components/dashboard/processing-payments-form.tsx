@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
@@ -63,10 +64,15 @@ export default function ProcessingPaymentsForm({ entryByFlatNo }: ProcessingPaym
     const onSubmit = async (data: z.infer<typeof formSchema>, payment: ProcessingPayment) => {
         setSubmittingId(payment.id);
         try {
-            const response = await fetch(`/api/maintenance/${payment.flatNo}/${encodeURIComponent(payment.monthYear)}`, {
-                method: 'PUT',
+            const response = await fetch(`/api/maintenance/confirm-payment`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ receiptNo: data.receiptNo, entryByFlatNo }),
+                body: JSON.stringify({ 
+                    receiptNo: data.receiptNo, 
+                    entryByFlatNo,
+                    flatNo: payment.flatNo,
+                    transactionRef: payment.transactionRef,
+                 }),
             });
 
             const result = await response.json();
