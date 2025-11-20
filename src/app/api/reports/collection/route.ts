@@ -7,7 +7,7 @@ import { parse, getYear, getMonth } from 'date-fns';
 
 const SPREADSHEET_ID = '1qbU0Wb-iosYEUu34nXMPczUpwVrnRsUT6E7XZr1vnH0';
 const COLLECTION_SHEET = 'monthCollection';
-// Columns: flatNo(A), ... receiptDate(C), ... amountPaid(F)
+// Columns: flatNo(A), ... receiptDate(C), receiptNo(D), ... amountPaid(F)
 const RANGE = `${COLLECTION_SHEET}!A:F`;
 
 export async function GET(request: Request) {
@@ -38,7 +38,13 @@ export async function GET(request: Request) {
 
         const filteredRows = rows.filter(row => {
             const receiptDateStr = row[2]; // Column C is receiptDate
-            if (!receiptDateStr) return false;
+            const receiptNo = row[3]; // Column D is receiptNo
+
+            // Exclude rows with a blank receipt number
+            if (!receiptDateStr || !receiptNo || receiptNo.trim() === '') {
+                 return false;
+            }
+
             try {
                 const receiptDate = parse(receiptDateStr, 'dd/MM/yyyy', new Date());
                 return getYear(receiptDate) === targetYear && getMonth(receiptDate) === targetMonth;
