@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Loader2, Timer } from "lucide-react";
+import { format } from 'date-fns';
 
 interface QRCodeDialogProps {
   isOpen: boolean;
@@ -91,13 +92,16 @@ export default function QRCodeDialog({
     }
     
     setIsSubmitting(true);
+    const currentDate = new Date();
+    const formattedReceiptDate = format(currentDate, 'dd/MM/yyyy');
+    const generatedReceiptNo = `O${format(currentDate, 'ddMMyy')}`;
 
     const paymentData = {
         flatNo: flatNo,
         monthYear: month,
         amount: amount,
-        receiptDate: new Date().toLocaleDateString('en-GB'), // dd/mm/yyyy
-        receiptNo: transactionId,
+        receiptDate: formattedReceiptDate,
+        receiptNo: generatedReceiptNo,
         tenantName: '',
         modeOfPayment: 'Online',
         transactionRef: transactionId,
